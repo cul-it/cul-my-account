@@ -4,6 +4,20 @@
   Account information for 
   = "#{@patron['first_name']} #{@patron['last_name']}"
 
+
+%ul.nav.nav-tabs{:role => "tablist"}
+  %li.nav-item
+    = link_to 'Checked out', "#checkouts", :class => "nav-link active", :id => "checkouts", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts", :selected => true }
+  %li.nav-item
+    = link_to 'Available requests', "#available-requests", :class => "nav-link active", :id => "available-requests", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
+  %li.nav-item
+    = link_to 'Pending requests', "#pending-requests", :class => "nav-link active", :id => "pending-requests", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
+  %li.nav-item
+    = link_to 'Fines and fees', "#fines", :class => "nav-link active", :id => "fines", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
+
+
+
+
 - if @checkouts
   %table#myaccount-table
     %tbody
