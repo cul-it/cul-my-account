@@ -2,4 +2,21 @@
   MyAccount information for 
   = "#{@patron['last_name']}, #{@patron['first_name']} (#{@patron['netid']})"
 
-
+- if @checkouts
+  %table#myaccount-table
+    %tbody
+      %tr
+        %th{:style => "width: 10%"} Due date
+        %th{:style => "width: 50%"} Title
+        %th{:style => "width: 20%"} Author
+        %th{:style => "width: 20%"} Status
+      - @checkouts.each do |c|
+        %tr
+          %td
+            =c['od']
+          %td 
+            =c['ou_title']
+          %td
+            =c['au']
+          %td
+            =c['vstatus']
