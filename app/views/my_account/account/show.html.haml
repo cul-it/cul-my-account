@@ -1,22 +1,28 @@
-%h1 
-  MyAccount information for 
-  = "#{@patron['last_name']}, #{@patron['first_name']} (#{@patron['netid']})"
+%h1 My Account
+
+%h3 
+  Account information for 
+  = "#{@patron['first_name']} #{@patron['last_name']}"
 
 - if @checkouts
   %table#myaccount-table
     %tbody
       %tr
+        %th{:style => "width: 5%"}
+          = check_box_tag ''
         %th{:style => "width: 10%"} Due date
         %th{:style => "width: 50%"} Title
         %th{:style => "width: 20%"} Author
         %th{:style => "width: 20%"} Status
       - @checkouts.each do |c|
         %tr
-          %td
+          %td{:style => "text-align: center"}
+            = check_box_tag ''
+          %td{:style => "text-align: center"}
             =c['od']
           %td 
             = link_to "#{c['ou_title']}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
-          %td
+          %td{:style => "text-align: center"}
             =c['au']
-          %td
+          %td{:style => "text-align: center"}
             =c['vstatus']
