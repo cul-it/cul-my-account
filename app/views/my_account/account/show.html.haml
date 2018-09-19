@@ -7,7 +7,7 @@
 
 %ul.nav.nav-tabs{:role => "tablist"}
   %li.nav-item
-    = link_to 'Checked out', "#checkouts", :class => "nav-link active", :id => "checkouts", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts", :selected => true }
+    = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :id => "checkouts", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts", :selected => true }
   %li.nav-item
     = link_to 'Available requests', "#available-requests", :class => "nav-link active", :id => "available-requests", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
   %li.nav-item
@@ -15,28 +15,28 @@
   %li.nav-item
     = link_to 'Fines and fees', "#fines", :class => "nav-link active", :id => "fines", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
 
-
-
-
-- if @checkouts
-  %table#myaccount-table
-    %tbody
-      %tr
-        %th{:style => "width: 5%"}
-          = check_box_tag ''
-        %th{:style => "width: 10%"} Due date
-        %th{:style => "width: 50%"} Title
-        %th{:style => "width: 20%"} Author
-        %th{:style => "width: 20%"} Status
-      - @checkouts.each do |c|
+%div.tab-content
+  %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
+    %table#myaccount-table
+      %tbody
         %tr
-          %td{:style => "text-align: center"}
+          %th{:style => "width: 5%"}
             = check_box_tag ''
-          %td{:style => "text-align: center"}
-            =c['od']
-          %td 
-            = link_to "#{c['ou_title']}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
-          %td{:style => "text-align: center"}
-            =c['au']
-          %td{:style => "text-align: center"}
-            =c['vstatus']
+          %th{:style => "width: 10%"} Due date
+          %th{:style => "width: 50%"} Title
+          %th{:style => "width: 20%"} Author
+          %th{:style => "width: 20%"} Status
+        - @checkouts.each do |c|
+          %tr
+            %td
+              = check_box_tag ''
+            %td
+              =c['od']
+            %td 
+              = link_to "#{c['ou_title']}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
+            %td
+              =c['au']
+            %td
+              =c['vstatus']
+  %div#available-requests.tab-pane.fade{:role => "tabpanel"}
+    boo!
