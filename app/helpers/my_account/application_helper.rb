@@ -3,7 +3,6 @@ module MyAccount
 
     def method_missing method, *args, &block
       if method.to_s.end_with?('_path') || method.to_s.end_with?('_url')
-        Rails.logger.debug "mjc12test: checking 1 for #{method.to_s}"
         if main_app.respond_to?(method)
           main_app.send(method, *args)
         else
@@ -16,8 +15,6 @@ module MyAccount
 
     def respond_to?(method,include_all=false)
       if method.to_s.end_with?('_path') || method.to_s.end_with?('_url')
-        Rails.logger.debug "mjc12test: checking 2 for #{method.to_s}"
-
         if main_app.respond_to?(method)
           true
         else
