@@ -4,5 +4,7 @@ $(document).ready ->
 account =
   onLoad: () ->
     $('.nav-tabs a').click ->
-      console.log("boom")
       $(this).tab('show')
+    $('#select-all-checkbox').click ->
+      checked = $(this).prop('checked')
+      $('tr.item input:checkbox').prop('checked', checked)

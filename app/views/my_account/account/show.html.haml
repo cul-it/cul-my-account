@@ -20,13 +20,13 @@
       %tbody
         %tr
           %th{:style => "width: 5%"}
-            = check_box_tag ''
+            = check_box_tag 'select-all-checkbox'
           %th{:style => "width: 10%"} Due date
           %th{:style => "width: 50%"} Title
           %th{:style => "width: 20%"} Author
           %th{:style => "width: 20%"} Status
         - @checkouts.each do |c|
-          %tr
+          %tr.item{:id => "#{c['bid']}"}
             %td
               = check_box_tag ''
             %td
