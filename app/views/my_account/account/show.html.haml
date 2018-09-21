@@ -1,22 +1,23 @@
+= javascript_include_tag 'application'
+= javascript_include_tag 'my_account/account'
 %h1 My Account
 
 %h3 
   Account information for 
   = "#{@patron['first_name']} #{@patron['last_name']}"
 
-
 %ul.nav.nav-tabs{:role => "tablist"}
-  %li.nav-item
-    = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :id => "checkouts", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts", :selected => true }
-  %li.nav-item
-    = link_to 'Available requests', "#available-requests", :class => "nav-link active", :id => "available-requests", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
-  %li.nav-item
-    = link_to 'Pending requests', "#pending-requests", :class => "nav-link active", :id => "pending-requests", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
-  %li.nav-item
-    = link_to 'Fines and fees', "#fines", :class => "nav-link active", :id => "fines", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
+  %li.active{:role => "presentation"}
+    = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }
+  %li{:role => "presentation"}
+    = link_to 'Available requests', "#available-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
+  %li{:role => "presentation"}
+    = link_to 'Pending requests', "#pending-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
+  %li{:role => "presentation"}
+    = link_to 'Fines and fees', "#fines", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
 
 %div.tab-content
-  %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
+  %div#checkouts.tab-pane.fade.in.active{:role => "tabpanel"}
     %table#myaccount-table
       %tbody
         %tr
