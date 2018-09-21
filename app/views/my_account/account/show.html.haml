@@ -1,5 +1,7 @@
 = javascript_include_tag 'application'
 = javascript_include_tag 'my_account/account'
+
+- request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Illiad'}
 %h3 
   Account information for 
   = "#{@patron['first_name']} #{@patron['last_name']}"
@@ -20,7 +22,7 @@
       %tbody
         %tr
           %th{:style => "width: 5%"}
-            = check_box_tag 'select-all-checkbox'
+            = check_box_tag 'select-all-checkouts', 1, nil, { :id => '', :class => 'select-all' }
           %th{:style => "width: 10%"} Due date
           %th{:style => "width: 50%"} Title
           %th{:style => "width: 20%"} Author
@@ -32,13 +34,13 @@
             %td
               =c['od']
             %td 
-              = link_to "#{c['ou_title']}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
+              = link_to "#{c['ou_title'] || c['tl']}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
             %td
               =c['au']
             %td
               =c['vstatus']
     = button_tag 'Renew', :type => 'button', :id => 'renew'
-    = button_tag 'Export (RIS)', :type => 'button', :id => 'export'
+    = button_tag 'Export (RIS)', :type => 'button', :id => 'export-checkouts'
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
     No available requests
   %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
@@ -49,24 +51,25 @@
         %tbody
           %tr
             %th{:style => "width: 5%"}
-              = check_box_tag 'select-all-checkbox'
-            %th{:style => "width: 10%"} Pick up before
+              = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all' }
+            %th{:style => "width: 10%"} Request expires
             %th{:style => "width: 50%"} Title
             %th{:style => "width: 20%"} Author
-            %th{:style => "width: 20%"} Pick up at
+            %th{:style => "width: 20%"} Type
           - @requests.each do |c|
             %tr.item{:id => "#{c['iid']}"}
               %td
                 = check_box_tag ''
               %td
-                = c['NotWantedAfter']
+                = c['NotWantedAfter'] || c['ed']
               %td
                 = c['ou_title'] || c['tl']
               %td
                 = c['ou_aulast'] || c['au']
               %td
-                = c['lo']
-      = button_tag 'Export (RIS)', :type => 'button', :id => 'export'
+                = request_types[c['ttype'] || c['system']]
+      = button_tag 'Cancel request(s)', :type => 'button', :id => 'cancel'
+      = button_tag 'Export (RIS)', :type => 'button', :id => 'export-requests'
   %div#fines.tab-pane.fade{:role => "tabpanel"}
     - if @fines.length == 0
       No fines or fees
