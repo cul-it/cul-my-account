@@ -10,6 +10,9 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
-//= require my_account/jquery-3.3.1.min
-//= require_tree .
-//= require my_account/bootstrap.min
+//= require jquery
+//= require jquery_ujs
+//
+//= require_tree ./my_account/account
+
+alert('hello');

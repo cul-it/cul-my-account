@@ -3,4 +3,6 @@ $(document).ready ->
 
 account =
   onLoad: () ->
-    console.log("test message")
+    $('.nav-tabs a').click ->
+      console.log("boom")
+      $(this).tab('show')
