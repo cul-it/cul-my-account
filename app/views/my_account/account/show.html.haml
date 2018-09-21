@@ -1,7 +1,5 @@
 = javascript_include_tag 'application'
 = javascript_include_tag 'my_account/account'
-%h1 My Account
-
 %h3 
   Account information for 
   = "#{@patron['first_name']} #{@patron['last_name']}"
@@ -40,4 +38,5 @@
             %td
               =c['vstatus']
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
-    boo!
+  %div#pending-requests.tab-pane.fade{:role => "tabpanel"} 
+  %div#fines-requests.tab-pane.fade{:role => "tabpanel"}
