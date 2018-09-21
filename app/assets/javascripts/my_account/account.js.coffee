@@ -3,11 +3,14 @@ $(document).ready ->
 
 account =
   onLoad: () ->
+
     $('.nav-tabs a').click ->
       $(this).tab('show')
-    $('#select-all-checkbox').click ->
+      
+    $('input:checkbox.select-all').click ->
       checked = $(this).prop('checked')
       $('tr.item input:checkbox').prop('checked', checked)
+
     $('#renew').click ->
       ids = []
       items = $('input:checked').each (index, element) =>
