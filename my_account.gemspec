@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency "rails", "~> 4.2.7.1"
   s.add_dependency 'blacklight',['>= 5.9']
   s.add_dependency "xml-simple"
+  s.add_dependency 'borrow_direct'
 
   s.add_development_dependency "sqlite3"
 end
