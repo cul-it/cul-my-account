@@ -1,7 +1,7 @@
 = javascript_include_tag 'application'
 = javascript_include_tag 'my_account/account'
 
-- request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Illiad'}
+- request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Illiad', 'bd' => 'Borrow Direct'}
 %h3 
   Account information for 
   = "#{@patron['first_name']} #{@patron['last_name']}"
@@ -10,9 +10,9 @@
   %li.active{:role => "presentation"}
     = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }
   %li{:role => "presentation"}
-    = link_to 'Available requests', "#available-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
+    = link_to "Available requests (#{@available_requests.count})", "#available-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
   %li{:role => "presentation"}
-    = link_to "Pending requests (#{@requests.count})", "#pending-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
+    = link_to "Pending requests (#{@pending_requests.count})", "#pending-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
   %li{:role => "presentation"}
     = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
 
@@ -44,7 +44,7 @@
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
     No available requests
   %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
-    - if @requests.length == 0 
+    - if @pending_requests.length == 0 
       No pending requests
     - else
       %table#pending-requests-table
@@ -56,7 +56,7 @@
             %th{:style => "width: 50%"} Title
             %th{:style => "width: 20%"} Author
             %th{:style => "width: 20%"} Type
-          - @requests.each do |c|
+          - @pending_requests.each do |c|
             %tr.item{:id => "#{c['iid']}"}
               %td
                 = check_box_tag ''
