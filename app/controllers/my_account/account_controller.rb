@@ -106,7 +106,17 @@ module MyAccount
       BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
       BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
 
-      items = BorrowDirect::RequestQuery.new(barcode).requests('open')
+     begin
+        items = BorrowDirect::RequestQuery.new(barcode).requests('open')
+      rescue BorrowDirect::Error => e
+        # The Borrow Direct gem doesn't differentiate among all of the BD API error types.
+        # In this case, PUBQR004 is an exception raised when there are no results for the query
+        # (why should that cause an exception??). We don't want to crash and burn just because
+        # the user doesn't have any BD requests in the system. But if it's anything else,
+        # raise it again -- that indicates a real problem.
+        raise unless e.message.include? 'PUBQR004'
+        items = []
+      end
       Rails.logger.debug "mjc12test: BD items #{items}"
       # Returns an array of BorrowDirect::RequestQuery::Item
       cleaned_items = []
