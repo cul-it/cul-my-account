@@ -46,8 +46,32 @@
     = button_tag 'Renew', :type => 'button', :id => 'renew', :class => 'btn btn-danger'
     = button_tag 'Export (RIS)', :type => 'button', :id => 'export-checkouts', :class => 'btn btn-danger'
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
-    %p
+    -if @available_requests.length == 0
       There are no available requests.
+    -else
+      %table#available-requests-table.table.table-striped.table-responsive
+        %thead
+          %tr
+            %th{:scope => 'col', :class => 'myacct-col-5'}
+              = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+            %th{:scope => 'col', :class => 'myacct-col-10'} Pick up before
+            %th{:scope => 'col', :class => 'myacct-col-50'} Title
+            %th{:scope => 'col', :class => 'myacct-col-20'} Author
+            %th{:scope => 'col', :class => 'myacct-col-20'} Pick up at
+        %tbody
+          - @available_requests.each do |c|
+            %tr.item{:id => "#{c['iid']}"}
+              %td
+                = check_box_tag ''
+              %td
+                = (c['ed'] || c['DueDate']) ? (c['ed'] || c['DueDate']).to_date.strftime('%m/%d/%y') : ''
+              %td
+                = c['ou_title'] || c['tl']
+              %td
+                = c['ou_aulast'] || c['au']
+              %td
+                = c['los']
+      = button_tag 'Export (RIS)', :type => 'button', :id => 'export-requests', :class => 'btn btn-danger'
   %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
     - if @pending_requests.length == 0 
       There are no pending requests.
