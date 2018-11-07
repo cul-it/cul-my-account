@@ -34,7 +34,7 @@
             %td
               =c['od']
             %td 
-              = link_to "#{c['ou_title'] || c['tl']}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
+              = link_to "#{c['ou_title'].titleize || c['tl'].titleize}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
             %td
               =c['au']
             %td
