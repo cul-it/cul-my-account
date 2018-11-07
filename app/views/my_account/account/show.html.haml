@@ -2,7 +2,7 @@
 = javascript_include_tag 'my_account/account'
 
 - request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Illiad', 'bd' => 'Borrow Direct'}
-%h3 
+%h2
   Account information for 
   = "#{@patron['first_name']} #{@patron['last_name']}"
 
@@ -22,7 +22,7 @@
       %thead
         %tr
           %th{:scope => 'col', :class => 'myacct-col-5'}
-            = check_box_tag 'select-all-checkouts', 1, nil, { :id => '', :class => 'select-all' }
+            = check_box_tag 'select-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
             %span.sr-only
               Select all
           %th{:scope => 'col', :class => 'myacct-col-10'} Due date
@@ -33,7 +33,7 @@
         - @checkouts.each do |c|
           %tr.item{:id => "#{c['iid']}"}
             %td
-              = check_box_tag ''
+              = check_box_tag '', { 'aria-label' => 'Select', :title => 'Select' }
             %td
               =c['od']
             %td 
@@ -45,16 +45,17 @@
     = button_tag 'Renew', :type => 'button', :id => 'renew', :class => 'btn btn-danger'
     = button_tag 'Export (RIS)', :type => 'button', :id => 'export-checkouts', :class => 'btn btn-danger'
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
-    No available requests
+    %p
+      There are no available requests.
   %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
     - if @pending_requests.length == 0 
-      No pending requests
+      There are no pending requests.
     - else
       %table#pending-requests-table.table.table-striped.table-responsive
         %thead
           %tr
             %th{:scope => 'col', :class => 'myacct-col-5'}
-              = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all' }
+              = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
             %th{:scope => 'col', :class => 'myacct-col-10'} Request expires
             %th{:scope => 'col', :class => 'myacct-col-50'} Title
             %th{:scope => 'col', :class => 'myacct-col-20'} Author
@@ -77,7 +78,7 @@
   %div#fines.tab-pane.fade{:role => "tabpanel"}
     - if @fines.length == 0
       %p
-        No fines or fees
+        There are no fines or fees.
     - else
       %table#pending-requests-table.table.table-striped.table-responsive
         %thead
