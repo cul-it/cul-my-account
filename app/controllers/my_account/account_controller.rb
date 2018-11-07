@@ -8,12 +8,9 @@ require 'xmlsimple'
 module MyAccount
 
   class AccountController < ApplicationController
+    before_filter :heading
 
     def index
-      show
-    end
-
-    def show
       ###############
       netid = 'mjc12'
       ###############
@@ -21,6 +18,10 @@ module MyAccount
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
       Rails.logger.debug "mjc12test: BD items #{@bd_requests}"
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN'}
+    end
+
+    def heading
+      @heading='My Account'
     end
 
     def get_patron_info netid
@@ -114,7 +115,7 @@ module MyAccount
         # (why should that cause an exception??). We don't want to crash and burn just because
         # the user doesn't have any BD requests in the system. But if it's anything else,
         # raise it again -- that indicates a real problem.
-        raise unless e.message.include? 'PUBQR004'
+        raise unless e.message.include? 'PUBQR004'  
         items = []
       end
       Rails.logger.debug "mjc12test: BD items #{items}"

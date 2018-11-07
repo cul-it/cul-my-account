@@ -1,4 +1,4 @@
 MyAccount::Engine.routes.draw do
-  get '/' => 'account#show'
-  get '/index' => 'account#show'
+  get '/' => 'account#index'
+ # get '/index' => 'account#show'
 end
