@@ -1,7 +1,7 @@
 = javascript_include_tag 'application'
 = javascript_include_tag 'my_account/account'
 
-- request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Illiad', 'bd' => 'Borrow Direct'}
+- request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Interlibrary Loan', 'bd' => 'Borrow Direct'}
 %h3 
   Account information for 
   = "#{@patron['first_name']} #{@patron['last_name']}"
@@ -10,7 +10,7 @@
   %li.active{:role => "presentation"}
     = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }
   %li{:role => "presentation"}
-    = link_to "Available requests (#{@available_requests.count})", "#available-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
+    = link_to "Ready for pickup (#{@available_requests.count})", "#available-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
   %li{:role => "presentation"}
     = link_to "Pending requests (#{@pending_requests.count})", "#pending-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
   %li{:role => "presentation"}
@@ -18,7 +18,7 @@
 
 %div.tab-content
   %div#checkouts.tab-pane.fade.in.active{:role => "tabpanel"}
-    %table#myaccount-table
+    %table#checkouts-table
       %tbody
         %tr
           %th{:style => "width: 5%"}
@@ -74,12 +74,12 @@
     - if @fines.length == 0
       No fines or fees
     - else
-      %table#pending-requests-table
+      %table#fines-table
         %tbody
           %tr
             %th{:style => "width: 10%"} Incurred on
             %th{:style => "width: 50%"} Title
-            %th{:style => "width: 20%"} Type
+            %th{:style => "width: 20%"} Fine type
             %th{:style => "width: 20%"} Amount
           - @fines.each do |f|
             %tr
