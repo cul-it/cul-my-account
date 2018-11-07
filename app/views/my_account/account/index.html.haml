@@ -67,7 +67,9 @@
               %td
                 = check_box_tag ''
               %td
-                = (c['NotWantedAfter'] || c['ed']).to_date.strftime('%m/%d/%y')
+                - pendingRQDueDate = c['NotWantedAfter'] || c['ed']
+                -# = Date.strptime(pendingRQDueDate, '%y-%m-%d').strftime('%m/%d/%y')
+                = pendingRQDueDate
               %td
                 = c['ou_title'] || c['tl']
               %td
