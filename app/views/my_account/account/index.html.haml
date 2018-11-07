@@ -33,7 +33,8 @@
         - @checkouts.each do |c|
           %tr.item{:id => "#{c['iid']}"}
             %td
-              = check_box_tag '', { 'aria-label' => 'Select', :title => 'Select' }
+              = label_tag "select-#{c['iid']}", ''
+              = check_box_tag "select-#{c['iid']}", { 'aria-label' => 'Select', :title => 'Select' }
             %td
               =c['od']
             %td 
