@@ -18,19 +18,22 @@
 
 %div.tab-content
   %div#checkouts.tab-pane.fade.in.active{:role => "tabpanel"}
-    %table#checkouts-table
-      %tbody
+    %table#checkouts-table.table.table-striped.table-responsive
+      %thead
         %tr
-          %th{:style => "width: 5%"}
-            = check_box_tag 'select-all-checkouts', 1, nil, { :id => '', :class => 'select-all' }
-          %th{:style => "width: 10%"} Due date
-          %th{:style => "width: 50%"} Title
-          %th{:style => "width: 20%"} Author
-          %th{:style => "width: 20%"} Status
+          %th{:scope => 'col', :class => 'myacct-col-5'}
+            = check_box_tag 'select-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+            %span.sr-only
+              Select all
+          %th{:scope => 'col', :class => 'myacct-col-10'} Due date
+          %th{:scope => 'col', :class => 'myacct-col-50'} Title
+          %th{:scope => 'col', :class => 'myacct-col-20'} Author
+          %th{:scope => 'col', :class => 'myacct-col-20'} Status
+      %tbody
         - @checkouts.each do |c|
           %tr.item{:id => "#{c['iid']}"}
             %td
-              = check_box_tag ''
+              = check_box_tag '', { 'aria-label' => 'Select', :title => 'Select' }
             %td
               =c['od']
             %td 
@@ -39,23 +42,25 @@
               =c['au']
             %td
               =c['vstatus']
-    = button_tag 'Renew', :type => 'button', :id => 'renew'
-    = button_tag 'Export (RIS)', :type => 'button', :id => 'export-checkouts'
+    = button_tag 'Renew', :type => 'button', :id => 'renew', :class => 'btn btn-danger'
+    = button_tag 'Export (RIS)', :type => 'button', :id => 'export-checkouts', :class => 'btn btn-danger'
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
-    No available requests
+    %p
+      There are no available requests.
   %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
     - if @pending_requests.length == 0 
-      No pending requests
+      There are no pending requests.
     - else
-      %table#pending-requests-table
-        %tbody
+      %table#pending-requests-table.table.table-striped.table-responsive
+        %thead
           %tr
-            %th{:style => "width: 5%"}
-              = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all' }
-            %th{:style => "width: 10%"} Request expires
-            %th{:style => "width: 50%"} Title
-            %th{:style => "width: 20%"} Author
-            %th{:style => "width: 20%"} Type
+            %th{:scope => 'col', :class => 'myacct-col-5'}
+              = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+            %th{:scope => 'col', :class => 'myacct-col-10'} Request expires
+            %th{:scope => 'col', :class => 'myacct-col-50'} Title
+            %th{:scope => 'col', :class => 'myacct-col-20'} Author
+            %th{:scope => 'col', :class => 'myacct-col-20'} Type
+        %tbody
           - @pending_requests.each do |c|
             %tr.item{:id => "#{c['iid']}"}
               %td
@@ -68,19 +73,21 @@
                 = c['ou_aulast'] || c['au']
               %td
                 = request_types[c['ttype'] || c['system']]
-      = button_tag 'Cancel request(s)', :type => 'button', :id => 'cancel'
-      = button_tag 'Export (RIS)', :type => 'button', :id => 'export-requests'
+      = button_tag 'Cancel request(s)', :type => 'button', :id => 'cancel', :class => 'btn btn-danger'
+      = button_tag 'Export (RIS)', :type => 'button', :id => 'export-requests', :class => 'btn btn-danger'
   %div#fines.tab-pane.fade{:role => "tabpanel"}
     - if @fines.length == 0
-      No fines or fees
+      %p
+        There are no fines or fees.
     - else
-      %table#fines-table
-        %tbody
+      %table#pending-requests-table.table.table-striped.table-responsive
+        %thead
           %tr
-            %th{:style => "width: 10%"} Incurred on
-            %th{:style => "width: 50%"} Title
-            %th{:style => "width: 20%"} Fine type
-            %th{:style => "width: 20%"} Amount
+            %th{:scope => 'col', :class => 'myacct-col-10'} Incurred on
+            %th{:scope => 'col', :class => 'myacct-col-50'} Title
+            %th{:scope => 'col', :class => 'myacct-col-20'} Fine type
+            %th{:scope => 'col', :class => 'myacct-col-20'} Amount
+        %tbody
           - @fines.each do |f|
             %tr
               %td
@@ -91,5 +98,5 @@
                 = f['fineType'][0]
               %td
                 = f['amount'][0].gsub('USD ', '$')
-    %br
+    %p
     = link_to "View fine rates", "https://www.library.cornell.edu/services/borrow/fines"
