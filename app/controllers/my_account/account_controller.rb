@@ -59,8 +59,7 @@ module MyAccount
        # i['system'] != 'voyager' || i['ttype'].present? ? pending_requests << i : checkouts << i
       end
       fines = get_patron_fines netid
-      #bd_items = get_bd_requests netid
-      bd_items = []
+      bd_items = get_bd_requests netid
       [checkouts, available_requests, pending_requests, fines, bd_items]
     end
 
@@ -68,8 +67,7 @@ module MyAccount
       uri = URI.parse("#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=#{ENV['VOYAGER_DB_ID']}")
       response = Net::HTTP.get_response(uri)
       xml = XmlSimple.xml_in response.body
-      #fines = xml['fines'][0]['institution'][0]['fine']
-      fines = []
+      fines = xml['fines'][0]['institution'][0]['fine']
       fine_detail = []
       fines.each do |f|
         url = f['href'].gsub('http://127.0.0.1:7014/', 'https://catalog.library.cornell.edu/')
