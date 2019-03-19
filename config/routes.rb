@@ -1,3 +1,3 @@
 MyAccount::Engine.routes.draw do
-  get '/' => 'account#index'
+  match '/' => 'account#index', via: [:get, :post]
 end

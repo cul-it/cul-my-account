@@ -15,13 +15,28 @@ module MyAccount
       netid = 'mjc12'
       ###############
       @patron = get_patron_info netid
+      Rails.logger.debug "mjc12test: patron: #{@patron}"
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
       Rails.logger.debug "mjc12test: BD items #{@bd_requests}"
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN'}
+
+      Rails.logger.debug "mjc12test: Going into renew: #{params}"
+      items_to_renew = params.select do |param|
+        Rails.logger.debug "mjc12test: p #{param}"
+        param.match(/select\-\d+/)
+      end
+      renew(items_to_renew) if items_to_renew.present?
     end
 
     def heading
       @heading='My Account'
+    end
+
+    def renew items
+      item_ids = items.map do |item, value|
+        item.match(/select\-(\d+)/)[1]
+      end 
+      Rails.logger.debug "mjc12test: item_ids #{item_ids}"
     end
 
     def get_patron_info netid
