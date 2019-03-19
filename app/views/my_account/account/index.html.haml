@@ -18,33 +18,34 @@
 
 %div.tab-content
   %div#checkouts.tab-pane.fade.in.active{:role => "tabpanel"}
-    %table#checkouts-table.table.table-striped.table-responsive
-      %thead
-        %tr
-          %th{:scope => 'col', :class => 'myacct-col-5'}
-            = check_box_tag 'select-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-            %span.sr-only
-              Select all
-          %th{:scope => 'col', :class => 'myacct-col-10'} Due date
-          %th{:scope => 'col', :class => 'myacct-col-50'} Title
-          %th{:scope => 'col', :class => 'myacct-col-20'} Author
-          %th{:scope => 'col', :class => 'myacct-col-20'} Status
-      %tbody
-        - @checkouts.each do |c|
-          %tr.item{:id => "#{c['iid']}"}
-            %td
-              = label_tag "select-#{c['iid']}", ''
-              = check_box_tag "select-#{c['iid']}", { 'aria-label' => 'Select', :title => 'Select' }
-            %td
-              = c['od'].to_date.strftime('%m/%d/%y')
-            %td 
-              = link_to "#{c['ou_title'].titleize || c['tl'].titleize}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
-            %td
-              =c['au']
-            %td
-              =c['vstatus']
-    = button_tag 'Renew', :type => 'button', :id => 'renew', :class => 'btn btn-danger'
-    = button_tag 'Export (RIS)', :type => 'button', :id => 'export-checkouts', :class => 'btn btn-danger'
+    = form_tag(controller: :account, action: :index) do
+      %table#checkouts-table.table.table-striped.table-responsive
+        %thead
+          %tr
+            %th{:scope => 'col', :class => 'myacct-col-5'}
+              = check_box_tag 'toggle-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+              %span.sr-only
+                Select all
+            %th{:scope => 'col', :class => 'myacct-col-10'} Due date
+            %th{:scope => 'col', :class => 'myacct-col-50'} Title
+            %th{:scope => 'col', :class => 'myacct-col-20'} Author
+            %th{:scope => 'col', :class => 'myacct-col-20'} Status
+        %tbody
+          - @checkouts.each do |c|
+            %tr.item{:id => "#{c['iid']}"}
+              %td
+                = label_tag "select-#{c['iid']}", ''
+                = check_box_tag "select-#{c['iid']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
+              %td
+                = c['od'].to_date.strftime('%m/%d/%y')
+              %td 
+                = link_to "#{c['ou_title'].titleize || c['tl'].titleize}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
+              %td
+                =c['au']
+              %td
+                =c['vstatus']
+      = button_tag 'Renew', :type => 'submit', :id => 'renew', :class => 'btn btn-danger'
+      = button_tag 'Export (RIS)', :type => 'button', :id => 'export-checkouts', :class => 'btn btn-danger'
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
     -if @available_requests.length == 0
       There are no available requests.
