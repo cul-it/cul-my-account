@@ -1,6 +1,7 @@
 require_dependency "my_account/application_controller"
 
 require 'net/http'
+require 'rest-client'
 require 'uri'
 require 'json'
 require 'xmlsimple'
@@ -10,33 +11,57 @@ module MyAccount
   class AccountController < ApplicationController
     before_filter :heading
 
+    def heading
+      @heading='My Account'
+    end
+
     def index
       ###############
       netid = 'mjc12'
       ###############
+
+      # Basic setup: use the ILSAPI to fetch patron info and most requests (everything but Borrow Direct);
+      # then use Borrow Direct API to fetch any additional requests from that source.
+
+
+
       @patron = get_patron_info netid
       Rails.logger.debug "mjc12test: patron: #{@patron}"
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
       Rails.logger.debug "mjc12test: BD items #{@bd_requests}"
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN'}
 
-      Rails.logger.debug "mjc12test: Going into renew: #{params}"
+      Rails.logger.debug "mjc12test: Going into renew"
       items_to_renew = params.select do |param|
-        Rails.logger.debug "mjc12test: p #{param}"
         param.match(/select\-\d+/)
       end
       renew(items_to_renew) if items_to_renew.present?
     end
 
-    def heading
-      @heading='My Account'
+    def renew items
+      # Retrieve the list of item IDs that have been selected for renewal
+      item_ids=[]
+      if items.length == @checkouts.length
+        renew_all
+      else
+        item_ids = items.map do |item, value|
+          item.match(/select\-(\d+)/)[1]
+        end 
+        Rails.logger.debug "mjc12test: item_ids #{item_ids}"
+      end
+
+      # Invoke Voyager APIs to do the actual renewals
+      item_ids.each do |id|
+        http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+        url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
+        Rails.logger.debug "mjc12test: RENEW URL: #{url}"
+        response = RestClient.post(url, {})
+        Rails.logger.debug "mjc12test: RENEW RESPONSE #{response.body}"
+      end
     end
 
-    def renew items
-      item_ids = items.map do |item, value|
-        item.match(/select\-(\d+)/)[1]
-      end 
-      Rails.logger.debug "mjc12test: item_ids #{item_ids}"
+    def renew_all
+      Rails.logger.debug "mjc12test: Renewing all! #{}"
     end
 
     def get_patron_info netid
@@ -51,7 +76,6 @@ module MyAccount
       Rails.logger.debug "mjc12test: uri #{uri}"
 
       response = Net::HTTP.get_response(uri)
-      Rails.logger.debug "mjc12test: body '#{response.body}'"
       record = JSON.parse(response.body)
       checkouts = []
       pending_requests = []
