@@ -17,29 +17,26 @@ module MyAccount
       ###############
       netid = 'mjc12'
       ###############
-
-      # Basic setup: use the ILSAPI to fetch patron info and most requests (everything but Borrow Direct);
-      # then use Borrow Direct API to fetch any additional requests from that source.
-
-
-
       @patron = get_patron_info netid
       Rails.logger.debug "mjc12test: patron: #{@patron}"
-      @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
-      Rails.logger.debug "mjc12test: BD items #{@bd_requests}"
-      @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN'}
 
+      # Take care of any requested renewals first based on query params
       Rails.logger.debug "mjc12test: Going into renew"
       items_to_renew = params.select do |param|
         param.match(/select\-\d+/)
       end
       renew(items_to_renew) if items_to_renew.present?
+
+      # Retrieve and display account info 
+      @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
+      Rails.logger.debug "mjc12test: BD items #{@bd_requests}"
+      @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN'}
     end
 
     def renew items
       # Retrieve the list of item IDs that have been selected for renewal
       item_ids=[]
-      if items.length == @checkouts.length
+      if params['num_checkouts'] && items.length == params['num_checkouts'].length
         renew_all
       else
         item_ids = items.map do |item, value|
