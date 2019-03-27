@@ -1,8 +1,6 @@
 require_dependency "my_account/application_controller"
 
-require 'net/http'
 require 'rest-client'
-require 'uri'
 require 'json'
 require 'xmlsimple'
 
@@ -65,18 +63,14 @@ module MyAccount
     end
 
     def get_patron_info netid
-      uri = URI.parse("#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}")
-      response = Net::HTTP.get_response(uri)
-      record = JSON.parse(response.body)
+      response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
+      record = JSON.parse response.body
       record[netid]
     end
 
     def get_patron_stuff netid
-      uri = URI.parse("#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}")
-      Rails.logger.debug "mjc12test: uri #{uri}"
-
-      response = Net::HTTP.get_response(uri)
-      record = JSON.parse(response.body)
+      response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
+      record = JSON.parse response.body
       checkouts = []
       pending_requests = []
       available_requests = []
@@ -104,8 +98,7 @@ module MyAccount
     end
 
     def get_patron_fines netid
-      uri = URI.parse("#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=#{ENV['VOYAGER_DB_ID']}")
-      response = Net::HTTP.get_response(uri)
+      response = RestClient.get "#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
       xml = XmlSimple.xml_in response.body
       fines = xml['fines'] ? xml['fines'][0]['institution'][0]['fine'] : []
       fine_detail = []
@@ -117,22 +110,19 @@ module MyAccount
     end
 
     def get_fine_detail fine_url
-      uri = URI.parse(fine_url)
-      response = Net::HTTP.get_response(uri)
+      response = RestClient.get fine_url
       xml = XmlSimple.xml_in response.body
       xml['resource'][0]['fine'][0]    
     end
 
     def patron_id(netid)
-      uri = URI.parse("#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}")
-      response = Net::HTTP.get_response(uri)
+      response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
       record = JSON.parse(response.body)
       record[netid]['patron_id']
     end
 
     def patron_barcode(netid)
-      uri = URI.parse("#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}")
-      response = Net::HTTP.get_response(uri)
+      response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
       record = JSON.parse(response.body)
       record[netid]['barcode']
     end
