@@ -37,7 +37,7 @@
                 = label_tag "select-#{c['iid']}", ''
                 = check_box_tag "select-#{c['iid']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
               %td
-                = c['od'].to_date.strftime('%m/%d/%y')
+                = c['od'].to_date.strftime('%-m/%-d/%y')
               %td 
                 = link_to "#{c['ou_title'].titleize || c['tl'].titleize}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
               %td
@@ -122,7 +122,7 @@
           - @fines.each do |f|
             %tr
               %td
-                = f['fineDate'][0].to_date.strftime('%m/%d/%y')
+                = f['fineDate'][0].to_date.strftime('%-m/%-d/%y')
               %td
                 = f['itemTitle'][0]
               %td
