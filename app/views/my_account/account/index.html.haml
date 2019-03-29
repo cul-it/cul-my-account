@@ -56,7 +56,7 @@
           %thead
             %tr
               %th{:scope => 'col', :class => 'myacct-col-5'}
-                = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+                = check_box_tag 'toggle-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
               %th{:scope => 'col', :class => 'myacct-col-10'} Pick up before
               %th{:scope => 'col', :class => 'myacct-col-50'} Title
               %th{:scope => 'col', :class => 'myacct-col-20'} Author
@@ -65,7 +65,8 @@
             - @available_requests.each do |c|
               %tr.item{:id => "#{c['iid']}"}
                 %td
-                  = check_box_tag ''
+                  = label_tag "select-#{c['iid']}", ''
+                  = check_box_tag "select-#{c['iid']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }  
                 %td
                   = (c['ed'] || c['DueDate']) ? (c['ed'] || c['DueDate']).to_date.strftime('%m/%d/%y') : ''
                 %td
@@ -84,7 +85,7 @@
           %thead
             %tr
               %th{:scope => 'col', :class => 'myacct-col-5'}
-                = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+                = check_box_tag 'toggle-all-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
               %th{:scope => 'col', :class => 'myacct-col-10'} Request expires
               %th{:scope => 'col', :class => 'myacct-col-50'} Title
               %th{:scope => 'col', :class => 'myacct-col-20'} Author
@@ -93,7 +94,8 @@
             - @pending_requests.each do |c|
               %tr.item{:id => "#{c['iid']}"}
                 %td
-                  = check_box_tag ''
+                  = label_tag "select-#{c['iid']}", ''
+                  = check_box_tag "select-#{c['iid']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }  
                 %td
                   - pendingRQDueDate = c['NotWantedAfter'] || c['ed']
                   -# = Date.strptime(pendingRQDueDate, '%y-%m-%d').strftime('%m/%d/%y')

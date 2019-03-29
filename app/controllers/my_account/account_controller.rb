@@ -19,23 +19,34 @@ module MyAccount
       ###############
       @patron = get_patron_info netid
       Rails.logger.debug "mjc12test: patron: #{@patron}"
-
-      # Take care of any requested renewals first based on query params
-      Rails.logger.debug "mjc12test: Going into renew"
-      items_to_renew = params.select do |param|
-        param.match(/select\-\d+/)
+      Rails.logger.debug "mjc12test: params #{params}"
+      # Take care of any requested actions first based on query params
+      if params['button'] == 'renew'
+        Rails.logger.debug "mjc12test: Going into renew"
+        items_to_renew = params.select { |param| param.match(/select\-.+/) }
+        #renew(items_to_renew) if items_to_renew.present?
+      elsif params['button'] == 'cancel'
+        Rails.logger.debug "mjc12test: Going into cancel"
+        items_to_cancel = params.select { |param| param.match(/select\-.+/) }
+        Rails.logger.debug "mjc12test: items #{}"
+        cancel items_to_cancel if items_to_cancel.present?
       end
-      renew(items_to_renew) if items_to_renew.present?
 
       # Retrieve and display account info 
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
-      Rails.logger.debug "mjc12test: BD items #{@bd_requests}"
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN'}
     end
 
+    # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
+    def ids_from_strings items
+      Rails.logger.debug "mjc12test: procdssing items #{items}"
+      items.map { |item, value| item.match(/select\-(.+)/)[1] }
+    end
+
+    # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
     def renew items
       # Retrieve the list of item IDs that have been selected for renewal
-      item_ids=[]
+      item_ids= ids_from_strings items
       if params['num_checkouts'] && items.length == params['num_checkouts'].length
         renew_all
       else
@@ -57,6 +68,14 @@ module MyAccount
 
     def renew_all
       Rails.logger.debug "mjc12test: Renewing all! #{}"
+      # TODO: implement this
+    end
+
+    # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
+    # Requested items could be Voyager items, ILLiad, or Borrow Direct -- so use whichever API is appropriate
+    def cancel items
+      request_ids = ids_from_strings items
+      Rails.logger.debug "mjc12test: items #{request_ids}"
     end
 
     def get_patron_info netid
@@ -77,6 +96,8 @@ module MyAccount
         # in this list? But maybe check the fine-related functions below to see if we
         # need to do anything with this
         next if i['status'] == 'finef'
+        # add a special "item id" for ILLiad items
+        i['iid'] = "illiad-#{i['TransactionNumber']}" if i['system'] == 'illiad'
         # 'ttype' appears to be for a Voyager request - H, R, or ? for hold, recall, call slip
         if i['system'] == 'voyager' && (i['ttype'] != 'H' && i['ttype'] != 'R')
           checkouts << i
@@ -148,10 +169,9 @@ module MyAccount
       # Returns an array of BorrowDirect::RequestQuery::Item
       cleaned_items = []
       items.each do |item|
-        Rails.logger.debug "mjc12test: BD item raw #{item.inspect}"
-        cleaned_items << { 'tl' => item.title, 'au' => '', 'system' => 'bd', 'status' => item.request_status }
+        # For the final item, we add a fake item ID number (iid) for compatibility with other items in the system
+        cleaned_items << { 'tl' => item.title, 'au' => '', 'system' => 'bd', 'status' => item.request_status, 'iid' => item.request_number }
       end
-
       cleaned_items
 
     end
