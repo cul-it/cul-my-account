@@ -18,13 +18,13 @@ module MyAccount
       netid = 'mjc12'
       ###############
       @patron = get_patron_info netid
-      Rails.logger.debug "mjc12test: patron: #{@patron}"
-      Rails.logger.debug "mjc12test: params #{params}"
+      @patron['status'] = 'blocked'
+
       # Take care of any requested actions first based on query params
       if params['button'] == 'renew'
         Rails.logger.debug "mjc12test: Going into renew"
         items_to_renew = params.select { |param| param.match(/select\-.+/) }
-        #renew(items_to_renew) if items_to_renew.present?
+        renew(items_to_renew) if items_to_renew.present?
       elsif params['button'] == 'cancel'
         Rails.logger.debug "mjc12test: Going into cancel"
         items_to_cancel = params.select { |param| param.match(/select\-.+/) }
@@ -34,40 +34,56 @@ module MyAccount
       # Retrieve and display account info 
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
+
+      # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
+      if params['button'] == 'export-checkouts'
+        items_to_export = params.select { |param| param.match(/select\-.+/) }
+        export items_to_export if items_to_export.present?
+      end
     end
 
     # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
     def ids_from_strings items
-      Rails.logger.debug "mjc12test: procdssing items #{items}"
       items.map { |item, value| item.match(/select\-(.+)/)[1] }
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
     def renew items
-      # Retrieve the list of item IDs that have been selected for renewal
-      item_ids= ids_from_strings items
-      if params['num_checkouts'] && items.length == params['num_checkouts'].length
-        renew_all
-      else
-        item_ids = items.map do |item, value|
-          item.match(/select\-(\d+)/)[1]
-        end 
-        Rails.logger.debug "mjc12test: item_ids #{item_ids}"
-      end
 
-      # Invoke Voyager APIs to do the actual renewals
-      item_ids.each do |id|
-        http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-        url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
-        Rails.logger.debug "mjc12test: RENEW URL: #{url}"
-        response = RestClient.post(url, {})
-        Rails.logger.debug "mjc12test: RENEW RESPONSE #{response.body}"
+      if @patron['status'] != 'Active'
+        flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
+      else
+        # Retrieve the list of item IDs that have been selected for renewal
+        item_ids= ids_from_strings items
+        if params['num_checkouts'] && items.length == params['num_checkouts'].length
+          renew_all
+        else
+          item_ids = items.map do |item, value|
+            item.match(/select\-(\d+)/)[1]
+          end 
+          Rails.logger.debug "mjc12test: item_ids #{item_ids}"
+        end
+
+        # Invoke Voyager APIs to do the actual renewals
+        # item_ids.each do |id|
+        #   http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+        #   url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
+        #   response = RestClient.post(url, {})
+        # end
+
+        if item_ids.count == 1
+          flash[:notice] = 'This item has been renewed'
+        elsif item_ids.count > 2
+          flash[:notice] = "#{item_ids.count} items have been renewed"
+        end
       end
     end
 
     def renew_all
       Rails.logger.debug "mjc12test: Renewing all! #{}"
       # TODO: implement this
+
+      flash[:notice] = 'All eligible items have been renewed'
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
@@ -77,23 +93,48 @@ module MyAccount
       Rails.logger.debug "mjc12test: items #{request_ids}"
       request_ids.each do |id|
         if id.match(/^COR/)
+          # TODO: implement this
           # do a Borrow Direct cancel
-          Rails.logger.debug "mjc12test: cancelling #{id} in Borrow Direct"
         elsif id.match(/^illiad/)
+          # TODO: implement this
           # do an ILLiad cancel
-          Rails.logger.debug "mjc12test: cancelling #{id} in ILLiad"
         else
           # do a Voyager cancel
-          Rails.logger.debug "mjc12test: cancelling #{id} in Voyager"
           http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
           # Remember that Voyager uses the '/holds/' path for both holds and recalls in order to confuse us
           url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/holds/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
-          Rails.logger.debug "mjc12test: RENEW URL: #{url}"
-        #  response = RestClient.delet(url, {})
-        #  Rails.logger.debug "mjc12test: RENEW RESPONSE #{response.body}"  
+          response = RestClient.delete(url, {})
         end
       end
 
+      if item_ids.count == 1
+        flash[:notice] = 'Your request has been cancelled'
+      elsif item_ids.count > 1
+        flash[:notice] = 'Your requests have been cancelled'
+      end
+
+    end
+
+    def export items
+      item_ids = ids_from_strings items
+      ris_output = ''
+      item_ids.each do |id|
+        item = @checkouts.detect { |i| i['iid'] == id }
+        Rails.logger.debug "mjc12test: item #{item}"
+      #  ris_output += "TY  - BOOK\n"
+        ris_output += "CY  - #{item['ou_pp']}\n"
+        ris_output += "PY  - #{item['ou_yr']}\n"
+        ris_output += "PB  - #{item['ou_pb']}\n"
+        ris_output += "T1  - #{item['ou_title']}\n"
+        ris_output += "AU  - #{item['au']}\n"
+        ris_output += "SN  - #{item['ou_isbn']}\n"
+        # LA  - English
+        ris_output += "UR  - http://newcatalog.library.cornell.edu/catalog/#{item['bid']}\n"
+        ris_output += "C1  - #{item['callno']}\n"
+        ris_output += "ER  -\n"
+      end
+
+      Rails.logger.debug "mjc12test: CITATIONS: #{ris_output}"
     end
 
     def get_patron_info netid
@@ -127,7 +168,6 @@ module MyAccount
           # add a special "item id" for ILLiad items
           if i['system'] == 'illiad'
             i['iid'] = "illiad-#{i['TransactionNumber']}" 
-            Rails.logger.debug "mjc12test: date #{i['TransactionDate']}"
             i['requestDate'] = DateTime.parse(i['TransactionDate']).strftime("%-m/%-d/%y")
           end
             
@@ -194,7 +234,6 @@ module MyAccount
         raise unless e.message.include? 'PUBQR004'  
         items = []
       end
-      Rails.logger.debug "mjc12test: BD items #{items}"
       # Returns an array of BorrowDirect::RequestQuery::Item
       cleaned_items = []
       items.each do |item|
