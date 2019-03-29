@@ -18,7 +18,7 @@
 
 %div.tab-content
   %div#checkouts.tab-pane.fade.in.active{:role => "tabpanel"}
-    = form_tag(controller: :account, action: :index) do
+    = form_tag({controller: :account, action: :index}, :id => 'checkouts-form') do
       %table#checkouts-table.table.table-striped.table-responsive
         %thead
           %tr
@@ -46,64 +46,66 @@
                 =c['vstatus']
       = hidden_field_tag 'num_checkouts', @checkouts.length
       = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
-      = button_tag 'Export (RIS)', :type => 'button', :id => 'export-checkouts', :value => 'export-checkouts', :class => 'btn btn-danger'
+      = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-checkouts', :value => 'export-checkouts', :class => 'btn btn-danger'
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
     -if @available_requests.length == 0
       There are no available requests.
     -else
-      %table#available-requests-table.table.table-striped.table-responsive
-        %thead
-          %tr
-            %th{:scope => 'col', :class => 'myacct-col-5'}
-              = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-            %th{:scope => 'col', :class => 'myacct-col-10'} Pick up before
-            %th{:scope => 'col', :class => 'myacct-col-50'} Title
-            %th{:scope => 'col', :class => 'myacct-col-20'} Author
-            %th{:scope => 'col', :class => 'myacct-col-20'} Pick up at
-        %tbody
-          - @available_requests.each do |c|
-            %tr.item{:id => "#{c['iid']}"}
-              %td
-                = check_box_tag ''
-              %td
-                = (c['ed'] || c['DueDate']) ? (c['ed'] || c['DueDate']).to_date.strftime('%m/%d/%y') : ''
-              %td
-                = c['ou_title'] || c['tl']
-              %td
-                = c['ou_aulast'] || c['au']
-              %td
-                = c['los']
-      = button_tag 'Export (RIS)', :type => 'button', :id => 'export-requests', :class => 'btn btn-danger'
+      = form_tag({controller: :account, action: :index}, :id => 'available-requests-form') do
+        %table#available-requests-table.table.table-striped.table-responsive
+          %thead
+            %tr
+              %th{:scope => 'col', :class => 'myacct-col-5'}
+                = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+              %th{:scope => 'col', :class => 'myacct-col-10'} Pick up before
+              %th{:scope => 'col', :class => 'myacct-col-50'} Title
+              %th{:scope => 'col', :class => 'myacct-col-20'} Author
+              %th{:scope => 'col', :class => 'myacct-col-20'} Pick up at
+          %tbody
+            - @available_requests.each do |c|
+              %tr.item{:id => "#{c['iid']}"}
+                %td
+                  = check_box_tag ''
+                %td
+                  = (c['ed'] || c['DueDate']) ? (c['ed'] || c['DueDate']).to_date.strftime('%m/%d/%y') : ''
+                %td
+                  = c['ou_title'] || c['tl']
+                %td
+                  = c['ou_aulast'] || c['au']
+                %td
+                  = c['los']
+        = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-available-requests', :value => 'export-available-requests', :class => 'btn btn-danger'
   %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
     - if @pending_requests.length == 0 
       There are no pending requests.
     - else
-      %table#pending-requests-table.table.table-striped.table-responsive
-        %thead
-          %tr
-            %th{:scope => 'col', :class => 'myacct-col-5'}
-              = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-            %th{:scope => 'col', :class => 'myacct-col-10'} Request expires
-            %th{:scope => 'col', :class => 'myacct-col-50'} Title
-            %th{:scope => 'col', :class => 'myacct-col-20'} Author
-            %th{:scope => 'col', :class => 'myacct-col-20'} Type
-        %tbody
-          - @pending_requests.each do |c|
-            %tr.item{:id => "#{c['iid']}"}
-              %td
-                = check_box_tag ''
-              %td
-                - pendingRQDueDate = c['NotWantedAfter'] || c['ed']
-                -# = Date.strptime(pendingRQDueDate, '%y-%m-%d').strftime('%m/%d/%y')
-                = pendingRQDueDate
-              %td
-                = c['ou_title'] || c['tl']
-              %td
-                = c['ou_aulast'] || c['au']
-              %td
-                = request_types[c['ttype'] || c['system']]
-      = button_tag 'Cancel request(s)', :type => 'button', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
-      = button_tag 'Export (RIS)', :type => 'button', :id => 'export-requests', :value => 'export-requests', :class => 'btn btn-danger'
+      = form_tag({controller: :account, action: :index}, :id => 'pending-requests-form') do
+        %table#pending-requests-table.table.table-striped.table-responsive
+          %thead
+            %tr
+              %th{:scope => 'col', :class => 'myacct-col-5'}
+                = check_box_tag 'select-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+              %th{:scope => 'col', :class => 'myacct-col-10'} Request expires
+              %th{:scope => 'col', :class => 'myacct-col-50'} Title
+              %th{:scope => 'col', :class => 'myacct-col-20'} Author
+              %th{:scope => 'col', :class => 'myacct-col-20'} Type
+          %tbody
+            - @pending_requests.each do |c|
+              %tr.item{:id => "#{c['iid']}"}
+                %td
+                  = check_box_tag ''
+                %td
+                  - pendingRQDueDate = c['NotWantedAfter'] || c['ed']
+                  -# = Date.strptime(pendingRQDueDate, '%y-%m-%d').strftime('%m/%d/%y')
+                  = pendingRQDueDate
+                %td
+                  = c['ou_title'] || c['tl']
+                %td
+                  = c['ou_aulast'] || c['au']
+                %td
+                  = request_types[c['ttype'] || c['system']]
+        = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
+        = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-pending-requests', :value => 'export-pending-requests', :class => 'btn btn-danger'
   %div#fines.tab-pane.fade{:role => "tabpanel"}
     - if @fines.length == 0
       %p
