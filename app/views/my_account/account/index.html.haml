@@ -74,7 +74,7 @@
                 %td
                   = c['ou_aulast'] || c['au']
                 %td
-                  = c['los']
+                  = c['lo']
         = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-available-requests', :value => 'export-available-requests', :class => 'btn btn-danger'
   %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
     - if @pending_requests.length == 0 

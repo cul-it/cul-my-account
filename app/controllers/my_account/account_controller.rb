@@ -28,13 +28,12 @@ module MyAccount
       elsif params['button'] == 'cancel'
         Rails.logger.debug "mjc12test: Going into cancel"
         items_to_cancel = params.select { |param| param.match(/select\-.+/) }
-        Rails.logger.debug "mjc12test: items #{}"
         cancel items_to_cancel if items_to_cancel.present?
       end
 
       # Retrieve and display account info 
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
-      @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN'}
+      @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
     end
 
     # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
@@ -76,6 +75,25 @@ module MyAccount
     def cancel items
       request_ids = ids_from_strings items
       Rails.logger.debug "mjc12test: items #{request_ids}"
+      request_ids.each do |id|
+        if id.match(/^COR/)
+          # do a Borrow Direct cancel
+          Rails.logger.debug "mjc12test: cancelling #{id} in Borrow Direct"
+        elsif id.match(/^illiad/)
+          # do an ILLiad cancel
+          Rails.logger.debug "mjc12test: cancelling #{id} in ILLiad"
+        else
+          # do a Voyager cancel
+          Rails.logger.debug "mjc12test: cancelling #{id} in Voyager"
+          http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+          # Remember that Voyager uses the '/holds/' path for both holds and recalls in order to confuse us
+          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/holds/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
+          Rails.logger.debug "mjc12test: RENEW URL: #{url}"
+        #  response = RestClient.delet(url, {})
+        #  Rails.logger.debug "mjc12test: RENEW RESPONSE #{response.body}"  
+        end
+      end
+
     end
 
     def get_patron_info netid
@@ -96,12 +114,19 @@ module MyAccount
         # in this list? But maybe check the fine-related functions below to see if we
         # need to do anything with this
         next if i['status'] == 'finef'
-        # add a special "item id" for ILLiad items
-        i['iid'] = "illiad-#{i['TransactionNumber']}" if i['system'] == 'illiad'
+
         # 'ttype' appears to be for a Voyager request - H, R, or ? for hold, recall, call slip
         if i['system'] == 'voyager' && (i['ttype'] != 'H' && i['ttype'] != 'R')
           checkouts << i
         else
+          # This is a Voyager hold or recall. Rather than tracking the item ID, we need the request
+          # id for potential cancellations.
+          # HACK: substitute request id for item id
+          # TODO: come up with a better way of doing this
+          i['iid'] = i['tid'] # not sure why 'tid' is used in the ILSAPI return - "transaction ID"?
+          # add a special "item id" for ILLiad items
+          i['iid'] = "illiad-#{i['TransactionNumber']}" if i['system'] == 'illiad'
+
           if i['status'] == 'waiting'
             available_requests << i
           else
