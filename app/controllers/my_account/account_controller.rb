@@ -18,7 +18,6 @@ module MyAccount
       netid = 'mjc12'
       ###############
       @patron = get_patron_info netid
-      @patron['status'] = 'blocked'
 
       # Take care of any requested actions first based on query params
       if params['button'] == 'renew'
@@ -65,17 +64,24 @@ module MyAccount
         end
 
         # Invoke Voyager APIs to do the actual renewals
-        # item_ids.each do |id|
-        #   http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-        #   url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
-        #   response = RestClient.post(url, {})
-        # end
+        errors = false
+        item_ids.each do |id|
+          http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
+          response = RestClient.post(url, {})
+          xml = XmlSimple.xml_in response.body
+          if xml && xml['reply-code'][0] != 0
+            flash[:error] = "The item could not be renewed. " + xml['reply-text'][0]
+            errors = true
+          end
+        end
 
-        if item_ids.count == 1
+        if item_ids.count == 1 && errors == false
           flash[:notice] = 'This item has been renewed'
-        elsif item_ids.count > 2
+        elsif item_ids.count > 2 && errors == false
           flash[:notice] = "#{item_ids.count} items have been renewed"
         end
+
       end
     end
 
@@ -107,9 +113,9 @@ module MyAccount
         end
       end
 
-      if item_ids.count == 1
+      if request_ids.count == 1
         flash[:notice] = 'Your request has been cancelled'
-      elsif item_ids.count > 1
+      elsif request_ids.count > 1
         flash[:notice] = 'Your requests have been cancelled'
       end
 
