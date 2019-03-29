@@ -125,8 +125,12 @@ module MyAccount
           # TODO: come up with a better way of doing this
           i['iid'] = i['tid'] # not sure why 'tid' is used in the ILSAPI return - "transaction ID"?
           # add a special "item id" for ILLiad items
-          i['iid'] = "illiad-#{i['TransactionNumber']}" if i['system'] == 'illiad'
-
+          if i['system'] == 'illiad'
+            i['iid'] = "illiad-#{i['TransactionNumber']}" 
+            Rails.logger.debug "mjc12test: date #{i['TransactionDate']}"
+            i['requestDate'] = DateTime.parse(i['TransactionDate']).strftime("%-m/%-d/%y")
+          end
+            
           if i['status'] == 'waiting'
             available_requests << i
           else

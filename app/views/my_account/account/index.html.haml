@@ -86,7 +86,7 @@
             %tr
               %th{:scope => 'col', :class => 'myacct-col-5'}
                 = check_box_tag 'toggle-all-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-              %th{:scope => 'col', :class => 'myacct-col-10'} Request expires
+              %th{:scope => 'col', :class => 'myacct-col-10'} Date requested
               %th{:scope => 'col', :class => 'myacct-col-50'} Title
               %th{:scope => 'col', :class => 'myacct-col-20'} Author
               %th{:scope => 'col', :class => 'myacct-col-20'} Type
@@ -97,9 +97,7 @@
                   = label_tag "select-#{c['iid']}", ''
                   = check_box_tag "select-#{c['iid']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }  
                 %td
-                  - pendingRQDueDate = c['NotWantedAfter'] || c['ed']
-                  -# = Date.strptime(pendingRQDueDate, '%y-%m-%d').strftime('%m/%d/%y')
-                  = pendingRQDueDate
+                  = c['requestDate']
                 %td
                   = c['ou_title'] || c['tl']
                 %td
