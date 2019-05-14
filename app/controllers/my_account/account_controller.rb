@@ -16,8 +16,8 @@ module MyAccount
 
     def authenticate_user
       session[:cuwebauth_return_path] = myaccount_path
-      redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-      #index
+      #redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      index
     end
 
     def index
@@ -130,8 +130,10 @@ module MyAccount
       ris_output = ''
       item_ids.each do |id|
         item = @checkouts.detect { |i| i['iid'] == id }
-        Rails.logger.debug "mjc12test: item #{item}"
-      #  ris_output += "TY  - BOOK\n"
+        # TODO: the TY field may need to be made dynamic to account for different material types -
+        # see https://en.wikipedia.org/wiki/RIS_(file_format). But currently the item record passed in
+        # does not indicate type.
+        ris_output += "TY  - BOOK\n"
         ris_output += "CY  - #{item['ou_pp']}\n"
         ris_output += "PY  - #{item['ou_yr']}\n"
         ris_output += "PB  - #{item['ou_pb']}\n"
@@ -140,11 +142,11 @@ module MyAccount
         ris_output += "SN  - #{item['ou_isbn']}\n"
         # LA  - English
         ris_output += "UR  - http://newcatalog.library.cornell.edu/catalog/#{item['bid']}\n"
-        ris_output += "C1  - #{item['callno']}\n"
+        ris_output += "CN  - #{item['callno']}\n"
         ris_output += "ER  -\n"
       end
 
-      Rails.logger.debug "mjc12test: CITATIONS: #{ris_output}"
+      send_data ris_output, filename: 'citation.ris', type: 'text/ris'
     end
 
     def get_patron_info netid
@@ -257,7 +259,7 @@ module MyAccount
     def user
       netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
       ############
-      #netid = 'mjc12'
+      netid = 'mjc12'
       ############
       netid.sub!('@CORNELL.EDU', '') unless netid.nil?
       netid.sub!('@cornell.edu', '') unless netid.nil?
