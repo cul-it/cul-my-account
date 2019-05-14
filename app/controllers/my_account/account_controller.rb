@@ -8,16 +8,21 @@ module MyAccount
 
   class AccountController < ApplicationController
     before_filter :heading
+    before_action :authenticate_user
 
     def heading
       @heading='My Account'
     end
 
+    def authenticate_user
+      session[:cuwebauth_return_path] = myaccount_path
+      #redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      Rails.logger.debug "mjc12test: authenticating #{}"
+      index
+    end
+
     def index
-      ###############
-      netid = 'mjc12'
-      ###############
-      @patron = get_patron_info netid
+      @patron = get_patron_info user
 
       # Take care of any requested actions first based on query params
       if params['button'] == 'renew'
@@ -31,7 +36,7 @@ module MyAccount
       end
 
       # Retrieve and display account info 
-      @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff netid
+      @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
 
       # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
@@ -248,6 +253,17 @@ module MyAccount
       end
       cleaned_items
 
+    end
+
+    def user
+      netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      ############
+      netid = 'mjc12'
+      ############
+      netid.sub!('@CORNELL.EDU', '') unless netid.nil?
+      netid.sub!('@cornell.edu', '') unless netid.nil?
+
+      netid
     end
 
   end
