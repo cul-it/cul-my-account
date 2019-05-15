@@ -243,7 +243,11 @@ module MyAccount
         # (why should that cause an exception??). We don't want to crash and burn just because
         # the user doesn't have any BD requests in the system. But if it's anything else,
         # raise it again -- that indicates a real problem.
-        raise unless e.message.include? 'PUBQR004'  
+        if e.message.include? 'PUBAN003'
+          Rails.logger.error "MyAccount error: user could not be authenticated in Borrow Direct"
+        else
+          raise unless e.message.include? 'PUBQR004'
+        end  
         items = []
       end
       # Returns an array of BorrowDirect::RequestQuery::Item
@@ -259,7 +263,7 @@ module MyAccount
     def user
       netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
       ############
-      netid = 'mjc12'
+      netid = 'fl223'
       ############
       netid.sub!('@CORNELL.EDU', '') unless netid.nil?
       netid.sub!('@cornell.edu', '') unless netid.nil?
