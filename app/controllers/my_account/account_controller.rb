@@ -15,9 +15,12 @@ module MyAccount
     end
 
     def authenticate_user
-      session[:cuwebauth_return_path] = myaccount_path
-      redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-      #index
+      if user.present?
+        index
+      else
+        session[:cuwebauth_return_path] = myaccount_path
+        redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+      end
     end
 
     def index
