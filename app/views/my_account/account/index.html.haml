@@ -2,7 +2,7 @@
 = javascript_include_tag 'my_account/account'
 
 - request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Interlibrary Loan', 'bd' => 'Borrow Direct'}
-%h3 
+%h2 
   Account information for 
   = "#{@patron['first_name']} #{@patron['last_name']}"
 
@@ -57,6 +57,8 @@
             %tr
               %th{:scope => 'col', :class => 'myacct-col-5'}
                 = check_box_tag 'toggle-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+                %span.sr-only
+                  Select all
               %th{:scope => 'col', :class => 'myacct-col-10'} Pick up before
               %th{:scope => 'col', :class => 'myacct-col-50'} Title
               %th{:scope => 'col', :class => 'myacct-col-20'} Author
@@ -86,6 +88,8 @@
             %tr
               %th{:scope => 'col', :class => 'myacct-col-5'}
                 = check_box_tag 'toggle-all-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+                %span.sr-only
+                  Select all
               %th{:scope => 'col', :class => 'myacct-col-10'} Date requested
               %th{:scope => 'col', :class => 'myacct-col-50'} Title
               %th{:scope => 'col', :class => 'myacct-col-20'} Author
