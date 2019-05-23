@@ -49,7 +49,8 @@
       = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-checkouts', :value => 'export-checkouts', :class => 'btn btn-danger'
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
     -if @available_requests.length == 0
-      There are no available requests.
+      %p
+        There are no available requests.
     -else
       = form_tag({controller: :account, action: :index}, :id => 'available-requests-form') do
         %table#available-requests-table.table.table-striped.table-responsive
@@ -80,7 +81,8 @@
         = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-available-requests', :value => 'export-available-requests', :class => 'btn btn-danger'
   %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
     - if @pending_requests.length == 0 
-      There are no pending requests.
+      %p
+        There are no pending requests.
     - else
       = form_tag({controller: :account, action: :index}, :id => 'pending-requests-form') do
         %table#pending-requests-table.table.table-striped.table-responsive
