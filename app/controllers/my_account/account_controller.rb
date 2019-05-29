@@ -20,6 +20,7 @@ module MyAccount
       else
         session[:cuwebauth_return_path] = myaccount_path
         redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+        #index
       end
     end
 
@@ -30,6 +31,7 @@ module MyAccount
       if params['button'] == 'renew'
         Rails.logger.debug "mjc12test: Going into renew"
         items_to_renew = params.select { |param| param.match(/select\-.+/) }
+        params['button'] = nil
         renew(items_to_renew) if items_to_renew.present?
       elsif params['button'] == 'cancel'
         Rails.logger.debug "mjc12test: Going into cancel"
@@ -77,7 +79,8 @@ module MyAccount
           url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
           response = RestClient.post(url, {})
           xml = XmlSimple.xml_in response.body
-          if xml && xml['reply-code'][0] != 0
+            Rails.logger.debug "mjc12test: response #{xml}"
+          if xml && xml['reply-code'][0] != '0'
             flash[:error] = "The item could not be renewed. " + xml['reply-text'][0]
             errors = true
           end
