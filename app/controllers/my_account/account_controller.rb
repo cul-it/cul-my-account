@@ -42,6 +42,7 @@ module MyAccount
       # Retrieve and display account info 
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
+      @checkouts.sort_by! { |c| c['od'] }   # sort by due date
 
       # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
       if params['button'] == 'export-checkouts'
@@ -58,6 +59,7 @@ module MyAccount
     # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
     def renew items
 
+      Rails.logger.debug "mjc12test: Going into renew with patron info: #{@patron}"
       if @patron['status'] != 'Active'
         flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
       else
@@ -77,11 +79,13 @@ module MyAccount
         item_ids.each do |id|
           http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
           url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
+          Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
           response = RestClient.post(url, {})
           xml = XmlSimple.xml_in response.body
             Rails.logger.debug "mjc12test: response #{xml}"
           if xml && xml['reply-code'][0] != '0'
             flash[:error] = "The item could not be renewed. " + xml['reply-text'][0]
+            Rails.logger.error "mjc12test: couldn't renew item. XML returned: #{xml}"
             errors = true
           end
         end
@@ -178,7 +182,7 @@ module MyAccount
         if i['system'] == 'voyager' && (i['ttype'] != 'H' && i['ttype'] != 'R')
           checkouts << i
         else
-          # This is a Voyager hold or recall. Rather than tracking the item ID, we need the request
+          # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
           # id for potential cancellations.
           # HACK: substitute request id for item id
           # TODO: come up with a better way of doing this
@@ -191,6 +195,9 @@ module MyAccount
             
           if i['status'] == 'waiting'
             available_requests << i
+          elsif i['status'] == 'chrged'
+            i['status'] = 'Charged'
+            checkouts << i
           else
             pending_requests << i
           end
