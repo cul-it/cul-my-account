@@ -1,0 +1,24 @@
+- if @fines.length == 0
+  %p
+    You have no fines or fees.
+- else
+  %table#pending-requests-table.table.table-striped.table-responsive
+    %thead
+      %tr
+        %th{:scope => 'col', :class => 'myacct-col-10'} Incurred on
+        %th{:scope => 'col', :class => 'myacct-col-50'} Title
+        %th{:scope => 'col', :class => 'myacct-col-20'} Fine type
+        %th{:scope => 'col', :class => 'myacct-col-20'} Amount
+    %tbody
+      - @fines.each do |f|
+        %tr
+          %td
+            = f['fineDate'][0].to_date.strftime('%-m/%-d/%y')
+          %td
+            = f['itemTitle'][0]
+          %td
+            = f['fineType'][0]
+          %td
+            = f['amount'][0].gsub('USD ', '$')
+%p
+= link_to "View fine rates", "https://www.library.cornell.edu/services/borrow/fines"
