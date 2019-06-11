@@ -85,7 +85,7 @@ module MyAccount
             Rails.logger.debug "mjc12test: response #{xml}"
           if xml && xml['reply-code'][0] != '0'
             flash[:error] = "The item could not be renewed. " + xml['reply-text'][0]
-            Rails.logger.error "mjc12test: couldn't renew item. XML returned: #{xml}"
+            Rails.logger.error "My Account: couldn't renew item. XML returned: #{xml}"
             errors = true
           end
         end
@@ -240,7 +240,13 @@ module MyAccount
     end
 
     def get_bd_requests(netid)
+      # Using the BD API is an expensive operation, so use the Rails session to cache the
+      # response the first time a user accesses her account
+      return session[netid + '_bd_items'] if session[netid + '_bd_items']
+      Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup #{}"
+
       barcode = patron_barcode(netid)
+
       # Set parameters for the Borrow Direct API
       BorrowDirect::Defaults.library_symbol = 'CORNELL'
       BorrowDirect::Defaults.find_item_patron_barcode = barcode
@@ -269,8 +275,8 @@ module MyAccount
         # For the final item, we add a fake item ID number (iid) for compatibility with other items in the system
         cleaned_items << { 'tl' => item.title, 'au' => '', 'system' => 'bd', 'status' => item.request_status, 'iid' => item.request_number }
       end
+      session[netid + '_bd_items'] = cleaned_items
       cleaned_items
-
     end
 
     def user
