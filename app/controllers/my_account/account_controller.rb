@@ -78,7 +78,7 @@ module MyAccount
         errors = false
         item_ids.each do |id|
           http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
+          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
           Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
           response = RestClient.post(url, {})
           xml = XmlSimple.xml_in response.body
@@ -122,7 +122,7 @@ module MyAccount
           # do a Voyager cancel
           http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
           # Remember that Voyager uses the '/holds/' path for both holds and recalls in order to confuse us
-          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/holds/#{ENV['VOYAGER_DB_ID']}%7C#{id}?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
+          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/holds/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
           response = RestClient.delete(url, {})
         end
       end
@@ -210,7 +210,7 @@ module MyAccount
     end
 
     def get_patron_fines netid
-      response = RestClient.get "#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=#{ENV['VOYAGER_DB_ID']}"
+      response = RestClient.get "#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=1@#{ENV['VOYAGER_DB']}"
       xml = XmlSimple.xml_in response.body
       fines = xml['fines'] ? xml['fines'][0]['institution'][0]['fine'] : []
       fine_detail = []
