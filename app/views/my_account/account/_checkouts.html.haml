@@ -20,6 +20,9 @@
             = c['od'].to_date.strftime('%-m/%-d/%y')
           %td 
             = link_to "#{c['ou_title'].titleize || c['tl'].titleize}", "https://newcatalog.library.cornell.edu/catalog/#{c['bid']}"
+            - if @renewable_lookup_hash[c['iid']] == 'N'
+              %br
+              This item cannot be renewed.
           %td
             =c['au']
           %td

@@ -43,6 +43,7 @@ module MyAccount
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
       @checkouts.sort_by! { |c| c['od'] }   # sort by due date
+      @renewable_lookup_hash = get_renewable_lookup user
 
       # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
       if params['button'] == 'export-checkouts'
@@ -54,6 +55,17 @@ module MyAccount
     # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
     def ids_from_strings items
       items.map { |item, value| item.match(/select\-(.+)/)[1] }
+    end
+
+    # Use one of the Voyager API to retrieve a list of checked-out items that includes a canRenew
+    # property. Use this to return a lookup hash based on item ID for later use.
+    def get_renewable_lookup patron
+      http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+      url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?patron_homedb=1@#{ENV['VOYAGER_DB']}"
+      response = RestClient.get(url)
+      xml = XmlSimple.xml_in response.body
+      loans = xml['loans'][0]['institution'][0]['loan']
+      loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
@@ -179,6 +191,8 @@ module MyAccount
         next if i['status'] == 'finef'
 
         # 'ttype' appears to be for a Voyager request - H, R, or ? for hold, recall, call slip
+        # NOTE: This can also be a BD item (or ILL?) that has been checked out (system becomes Voyager
+        # when that happens, at least for BD)
         if i['system'] == 'voyager' && (i['ttype'] != 'H' && i['ttype'] != 'R')
           checkouts << i
         else
@@ -282,7 +296,6 @@ module MyAccount
     def user
       netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
       ############
-      # netid = 'mjc12'
       ############
       netid.sub!('@CORNELL.EDU', '') unless netid.nil?
       netid.sub!('@cornell.edu', '') unless netid.nil?
