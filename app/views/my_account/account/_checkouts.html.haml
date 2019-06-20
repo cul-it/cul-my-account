@@ -21,8 +21,8 @@
           %td
             = cased_title_link c
             - if @renewable_lookup_hash[c['iid']] == 'N'
-              %br
-              This item cannot be renewed.
+              %span.label.label-default
+                This item cannot be renewed.
           %td
             =c['au']
           %td
