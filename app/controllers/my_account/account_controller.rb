@@ -26,6 +26,7 @@ module MyAccount
 
     def index
       @patron = get_patron_info user
+      @renewable_lookup_hash = get_renewable_lookup user
 
       # Take care of any requested actions first based on query params
       if params['button'] == 'renew'
@@ -43,7 +44,6 @@ module MyAccount
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
       @checkouts.sort_by! { |c| c['od'] }   # sort by due date
-      @renewable_lookup_hash = get_renewable_lookup user
 
       # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
       if params['button'] == 'export-checkouts'
@@ -65,6 +65,13 @@ module MyAccount
       response = RestClient.get(url)
       xml = XmlSimple.xml_in response.body
       loans = xml['loans'][0]['institution'][0]['loan']
+      ##############
+      # loans.each do |loan|
+      #   if (rand > 0.8)
+      #     loan['canRenew'] = 'N'
+      #   end
+      # end
+      ###############
       loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h
     end
 
@@ -75,39 +82,44 @@ module MyAccount
       if @patron['status'] != 'Active'
         flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
       else
+        error_messages = ''
         # Retrieve the list of item IDs that have been selected for renewal
         item_ids= ids_from_strings items
-        if params['num_checkouts'] && items.length == params['num_checkouts'].length
+        renewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'Y' }
+        unrenewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'N' }
+        if params['num_checkouts'] && renewable_item_ids.length == params['num_checkouts'].to_i
           renew_all
         else
-          item_ids = items.map do |item, value|
-            item.match(/select\-(\d+)/)[1]
-          end 
-          Rails.logger.debug "mjc12test: item_ids #{item_ids}"
-        end
+          Rails.logger.debug "mjc12test: renewable item_ids #{renewable_item_ids}"
+          Rails.logger.debug "mjc12test: unrenewable item_ids #{unrenewable_item_ids}"
 
-        # Invoke Voyager APIs to do the actual renewals
-        errors = false
-        item_ids.each do |id|
-          http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-          Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
-          response = RestClient.post(url, {})
-          xml = XmlSimple.xml_in response.body
-            Rails.logger.debug "mjc12test: response #{xml}"
-          if xml && xml['reply-code'][0] != '0'
-            flash[:error] = "The item could not be renewed. " + xml['reply-text'][0]
-            Rails.logger.error "My Account: couldn't renew item. XML returned: #{xml}"
-            errors = true
+          # Invoke Voyager APIs to do the actual renewals
+          errors = false
+          renewable_item_ids.each do |id|
+            http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+            url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
+            Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
+            response = RestClient.post(url, {})
+            xml = XmlSimple.xml_in response.body
+              Rails.logger.debug "mjc12test: response #{xml}"
+            if xml && xml['reply-code'][0] != '0'
+              error_messages += "Item #{id} could not be renewed due to an error: " + xml['reply-text'][0]
+              Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+              errors = true
+            end
           end
-        end
 
-        if item_ids.count == 1 && errors == false
-          flash[:notice] = 'This item has been renewed'
-        elsif item_ids.count > 2 && errors == false
-          flash[:notice] = "#{item_ids.count} items have been renewed"
+          if renewable_item_ids.count == 1 && errors == false
+            flash[:notice] = 'This item has been renewed.'
+          elsif item_ids.count > 2 && errors == false
+            flash[:notice] = "#{renewable_item_ids.count} items were renewed."
+          end
+          if unrenewable_item_ids.count > 0
+            error_messages += 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
+          end
+          flash[:error] = error_messages if error_messages.present?
         end
-
+        params.select! { |param| !param.match(/select\-.+/) }
       end
     end
 
@@ -115,7 +127,7 @@ module MyAccount
       Rails.logger.debug "mjc12test: Renewing all! #{}"
       # TODO: implement this
 
-      flash[:notice] = 'All eligible items have been renewed'
+      flash[:notice] = 'All items were renewed.'
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
@@ -140,9 +152,9 @@ module MyAccount
       end
 
       if request_ids.count == 1
-        flash[:notice] = 'Your request has been cancelled'
+        flash[:notice] = 'Your request has been cancelled.'
       elsif request_ids.count > 1
-        flash[:notice] = 'Your requests have been cancelled'
+        flash[:notice] = 'Your requests have been cancelled.'
       end
 
     end
@@ -295,8 +307,6 @@ module MyAccount
 
     def user
       netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
-      ############
-      ############
       netid.sub!('@CORNELL.EDU', '') unless netid.nil?
       netid.sub!('@cornell.edu', '') unless netid.nil?
 
