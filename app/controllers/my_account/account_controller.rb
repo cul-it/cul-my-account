@@ -124,10 +124,18 @@ module MyAccount
     end
 
     def renew_all
-      Rails.logger.debug "mjc12test: Renewing all! #{}"
-      # TODO: implement this
-
-      flash[:notice] = 'All items were renewed.'
+      Rails.logger.debug "mjc12test: Renewing all!"
+      http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+      url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?institution=1@LOCAL&patron_homedb=1@#{ENV['VOYAGER_DB']}"
+      response = RestClient.post(url, {})
+      xml = XmlSimple.xml_in response.body
+        Rails.logger.debug "mjc12test: response from renew all: #{xml}"
+      if xml && xml['reply-code'][0] != '0'
+        flash[:error] = "There was an error when trying to renew all items: " + xml['reply-text'][0]
+        Rails.logger.error "My Account: couldn't renew all items. XML returned: #{xml}"
+      else
+        flash[:notice] = 'All items were renewed.'
+      end
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
@@ -307,6 +315,9 @@ module MyAccount
 
     def user
       netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      ############
+      #netid = 'mjc12'
+      ############
       netid.sub!('@CORNELL.EDU', '') unless netid.nil?
       netid.sub!('@cornell.edu', '') unless netid.nil?
 
