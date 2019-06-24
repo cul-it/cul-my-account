@@ -19,9 +19,10 @@
           %td
             = c['od'].to_date.strftime('%-m/%-d/%y')
           %td
-            = cased_title_link c
+            %div
+              = cased_title_link c
             - if @renewable_lookup_hash[c['iid']] == 'N'
-              %span.label.label-default
+              %div.label.label-default
                 This item cannot be renewed.
           %td
             =c['au']
