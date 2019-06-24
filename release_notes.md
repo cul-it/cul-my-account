@@ -4,6 +4,7 @@
 - Removed catalog links for items that don't have a catalog record (#4)
 - Add UI indication for items that can't be renewed (#3)
 - Don't try to renew items that can't be renewed (#3)
+- implemented 'renew all' (#5)
 
 ## v1.0 beta 2
 - Added more debugging code
