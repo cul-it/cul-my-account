@@ -24,6 +24,10 @@ module MyAccount
       end
     end
 
+    def intro
+
+    end
+
     def index
       @patron = get_patron_info user
       @renewable_lookup_hash = get_renewable_lookup user
