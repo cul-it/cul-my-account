@@ -19,8 +19,11 @@ module MyAccount
         index
       else
         session[:cuwebauth_return_path] = myaccount_path
-        redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
-        #index
+        if ENV['DEBUG_USER'] && Rails.env.development?
+          index
+        else
+          redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+        end
       end
     end
 
@@ -318,12 +321,15 @@ module MyAccount
     end
 
     def user
-      netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
-      ############
-      #netid = 'mjc12'
-      ############
-      netid.sub!('@CORNELL.EDU', '') unless netid.nil?
-      netid.sub!('@cornell.edu', '') unless netid.nil?
+      netid = nil
+      if ENV['DEBUG_USER'] && Rails.env.development?
+        netid = ENV['DEBUG_USER']
+      else
+        netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+      end
+
+      netid = netid.sub('@CORNELL.EDU', '') unless netid.nil?
+      netid = netid.sub('@cornell.edu', '') unless netid.nil?
 
       netid
     end
