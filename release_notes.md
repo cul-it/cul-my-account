@@ -1,6 +1,15 @@
 # Release Notes - my-account
 
-## v1.0 beta 3 (IN PROGRESS)
+## v1.0 (IN PROGRESS)
+
+### New features
+
+### Enhancements
+- Added an easier way to switch users for debugging
+
+### Bug fixes
+
+## v1.0 beta 3
 - Removed catalog links for items that don't have a catalog record (#4)
 - Add UI indication for items that can't be renewed (#3)
 - Don't try to renew items that can't be renewed (#3)
