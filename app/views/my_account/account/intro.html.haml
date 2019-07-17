@@ -1,0 +1,24 @@
+%p Renew your books and check the status of your requests.
+.well
+  .row-fluid.clearfix
+    %h2 Cornell students, faculty, and staff
+    =link_to('Log in with your NetID', '/myaccount', {:class => 'btn btn-cul btn-large'})
+
+%h3 Interlibrary Loan
+=link_to('Renew Interlibrary Loan items','https://cornell.hosts.atlas-sys.com/nonetid/home.html')
+
+%h3 Columbia University Borrowing Privileges
+%p As a current student, staff or faculty member of Cornell University, you have the option to get a library borrowing card from Columbia University. This allows you to check out books from their collections when you visit Columbia.
+%ul
+  %li
+    =link_to('More information about Columbia Library Borrowing Privileges', 'https://www.library.cornell.edu/services/borrow/2cul')
+  %li
+    =link_to('Apply for a Columbia Library card', 'https://www.library.cornell.edu/2cul-columbia-library-patron-borrowing-application')
+
+%h3 Need assistance?
+%p 
+  Email the 
+  =link_to('Library Public Services office', 'mailto:libpublicservices@cornell.edu')
+  or 
+  =link_to('Mann Library Circulation', 'mailto:mann_circ@cornell.edu')
+  \.
