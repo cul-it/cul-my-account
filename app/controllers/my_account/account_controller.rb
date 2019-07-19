@@ -7,7 +7,7 @@ require 'xmlsimple'
 module MyAccount
 
   class AccountController < ApplicationController
-    before_filter :heading
+    before_action :heading
     before_action :authenticate_user
 
     def heading
