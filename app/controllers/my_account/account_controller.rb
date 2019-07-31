@@ -8,7 +8,7 @@ module MyAccount
 
   class AccountController < ApplicationController
     before_action :heading
-    before_action :authenticate_user
+    before_action :authenticate_user, except: [:intro]
 
     def heading
       @heading='My Account'
@@ -28,7 +28,8 @@ module MyAccount
     end
 
     def intro
-
+      # This is the "landing page" that displays general info before the user clicks the button
+      # to log in.
     end
 
     def index
