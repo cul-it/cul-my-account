@@ -71,7 +71,7 @@ module MyAccount
       url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?patron_homedb=1@#{ENV['VOYAGER_DB']}"
       response = RestClient.get(url)
       xml = XmlSimple.xml_in response.body
-      loans = xml['loans'][0]['institution'][0]['loan']
+      loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
       ##############
       # loans.each do |loan|
       #   if (rand > 0.8)
@@ -79,7 +79,7 @@ module MyAccount
       #   end
       # end
       ###############
-      loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h
+      loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h unless loans.nil?
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
