@@ -63,7 +63,7 @@ module MyAccount
 
     # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
     def ids_from_strings items
-      items.map { |item, value| item.match(/select\-(.+)/)[1] }
+      items.keys.map { |item, value| item.match(/select\-(.+)/)[1] }
     end
 
     # Use one of the Voyager API to retrieve a list of checked-out items that includes a canRenew
