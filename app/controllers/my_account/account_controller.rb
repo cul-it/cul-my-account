@@ -15,6 +15,7 @@ module MyAccount
     end
 
     def authenticate_user
+      Rails.logger.debug "mjc12test: authenticating"
       if user.present?
         index
       else
