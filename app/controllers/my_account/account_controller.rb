@@ -7,14 +7,15 @@ require 'xmlsimple'
 module MyAccount
 
   class AccountController < ApplicationController
-    before_filter :heading
-    before_action :authenticate_user
+    before_action :heading
+    before_action :authenticate_user, except: [:intro]
 
     def heading
       @heading='My Account'
     end
 
     def authenticate_user
+      Rails.logger.debug "mjc12test: authenticating"
       if user.present?
         index
       else
@@ -28,7 +29,8 @@ module MyAccount
     end
 
     def intro
-
+      # This is the "landing page" that displays general info before the user clicks the button
+      # to log in.
     end
 
     def index
@@ -61,7 +63,7 @@ module MyAccount
 
     # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
     def ids_from_strings items
-      items.map { |item, value| item.match(/select\-(.+)/)[1] }
+      items.keys.map { |item, value| item.match(/select\-(.+)/)[1] }
     end
 
     # Use one of the Voyager API to retrieve a list of checked-out items that includes a canRenew
@@ -71,7 +73,7 @@ module MyAccount
       url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?patron_homedb=1@#{ENV['VOYAGER_DB']}"
       response = RestClient.get(url)
       xml = XmlSimple.xml_in response.body
-      loans = xml['loans'][0]['institution'][0]['loan']
+      loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
       ##############
       # loans.each do |loan|
       #   if (rand > 0.8)
@@ -79,7 +81,7 @@ module MyAccount
       #   end
       # end
       ###############
-      loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h
+      loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h unless loans.nil?
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API

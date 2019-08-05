@@ -6,17 +6,17 @@
   = "#{@patron['first_name']} #{@patron['last_name']}"
 
 %ul.nav.nav-tabs{:role => "tablist"}
-  %li.active{:role => "presentation"}
+  %li.nav-item{:role => "presentation"}
     = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }
-  %li{:role => "presentation"}
-    = link_to "Ready for pickup (#{@available_requests.count})", "#available-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
-  %li{:role => "presentation"}
-    = link_to "Pending requests (#{@pending_requests.count})", "#pending-requests", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
-  %li{:role => "presentation"}
-    = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
+  %li.nav-item{:role => "presentation"}
+    = link_to "Ready for pickup (#{@available_requests.count})", "#available-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
+  %li.nav-item{:role => "presentation"}
+    = link_to "Pending requests (#{@pending_requests.count})", "#pending-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
+  %li.nav-item{:role => "presentation"}
+    = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
 
 %div.tab-content
-  %div#checkouts.tab-pane.fade.in.active{:role => "tabpanel"}
+  %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
     = render :partial => 'checkouts'
   %div#available-requests.tab-pane.fade{:role => "tabpanel"}
     = render :partial => 'available_requests'
