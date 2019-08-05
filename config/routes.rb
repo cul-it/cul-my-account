@@ -1,3 +1,4 @@
 MyAccount::Engine.routes.draw do
-  get 'myaccount' => 'account#show'
+  match '/login' => 'account#intro', via: [:get]
+  match '/' => 'account#index', via: [:get, :post], as: 'myaccount'
 end

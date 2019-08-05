@@ -17,8 +17,11 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["test/**/*"]
 
-  s.add_dependency "rails", "~> 4.2.7.1"
-  s.add_dependency "simple-xml"
+  s.add_dependency "rails", "~> 5.1"
+  s.add_dependency 'blacklight',['>= 7.0']
+  s.add_dependency "xml-simple"
+  s.add_dependency 'rest-client'
+  s.add_dependency 'borrow_direct'
 
   s.add_development_dependency "sqlite3"
 end
