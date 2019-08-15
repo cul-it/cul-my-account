@@ -3,6 +3,7 @@
 ## v1.0.1
 ### Bug fixes
 - Guard against charged items with no due date
+- Guard against empty renewable lookup hash
 
 ## v1.0
 
