@@ -1,13 +1,14 @@
 # Release Notes - my-account
 
+## v1.0.1
+### Bug fixes
+- Guard against charged items with no due date
+
 ## v1.0
 
 - Added new login page
 - Added an easier way to switch users for debugging
 - Various bug fixes
-
-### Bug fixes
-
 
 ## v1.0 beta 3
 - Removed catalog links for items that don't have a catalog record (#4)
