@@ -35,29 +35,31 @@ module MyAccount
 
     def index
       @patron = get_patron_info user
-      @renewable_lookup_hash = get_renewable_lookup user
+      if @patron.present?
+        @renewable_lookup_hash = get_renewable_lookup user
 
-      # Take care of any requested actions first based on query params
-      if params['button'] == 'renew'
-        Rails.logger.debug "mjc12test: Going into renew"
-        items_to_renew = params.select { |param| param.match(/select\-.+/) }
-        params['button'] = nil
-        renew(items_to_renew) if items_to_renew.present?
-      elsif params['button'] == 'cancel'
-        Rails.logger.debug "mjc12test: Going into cancel"
-        items_to_cancel = params.select { |param| param.match(/select\-.+/) }
-        cancel items_to_cancel if items_to_cancel.present?
-      end
+        # Take care of any requested actions first based on query params
+        if params['button'] == 'renew'
+          Rails.logger.debug "mjc12test: Going into renew"
+          items_to_renew = params.select { |param| param.match(/select\-.+/) }
+          params['button'] = nil
+          renew(items_to_renew) if items_to_renew.present?
+        elsif params['button'] == 'cancel'
+          Rails.logger.debug "mjc12test: Going into cancel"
+          items_to_cancel = params.select { |param| param.match(/select\-.+/) }
+          cancel items_to_cancel if items_to_cancel.present?
+        end
 
-      # Retrieve and display account info 
-      @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
-      @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
-      @checkouts.sort_by! { |c| c['od'] }   # sort by due date
+        # Retrieve and display account info 
+        @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
+        @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
+        @checkouts.sort! { |a,b| a['od'] && b['od'] ? a['od'] <=> b['od'] : a['od'] ? -1 : 1 }   # sort by due date
 
-      # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
-      if params['button'] == 'export-checkouts'
-        items_to_export = params.select { |param| param.match(/select\-.+/) }
-        export items_to_export if items_to_export.present?
+        # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
+        if params['button'] == 'export-checkouts'
+          items_to_export = params.select { |param| param.match(/select\-.+/) }
+          export items_to_export if items_to_export.present?
+        end
       end
     end
 
@@ -69,11 +71,15 @@ module MyAccount
     # Use one of the Voyager API to retrieve a list of checked-out items that includes a canRenew
     # property. Use this to return a lookup hash based on item ID for later use.
     def get_renewable_lookup patron
+      return nil if @patron.nil?
       http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+      Rails.logger.debug "mjc12test: patron #{@patron}"
       url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-      response = RestClient.get(url)
+      #response = RestClient.get(url)
+      response = RestClient::Request.execute(method: :get, url: url, timeout: 120)
       xml = XmlSimple.xml_in response.body
       loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
+      Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
       ##############
       # loans.each do |loan|
       #   if (rand > 0.8)
@@ -207,8 +213,15 @@ module MyAccount
     end
 
     def get_patron_stuff netid
-      response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
-      record = JSON.parse response.body
+      record = nil
+      begin 
+        response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
+        record = JSON.parse response.body
+      rescue => error
+        Rails.logger.error "MyAccount error: Could not find a patron entry for #{netid}"
+        return nil
+      end
+
       checkouts = []
       pending_requests = []
       available_requests = []
