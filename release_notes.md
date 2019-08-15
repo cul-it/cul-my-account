@@ -4,6 +4,9 @@
 ### Bug fixes
 - Guard against charged items with no due date
 - Guard against empty renewable lookup hash
+- Increase timeout of Voyager API call
+- Rescue error in patron info lookup
+- Additional nil checks
 
 ## v1.0
 
