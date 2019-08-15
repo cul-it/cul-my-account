@@ -52,7 +52,7 @@ module MyAccount
       # Retrieve and display account info 
       @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
       @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
-      @checkouts.sort_by! { |c| c['od'] }   # sort by due date
+      @checkouts.sort! { |a,b| a['od'] && b['od'] ? a['od'] <=> b['od'] : a['od'] ? -1 : 1 }   # sort by due date
 
       # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
       if params['button'] == 'export-checkouts'
