@@ -72,7 +72,8 @@ module MyAccount
       http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
       Rails.logger.debug "mjc12test: patron #{@patron}"
       url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-      response = RestClient.get(url)
+      #response = RestClient.get(url)
+      response = RestClient::Request.execute(method: :get, url: url, timeout: 120)
       xml = XmlSimple.xml_in response.body
       loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
       Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
