@@ -18,5 +18,12 @@ module MyAccount
         link_to(display_title, "https://newcatalog.library.cornell.edu/catalog/#{item['bid']}") 
     end
 
+    # Return a user-readable item status message. This will filter out the 'pahr' statuses that turn
+    # up from time to time but are inscrutable to users.
+    def status_display item
+      status = item['vstatus'] || item['status']
+      status == 'pahr' ? '' : status
+    end
+
   end
 end
