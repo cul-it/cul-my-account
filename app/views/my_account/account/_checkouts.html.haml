@@ -27,7 +27,7 @@
               %td
                 %div
                   = cased_title_link c
-                - if @renewable_lookup_hash[c['iid']] == 'N'
+                - if @renewable_lookup_hash && @renewable_lookup_hash[c['iid']] == 'N'
                   %div.badge.badge-secondary
                     This item cannot be renewed.
               %td
