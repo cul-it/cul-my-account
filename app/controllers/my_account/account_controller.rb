@@ -85,7 +85,7 @@ module MyAccount
       response = RestClient::Request.execute(method: :get, url: url, timeout: 120)
       xml = XmlSimple.xml_in response.body
       loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
-      Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
+      #Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
       ##############
       # loans.each do |loan|
       #   if (rand > 0.8)
@@ -322,6 +322,7 @@ module MyAccount
     def get_bd_requests(netid)
       # Using the BD API is an expensive operation, so use the Rails session to cache the
       # response the first time a user accesses her account
+      Rails.logger.debug "mjc12test: Checking session  #{session['mjc12_bd_items']}"
       return session[netid + '_bd_items'] if session[netid + '_bd_items']
       Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup #{}"
 
