@@ -102,7 +102,7 @@ module MyAccount
       if @patron['status'] != 'Active'
         flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
       else
-        error_messages = ''
+        error_messages = []
         # Retrieve the list of item IDs that have been selected for renewal
         item_ids= ids_from_strings items
         # if @checkouts.length <= 100 
@@ -123,28 +123,37 @@ module MyAccount
 
           # Invoke Voyager APIs to do the actual renewals
           errors = false
+          successful_renewal_count = 0
           renewable_item_ids.each do |id|
             http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
             url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
             Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
             response = RestClient.post(url, {})
             xml = XmlSimple.xml_in response.body
-              Rails.logger.debug "mjc12test: response #{xml}"
-            if xml && xml['reply-code'][0] != '0'
-              error_messages += "Item #{id} could not be renewed due to an error: " + xml['reply-text'][0]
+            Rails.logger.debug "mjc12test: response #{xml}"
+            response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0]
+            if xml && xml['reply-code'][0] != '0' 
+              error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
               Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
               errors = true
+            elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
+              error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
+              Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+              errors = true
+            else
+              successful_renewal_count += 1
             end
           end
 
-          if renewable_item_ids.count == 1 && errors == false
+          if renewable_item_ids.count == 1 && successful_renewal_count == 1 && errors == false
             flash[:notice] = 'This item has been renewed.'
-          elsif item_ids.count > 1 && errors == false
-            flash[:notice] = "#{renewable_item_ids.count} items were renewed."
+          elsif successful_renewal_count > 1
+            flash[:notice] = "#{successful_renewal_count} items were renewed."
           end
           if unrenewable_item_ids.count > 0
-            error_messages += 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
+            error_messages << 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
           end
+          error_messages = error_messages.join('<br/>').html_safe
           flash[:error] = error_messages if error_messages.present?
         end
         params.select! { |param| !param.match(/select\-.+/) }
