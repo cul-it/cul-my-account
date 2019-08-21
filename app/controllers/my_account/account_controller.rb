@@ -105,9 +105,9 @@ module MyAccount
         error_messages = []
         # Retrieve the list of item IDs that have been selected for renewal
         item_ids= ids_from_strings items
-        if @checkouts.length <= 100 
-          @renewable_lookup_hash ||= get_renewable_lookup user
-        end
+        # if @checkouts.length <= 100 
+        #   @renewable_lookup_hash ||= get_renewable_lookup user
+        # end
         if @renewable_lookup_hash.present?
           renewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'Y' }
           unrenewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'N' }
