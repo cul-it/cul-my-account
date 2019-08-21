@@ -1,5 +1,10 @@
 # Release Notes - my-account
 
+## v1.0.2
+### Bug fixes
+- Improved renewal status and error messages
+- Removed 'cannot be renewed' badges for items in large collections of charged material (fixes a timeout error)
+
 ## v1.0.1
 ### Bug fixes
 - Guard against charged items with no due date

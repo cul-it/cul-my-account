@@ -36,8 +36,6 @@ module MyAccount
     def index
       @patron = get_patron_info user
       if @patron.present?
-        @renewable_lookup_hash = get_renewable_lookup user
-
         # Take care of any requested actions first based on query params
         if params['button'] == 'renew'
           Rails.logger.debug "mjc12test: Going into renew"
@@ -54,6 +52,13 @@ module MyAccount
         @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
         @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
         @checkouts.sort! { |a,b| a['od'] && b['od'] ? a['od'] <=> b['od'] : a['od'] ? -1 : 1 }   # sort by due date
+        # HACK: the API call that is used to build the hash of renewable (yes/no) status for checked-out
+        # items times out with a nasty server error if the user has too many charged items. For now, arbitrarily
+        # do this only for small collections of items. (This means that users with large collections won't see the
+        # warning labels that certain items can't be renewed ... but the renewal process itself should still work.)
+        if @checkouts.length <= 100
+          @renewable_lookup_hash = get_renewable_lookup user
+        end
 
         # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
         if params['button'] == 'export-checkouts'
@@ -69,7 +74,8 @@ module MyAccount
     end
 
     # Use one of the Voyager API to retrieve a list of checked-out items that includes a canRenew
-    # property. Use this to return a lookup hash based on item ID for later use.
+    # property. Use this to return a lookup hash based on item ID for later use. Unfortunately, if a patron
+    # has hundreds of items checked out, this can time out on the Voyager side.  
     def get_renewable_lookup patron
       return nil if @patron.nil?
       http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
@@ -79,7 +85,7 @@ module MyAccount
       response = RestClient::Request.execute(method: :get, url: url, timeout: 120)
       xml = XmlSimple.xml_in response.body
       loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
-      Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
+      #Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
       ##############
       # loans.each do |loan|
       #   if (rand > 0.8)
@@ -92,16 +98,23 @@ module MyAccount
 
     # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
     def renew items
-
       Rails.logger.debug "mjc12test: Going into renew with patron info: #{@patron}"
       if @patron['status'] != 'Active'
         flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
       else
-        error_messages = ''
+        error_messages = []
         # Retrieve the list of item IDs that have been selected for renewal
         item_ids= ids_from_strings items
-        renewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'Y' }
-        unrenewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'N' }
+        # if @checkouts.length <= 100 
+        #   @renewable_lookup_hash ||= get_renewable_lookup user
+        # end
+        if @renewable_lookup_hash.present?
+          renewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'Y' }
+          unrenewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'N' }
+        else
+          renewable_item_ids = item_ids
+          unrenewable_item_ids = []
+        end
         if params['num_checkouts'] && renewable_item_ids.length == params['num_checkouts'].to_i
           renew_all
         else
@@ -110,28 +123,37 @@ module MyAccount
 
           # Invoke Voyager APIs to do the actual renewals
           errors = false
+          successful_renewal_count = 0
           renewable_item_ids.each do |id|
             http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
             url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
             Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
             response = RestClient.post(url, {})
             xml = XmlSimple.xml_in response.body
-              Rails.logger.debug "mjc12test: response #{xml}"
-            if xml && xml['reply-code'][0] != '0'
-              error_messages += "Item #{id} could not be renewed due to an error: " + xml['reply-text'][0]
+            Rails.logger.debug "mjc12test: response #{xml}"
+            response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0]
+            if xml && xml['reply-code'][0] != '0' 
+              error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
               Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
               errors = true
+            elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
+              error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
+              Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+              errors = true
+            else
+              successful_renewal_count += 1
             end
           end
 
-          if renewable_item_ids.count == 1 && errors == false
+          if renewable_item_ids.count == 1 && successful_renewal_count == 1 && errors == false
             flash[:notice] = 'This item has been renewed.'
-          elsif item_ids.count > 2 && errors == false
-            flash[:notice] = "#{renewable_item_ids.count} items were renewed."
+          elsif successful_renewal_count > 1
+            flash[:notice] = "#{successful_renewal_count} items were renewed."
           end
           if unrenewable_item_ids.count > 0
-            error_messages += 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
+            error_messages << 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
           end
+          error_messages = error_messages.join('<br/>').html_safe
           flash[:error] = error_messages if error_messages.present?
         end
         params.select! { |param| !param.match(/select\-.+/) }
@@ -212,6 +234,8 @@ module MyAccount
       record[netid]
     end
 
+    # This is the main lookup function. It retrieves a list of a user's requests and charged
+    # items using the ilsapi CGI script.
     def get_patron_stuff netid
       record = nil
       begin 
@@ -298,6 +322,7 @@ module MyAccount
     def get_bd_requests(netid)
       # Using the BD API is an expensive operation, so use the Rails session to cache the
       # response the first time a user accesses her account
+      Rails.logger.debug "mjc12test: Checking session  #{session['mjc12_bd_items']}"
       return session[netid + '_bd_items'] if session[netid + '_bd_items']
       Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup #{}"
 
