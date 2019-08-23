@@ -11,9 +11,9 @@ mount MyAccount::Engine => '/myaccount', :as => 'my_account'
 ```
 2. In the root-level `.env` file, add these key-value pairs:
 ```
-MY_ACCOUNT_PATRONINFO_URL=https://voyager-tools.library.cornell.edu/patron_info_service/patron_info_service.cgi/netid
-MY_ACCOUNT_ILSAPI_URL=https://voy-api.library.cornell.edu/cgi-bin/ilsapiE.cgi
-MY_ACCOUNT_VOYAGER_URL=https://catalog.library.cornell.edu/vxws
+MY_ACCOUNT_PATRONINFO_URL=<netid/patron info lookup URL>
+MY_ACCOUNT_ILSAPI_URL=<ilsapi script URL>
+MY_ACCOUNT_VOYAGER_URL=<Voyager web services URL>
 ```
 
 After restarting the Blacklight server, MyAccount should be accessible at `/myaccount`.
