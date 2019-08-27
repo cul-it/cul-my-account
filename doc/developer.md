@@ -14,7 +14,10 @@ mount MyAccount::Engine => '/myaccount', :as => 'my_account'
 MY_ACCOUNT_PATRONINFO_URL=<netid/patron info lookup URL>
 MY_ACCOUNT_ILSAPI_URL=<ilsapi script URL>
 MY_ACCOUNT_VOYAGER_URL=<Voyager web services URL>
+BORROW_DIRECT_PROD_API_KEY=<API key for Borrow Direct web services>
+BORROW_DIRECT_TIMEOUT=<Borrow Direct timeout in seconds>
 ```
+Note that the Borrow Direct ENV keys are also used by the Requests engine.
 
 After restarting the Blacklight server, MyAccount should be accessible at `/myaccount`.
 
@@ -36,7 +39,7 @@ Patron info is derived from the `patron_info_service.cgi` service (part of `voya
 ```
 This information is essential for the rest of the system, because `barcode` and `patron_id` are needed to perform lookups in the other external services. There have been a few reports lately of patrons being unable to access their accounts that I’ve traced to the `patron_info_service` returning a blank or incomplete response object. I _think_ (though I’m not sure) that this is because there is some gap between the time that new patron records are created for Voyager circulation and the time that they become available to the netid lookup service.
 
-### Charged items
+### Charged items and ILL requests
 The central item lookup service is the `ilsapi` CGI service (currently `ilsapiE.cgi`, but there have been several versions). This is where things get a bit tricky. The `ilsapi` service takes a netid  and returns a JSON object primarily containing an array of all the items the user has checked out from Voyager (**which includes charged items from Borrow Direct and ILL**) and all his/her pending requests from ILLiad (but, confusingly, not from Borrow Direct!). The record for an individual item looks something like this if it’s an item from Voyager:
 ```json
     {
@@ -69,3 +72,24 @@ The central item lookup service is the `ilsapi` CGI service (currently `ilsapiE.
 
 ```
 However, if it’s an ILL or BD item, it will include different keys and values. The difficulty is in determining (a) the origin of a particular item (Voyager, ILL, or BD) and (b) the status of a given request.  
+
+### Borrow Direct requests
+Borrow Direct _requests_ are brought in separately via the BD API (within `my_account_controller`, using the `borrow_direct` gem). Once the user has claimed and checked out an available BD request, it will appear in the output from the `ilsapi` lookup.
+
+## Authentication and debugging without SAML
+By default, MA uses SAML authentication to authenticate a user and retrieve a netid (see the `authenticate_user` and `user` methods in `my_account_controller.rb`). Since SAML is a little tricky to get up and running on an individual development machine, there is a workaround. If Blacklight/Rails is running in `development` mode, a special key can be added to the Blacklight `.env` file: `DEBUG_USER=<netid>`. (This has no effect if Rails is running in `production` mode, to prevent bad things from happening. This value can also be used to debug the Requests engine.) In that case, SAML authentication is bypassed and MA loads with the account information for the specified netid.
+
+## Main event loop
+The primary path/method in `my_account_controller` is `index`: this is the default content that is loaded when a user logs in. (The `/myaccount/login` path and `intro` method are used to display a “landing page” for the user, with general information about MA and a login button.)
+
+When a user logs in and hits the `index` method, the following happens:
+1. Patron info (netid, barcode, etc) is loaded into `@patron`.
+2. The `params` object is checked to see if this page load is due to a `Renew` or `Cancel` button click. If so, the user is routed to the appropriate method for item renewal or request cancellation.
+3. The `get_patron_stuff` method is called. This queries the `ilsapi` web service to retrieve a list of the user’s items and then tries to make sense of them, separating them into Voyager or other charged items, available requests, and pending requests. Then the Borrow Direct service and an additional Voyager web service are called to retrieve information about any BD requests and fines or fees the user may have.
+4. If possible, the `@renewable_lookup_hash` object is built. This builds a lookup dictionary of item IDs and their renewability status in Voyager: `Y` or `N`, indicating whether the item can be renewed. This is used to indicate unrenewable items in the UI and to make the renewal process more efficient. Unfortunately, the Voyager web service that this process uses has a tendency to time out and return a nasty 500 error if the user has a large number of items checked out (on the order of a few hundred). For now, therefore, `@renewable_lookup_hash` is only populated if the number of charged items in question is \<= 100.
+5. Finally, if the citation export button has been clicked, the `export` method is called to handle that. Otherwise, the view template is loaded to display the user’s list of items.
+
+## Common problems
+### Missing patron info
+### Voyager web services timeout
+### Determining the origin and status of a request
