@@ -1,6 +1,6 @@
 # MyAccount Developer Documentation
 
-The MyAccount system reproduces the functionality from the Drupal-based MyAccount implementation that was previously in use. The current system was put into production during July/August 2019. This document is intended to help developers understand how it all works and too debug common issues.
+The MyAccount system reproduces the functionality from the Drupal-based MyAccount implementation that was previously in use. The current system was put into production during July/August 2019. This document is intended to help developers understand how it all works and to debug common issues.
 
 ## Installation
 
@@ -37,7 +37,7 @@ Patron info is derived from the `patron_info_service.cgi` service (part of `voya
 ```json
 {"mjc12":{"status":"Active","barcode":"<user barcode>","empl_id":"<employee ID>","netid":"<netid>","last_name":"Connolly","group":"STAF","patron_id":"<Voyager patron ID>","first_name":"Matt"}}
 ```
-This information is essential for the rest of the system, because `barcode` and `patron_id` are needed to perform lookups in the other external services. There have been a few reports lately of patrons being unable to access their accounts that I’ve traced to the `patron_info_service` returning a blank or incomplete response object. I _think_ (though I’m not sure) that this is because there is some gap between the time that new patron records are created for Voyager circulation and the time that they become available to the netid lookup service.
+This information is essential for the rest of the system, because `barcode` and `patron_id` are needed to perform lookups in the other external services. 
 
 ### Charged items and ILL requests
 The central item lookup service is the `ilsapi` CGI service (currently `ilsapiE.cgi`, but there have been several versions). This is where things get a bit tricky. The `ilsapi` service takes a netid  and returns a JSON object primarily containing an array of all the items the user has checked out from Voyager (**which includes charged items from Borrow Direct and ILL**) and all his/her pending requests from ILLiad (but, confusingly, not from Borrow Direct!). The record for an individual item looks something like this if it’s an item from Voyager:
@@ -91,5 +91,14 @@ When a user logs in and hits the `index` method, the following happens:
 
 ## Common problems
 ### Missing patron info
+There have been a few reports lately of patrons being unable to access their accounts that I’ve traced to the `patron_info_service` returning a blank or incomplete response object. I _think_ (though I’m not sure) that this is because there is some gap between the time that new patron records are created for Voyager circulation and the time that they become available to the netid lookup service. If we can’t determine a patron’s netid and barcode, then we can’t look up the details for his/her account. I’m not sure if the `patron_info_service.cgi` can be modified to remedy this.
+
 ### Voyager web services timeout
+It turns out that some patrons have _a lot_ of items checked out! When the number of charged items runs into the thousands, it can cause problems with the Voyager web services (and the `ilsapi` script too, since it does its own Voyager lookups). In extreme cases, the `ilsapi` request can time out, causing an error and preventing the account view from loading properly. 
+
+And, as mentioned above, there is a separate Voyager web service that is needed to provide an item’s renewability status. That service is much more prone to timeouts, so I’m trying not to use it now except for smaller accounts with a reasonable number of charged items.
+
 ### Determining the origin and status of a request
+Voyager and ILLiad requests are retrieved through the `ilsapi` service; Borrow Direct through its own APIs. It’s easy to distinguish BD requests from the others, then (while they’re pending, at least; once an item is charged, it appears in the `ilsapi` list as well). But separating Voyager and ILLiad requests is more of a challenge.
+
+Relevant fields in an `ilsapi` item record include `system`, `status` (but also `vstatus`), and `ttype`. `system` can be `illiad` or `voyager`. `ttype` can be `H` or `R` for hold or recall (or possibly something else for L2L?). `status` is the most ambiguous value; depending on where a request is in its process, status might appear as `waiting`, `chrged`, `finef` (for duplicate records showing fines), `ON_LOAN`,  or the mysterious `pahr`, which seems to have an ambiguous meaning. The `get_patron_stuff` method in `account_controller.rb` attempts to sort items into their proper categories based on these values.
