@@ -12,7 +12,7 @@ module MyAccount
       # indistinguishable from regular records.) The one property that seems to offer
       # guidance is the 'lo' (location) field, which is unpopulated for BD/ILL records
       # but indicates an actual library location for Voyager records.
-      item['lo'] == '' ?
+      item['lo'] == '' || item['TransactionNumber'] ?
         display_title :
         link_to(display_title, "https://newcatalog.library.cornell.edu/catalog/#{item['bid']}") 
     end
@@ -24,5 +24,12 @@ module MyAccount
       status == 'pahr' ? '' : status
     end
 
+    # Return a 'system' data tag for a checkout. Can be Voyager or Illiad for now. Note that
+    # this is *not* the same as the 'system' field in the item metadata, which apparently always reads
+    # 'voyager' regardless when an item is checked out. Instead, this goes on the assumption that
+    # a TransactionNumber indicates an Illiad loan.
+    def system_tag item
+      item['TransactionNumber'].present? ? 'illiad' : 'voyager'
+    end
   end
 end
