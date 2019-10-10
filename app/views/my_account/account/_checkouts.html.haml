@@ -18,7 +18,7 @@
             %th{:scope => 'col', :class => 'myacct-col-20'} Status
         %tbody
           - @checkouts.each do |c|
-            %tr.item{:id => "#{c['iid']}"}
+            %tr.item{:id => "#{c['iid']}", :data => {:system => system_tag(c)}}
               %td
                 = label_tag "select-#{c['iid']}", 'Select', { :class => 'sr-only' }
                 = check_box_tag "select-#{c['iid']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }

@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.0.3
+- Fixed a bug preventing renewals through ILLiad
+
 ## v1.0.2
 ### Bug fixes
 - Improved renewal status and error messages
