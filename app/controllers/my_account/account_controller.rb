@@ -70,6 +70,7 @@ module MyAccount
 
     # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
     def ids_from_strings items
+      Rails.logger.debug "mjc12test: items: #{items}"
       items.keys.map { |item, value| item.match(/select\-(.+)/)[1] }
     end
 
@@ -105,6 +106,7 @@ module MyAccount
         error_messages = []
         # Retrieve the list of item IDs that have been selected for renewal
         item_ids= ids_from_strings items
+
         # if @checkouts.length <= 100 
         #   @renewable_lookup_hash ||= get_renewable_lookup user
         # end
@@ -125,23 +127,38 @@ module MyAccount
           errors = false
           successful_renewal_count = 0
           renewable_item_ids.each do |id|
-            http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-            url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-            Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
-            response = RestClient.post(url, {})
-            xml = XmlSimple.xml_in response.body
-            Rails.logger.debug "mjc12test: response #{xml}"
-            response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0]
-            if xml && xml['reply-code'][0] != '0' 
-              error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
-              Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
-              errors = true
-            elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
-              error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
-              Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
-              errors = true
+            # Check for ILLiad item
+            if id.start_with? 'illiad'
+              transaction_id = id.split(/-/)[1]
+              response = RestClient.get "https://ill-access.library.cornell.edu/illrenew.cgi?netid=#{@patron['netid']}&iid=#{transaction_id}"
+              response = JSON.parse response.body
+              Rails.logger.debug "mjc12test: got renew response: #{response['error']}"
+              if response['error'].present?
+                error_messages << "Could not renew item in ILLiad"
+                Rails.logger.error "My Account: Couldn't renew ILLiad item with transaction ID #{transaction_id}. Request returned error: #{response['error']}"
+                errors = true
+              else
+                successful_renewal_count += 1
+              end
             else
-              successful_renewal_count += 1
+              http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+              url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
+              Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
+              response = RestClient.post(url, {})
+              xml = XmlSimple.xml_in response.body
+              Rails.logger.debug "mjc12test: response #{xml}"
+              response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0]
+              if xml && xml['reply-code'][0] != '0' 
+                error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
+                Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+                errors = true
+              elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
+                error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
+                Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+                errors = true
+              else
+                successful_renewal_count += 1
+              end
             end
           end
 
