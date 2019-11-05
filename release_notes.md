@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.0.4
+- Added nil check for @bd_requests in the index method
+
 ## v1.0.3
 - Fixed a bug preventing renewals through ILLiad
 
