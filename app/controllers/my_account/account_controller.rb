@@ -260,7 +260,8 @@ module MyAccount
         record = JSON.parse response.body
       rescue => error
         Rails.logger.error "MyAccount error: Could not find a patron entry for #{netid}"
-        return nil
+        msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
+        redirect_to root_path, :notice => msg.html_safe
       end
 
       checkouts = []
