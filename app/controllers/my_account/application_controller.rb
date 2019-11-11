@@ -1,6 +1,6 @@
 module MyAccount
   class ApplicationController < ActionController::Base
-    protect_from_forgery prepend: true, with: :exception
+    protect_from_forgery with: :exception
     layout 'layouts/blacklight'
   end
 end
