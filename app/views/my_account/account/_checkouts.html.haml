@@ -1,4 +1,7 @@
 - Rails.logger.debug "mjc12test: RLH #{@renewable_lookup_hash}"
+
+- request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Interlibrary Loan', 'bd' => 'Borrow Direct'}
+
 - if @checkouts.length == 0 
   %p
     You have no items checked out.
@@ -16,6 +19,7 @@
             %th{:scope => 'col', :class => 'myacct-col-50'} Title
             %th{:scope => 'col', :class => 'myacct-col-20'} Author
             %th{:scope => 'col', :class => 'myacct-col-20'} Status
+            %th{:scope => 'col', :class => 'myacct-col-20'} Type
         %tbody
           - @checkouts.each do |c|
             %tr.item{:id => "#{c['iid']}", :data => {:system => system_tag(c)}}
@@ -34,6 +38,8 @@
                 =c['au']
               %td
                 = status_display c
+	          %td
+	            = request_types[c['ttype'] || c['system']]
       = hidden_field_tag 'num_checkouts', @checkouts.length
       = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
       = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-checkouts', :value => 'export-checkouts', :class => 'btn btn-danger'
