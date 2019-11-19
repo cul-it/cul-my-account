@@ -304,6 +304,9 @@ module MyAccount
       end
       fines = get_patron_fines netid
       bd_items = get_bd_requests netid
+      Rails.logger.info("tlw72 > checkouts = " checkouts.inspect)
+      Rails.logger.info("tlw72 > pending_requests = " pending_requests.inspect)
+      Rails.logger.info("tlw72 > available_requests = " available_requests.inspect)
       [checkouts, available_requests, pending_requests, fines, bd_items]
     end
 
