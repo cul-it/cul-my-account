@@ -56,6 +56,9 @@ module MyAccount
         # items times out with a nasty server error if the user has too many charged items. For now, arbitrarily
         # do this only for small collections of items. (This means that users with large collections won't see the
         # warning labels that certain items can't be renewed ... but the renewal process itself should still work.)
+        Rails.logger.debug("tlw72 > @bd_requests = " + @bd_requests.inspect)
+        Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)
+        Rails.logger.debug("tlw72 > @pending_requests = " + @pending_requests.inspect)
         if @checkouts.length <= 100
           @renewable_lookup_hash = get_renewable_lookup user
         end
@@ -263,7 +266,6 @@ module MyAccount
         msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
         redirect_to root_path, :notice => msg.html_safe
       end
-      Rails.logger.info("tlw72 > full record = " + record.inspect)
       checkouts = []
       pending_requests = []
       available_requests = []
@@ -304,9 +306,6 @@ module MyAccount
       end
       fines = get_patron_fines netid
       bd_items = get_bd_requests netid
-      Rails.logger.info("tlw72 > checkouts = " + checkouts.inspect)
-      Rails.logger.info("tlw72 > pending_requests = " + pending_requests.inspect)
-      Rails.logger.info("tlw72 > available_requests = " + available_requests.inspect)
       [checkouts, available_requests, pending_requests, fines, bd_items]
     end
 
