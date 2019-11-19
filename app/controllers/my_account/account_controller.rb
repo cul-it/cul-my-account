@@ -263,7 +263,7 @@ module MyAccount
         msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
         redirect_to root_path, :notice => msg.html_safe
       end
-
+      Rails.logger.info("tlw72 > full record = " + record.inspect)
       checkouts = []
       pending_requests = []
       available_requests = []
@@ -304,9 +304,9 @@ module MyAccount
       end
       fines = get_patron_fines netid
       bd_items = get_bd_requests netid
-      Rails.logger.info("tlw72 > checkouts = " checkouts.inspect)
-      Rails.logger.info("tlw72 > pending_requests = " pending_requests.inspect)
-      Rails.logger.info("tlw72 > available_requests = " available_requests.inspect)
+      Rails.logger.info("tlw72 > checkouts = " + checkouts.inspect)
+      Rails.logger.info("tlw72 > pending_requests = " + pending_requests.inspect)
+      Rails.logger.info("tlw72 > available_requests = " + available_requests.inspect)
       [checkouts, available_requests, pending_requests, fines, bd_items]
     end
 
