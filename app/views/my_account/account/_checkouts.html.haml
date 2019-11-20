@@ -31,6 +31,12 @@
                 - if @renewable_lookup_hash && @renewable_lookup_hash[c['iid']] == 'N'
                   %div.badge.badge-secondary
                     This item cannot be renewed.
+                - if c['is_bd']
+                  %div.badge.badge-primary
+                    Borrow Direct
+                - if c['is_ill']
+                  %div.badge.badge-success
+                    Interlibrary Loan
               %td
                 =c['au']
               %td
