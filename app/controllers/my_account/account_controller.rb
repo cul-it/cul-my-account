@@ -50,7 +50,7 @@ module MyAccount
 
         # Retrieve and display account info 
         @checkouts, @available_requests, @pending_requests, @fines, @bd_requests = get_patron_stuff user
-        @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' } if @bd_requests.present?
+        @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
         @checkouts.sort! { |a,b| a['od'] && b['od'] ? a['od'] <=> b['od'] : a['od'] ? -1 : 1 }   # sort by due date
         # HACK: the API call that is used to build the hash of renewable (yes/no) status for checked-out
         # items times out with a nasty server error if the user has too many charged items. For now, arbitrarily
