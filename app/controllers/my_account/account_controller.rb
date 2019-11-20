@@ -56,6 +56,30 @@ module MyAccount
         # items times out with a nasty server error if the user has too many charged items. For now, arbitrarily
         # do this only for small collections of items. (This means that users with large collections won't see the
         # warning labels that certain items can't be renewed ... but the renewal process itself should still work.)
+
+        # HACK (tlw72): if the title of a BD request = the title of an item that's checked out but shows
+        # "voyager" as the system, it's a good bet -- maybe -- that checked out item is a BD request.
+        # The location (lo) and callnumber (callno) of the checked out item should also be null, so
+        # check those, too. If all three criteria meet, add a "is_bd" value to the checkout out item to grab
+        # in the template. Also, if the system is "illiad" or there's a TransactionNumber, we have an ILL item.
+        # add a "is_ill" value to checkout that can also be grabbed in the template.
+        if @checkouts.length > 0
+          @checkouts.each do |chk|
+            if @bd_requests.length > 0
+              # there's often (always?) a white space at the end of a BD title in voyager. Lose it.
+              chk_title = chk["ou_title"].present? ? chk["ou_title"].sub(/\s+\Z/, "") : chk["tl"].sub(/\s+\Z/, "")
+              bd_array = @bd_requests.select {|book| book["tl"] ==  chk_title}
+              if bd_array.length > 0 && chk["lo"].length == 0 && chk["callno"].length == 0
+                chk["is_bd"] = true
+              end
+            end
+            if chk["system"] == "illiad" || chk["TransactionNumber"].present?
+              chk["is_ill"] = true
+            end
+          end
+          Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)          
+        end
+
         if @checkouts.length <= 100
           @renewable_lookup_hash = get_renewable_lookup user
         end
@@ -260,9 +284,9 @@ module MyAccount
         record = JSON.parse response.body
       rescue => error
         Rails.logger.error "MyAccount error: Could not find a patron entry for #{netid}"
-        return nil
+        msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
+        redirect_to root_path, :notice => msg.html_safe
       end
-
       checkouts = []
       pending_requests = []
       available_requests = []

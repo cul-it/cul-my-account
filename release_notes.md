@@ -1,5 +1,11 @@
 # Release Notes - my-account
 
+## v1.0.4
+- Added nil check for @bd_requests in the index method
+- If the netid isn't found, redirect to root and display flash message
+- For Rails 5, protect_from_forgery must be explicitly prepended to the before_action chain
+- Added Type column to the checkout out items tab
+
 ## v1.0.3
 - Fixed a bug preventing renewals through ILLiad
 
