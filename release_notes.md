@@ -1,8 +1,5 @@
 # Release Notes - my-account
 
-## v1.0.5
-- Reworked the redirect that occurs when no patron account is found
-
 ## v1.0.4
 - Added nil check for @bd_requests in the index method
 - If the netid isn't found, redirect to root and display flash message

@@ -1,3 +1,3 @@
 module MyAccount
-  VERSION = "1.0.5"
+  VERSION = "1.0.3"
 end
