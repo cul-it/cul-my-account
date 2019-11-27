@@ -281,6 +281,7 @@ module MyAccount
 
     # This is the main lookup function. It retrieves a list of a user's requests and charged
     # items using the ilsapi CGI script.
+    # DISCOVERYACCESS-5558 add msg for the error handling
     def get_patron_stuff netid
       record = nil
       msg = ""
