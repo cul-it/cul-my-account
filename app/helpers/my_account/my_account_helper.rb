@@ -21,7 +21,7 @@ module MyAccount
     # up from time to time but are inscrutable to users.
     def status_display item
       status = item['vstatus'] || item['status']
-      status == 'pahr' ? '' : status
+      status == 'pahr' ? '' : status.gsub("Charged","Checked Out")
     end
 
     # Return a 'system' data tag for a checkout. Can be Voyager or Illiad for now. Note that
