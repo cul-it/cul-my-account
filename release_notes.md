@@ -1,7 +1,7 @@
 # Release Notes - my-account
 
 ## v1.0.6
-- Changed 'Charged' status to be 'Checked Out'
+- Changed 'Charged' status to be 'Checked Out' and added comma here: 'Recall Request, Checked Out'
 
 ## v1.0.5
 - Reworked the redirect that occurs when no patron account is found
