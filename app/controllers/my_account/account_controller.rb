@@ -34,6 +34,12 @@ module MyAccount
     end
 
     def index
+      # Master disable -- this kicks the user out of My Account before anything gets going
+      if ENV['DISABLE_BORROW_DIRECT']
+        msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
+        redirect_to "/catalog#index", :notice => msg.html_safe
+      end
+
       @patron = get_patron_info user
       if @patron.present?
         # Take care of any requested actions first based on query params
@@ -393,7 +399,9 @@ module MyAccount
         if e.message.include? 'PUBAN003'
           Rails.logger.error "MyAccount error: user could not be authenticated in Borrow Direct"
         else
-          raise unless e.message.include? 'PUBQR004'
+          # TODO: Add better error handling. For now, BD is causing too many problems with flaky connections;
+          # we have to do something other than raise the errors here.
+          # raise unless e.message.include? 'PUBQR004'
         end  
         items = []
       end
