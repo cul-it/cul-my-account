@@ -16,7 +16,7 @@ module MyAccount
 
     def authenticate_user
       # Master disable -- this kicks the user out of My Account before anything gets going
-      if ENV['DISABLE_BORROW_DIRECT']
+      if ENV['DISABLE_MY_ACCOUNT']
         msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
         redirect_to "/catalog#index", :notice => msg.html_safe
         return
@@ -42,7 +42,7 @@ module MyAccount
 
     def index
       # Master disable -- this kicks the user out of My Account before anything gets going
-      if ENV['DISABLE_BORROW_DIRECT']
+      if ENV['DISABLE_MY_ACCOUNT']
         msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
         redirect_to "/catalog#index", :notice => msg.html_safe
       end
