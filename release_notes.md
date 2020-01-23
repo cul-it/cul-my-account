@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.0
+- Add a master disable feature based on an env key: DISABLE_MY_ACCOUNT=1
+
 ## v1.0.6
 - Changed 'Charged' status to be 'Checked Out' and added comma here: 'Recall Request, Checked Out'
 
