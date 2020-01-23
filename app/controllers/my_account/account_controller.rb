@@ -19,8 +19,9 @@ module MyAccount
       if ENV['DISABLE_BORROW_DIRECT']
         msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
         redirect_to "/catalog#index", :notice => msg.html_safe
+        return
       end
-      
+
       Rails.logger.debug "mjc12test: authenticating"
       if user.present?
         index
