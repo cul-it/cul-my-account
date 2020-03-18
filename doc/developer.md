@@ -21,6 +21,9 @@ Note that the Borrow Direct ENV keys are also used by the Requests engine.
 
 After restarting the Blacklight server, MyAccount should be accessible at `/myaccount`.
 
+### Disabling MA
+The entire MyAccount system can be disabled by adding another ENV key to the file: `DISABLE_MY_ACCOUNT=1`. If this key/value pair is present, then all visitors to MA will be rerouted to the catalog home page and shown a flash message informing them that the service is presently unavailable.
+
 ## Important files
 Most of the MA functionality is implemented within a handful of files. Important files include:
 - `/app/assets/javascripts/my_account/account.js.coffee`: manages the UI checkboxes and enabling/disabling of the action buttons

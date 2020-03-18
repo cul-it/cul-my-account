@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.1
+- Call slip items should not be included in the @checkouts array. (DISCOVERYACCESS-5567)
+
 ## v1.1.0
 - Add a master disable feature based on an env key: DISABLE_MY_ACCOUNT=1
 
