@@ -98,6 +98,7 @@ module MyAccount
           
           if @checkouts.length <= 100
             @renewable_lookup_hash = get_renewable_lookup user
+            Rails.logger.info(@renewable_lookup_hash.inspect)
           end
           
           # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
@@ -146,8 +147,7 @@ module MyAccount
       else
         error_messages = []
         # Retrieve the list of item IDs that have been selected for renewal
-        item_ids= ids_from_strings items
-
+        item_ids = ids_from_strings items
         # if @checkouts.length <= 100 
         #   @renewable_lookup_hash ||= get_renewable_lookup user
         # end
@@ -186,9 +186,16 @@ module MyAccount
               url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
               Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
               response = RestClient.post(url, {})
+              Rails.logger.debug("COME ON: " + response.body.inspect)
               xml = XmlSimple.xml_in response.body
               Rails.logger.debug "mjc12test: response #{xml}"
-              response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0]
+              if xml && xml["reply-code"][0] == '6'
+                error_messages << "Item could not be renewed due to an error."
+                Rails.logger.error "My Account: loan does not exist (id: #{id}). XML returned: #{xml}"
+                errors = true                
+              else                
+                response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0] 
+              end
               if xml && xml['reply-code'][0] != '0' 
                 error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
                 Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
@@ -316,10 +323,10 @@ module MyAccount
         # need to do anything with this
         next if i['status'] == 'finef'
 
-        # 'ttype' appears to be for a Voyager request - H, R, or ? for hold, recall, call slip
+        # 'ttype' appears to be for a Voyager request - H, R, or C for hold, recall, call slip
         # NOTE: This can also be a BD item (or ILL?) that has been checked out (system becomes Voyager
         # when that happens, at least for BD)
-        if i['system'] == 'voyager' && (i['ttype'] != 'H' && i['ttype'] != 'R')
+        if i['system'] == 'voyager' && (i['ttype'] != 'H' && i['ttype'] != 'R' && i['ttype'] != 'C')
           checkouts << i
         else
           # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
