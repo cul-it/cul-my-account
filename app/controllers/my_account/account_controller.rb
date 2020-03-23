@@ -93,7 +93,7 @@ module MyAccount
                 chk["is_ill"] = true
               end
             end
-            Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)          
+            #Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)          
           end
           
           if @checkouts.length <= 100
