@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.2
+- Call slip items should display on the pending requests tab. (DISCOVERYACCESS-5762)
+
 ## v1.1.1
 - Call slip items should not be included in the @checkouts array. (DISCOVERYACCESS-5567)
 
