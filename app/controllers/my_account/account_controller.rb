@@ -341,6 +341,11 @@ module MyAccount
           end
             
           if i['status'] == 'waiting'
+            # If the due date is an empty string, this line in the haml file throws an exception:
+            # c['DueDate']).to_date.strftime('%m/%d/%y'). (DISCOVERYACCESS-5822)
+            if i['DueDate'] == ''
+              i['DueDate'] = nil
+            end
             available_requests << i
           elsif i['status'] == 'chrged'
             i['status'] = 'Charged'
