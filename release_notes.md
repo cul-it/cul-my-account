@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.3
+- Prevent 'undefined method strftime for nil:NilClass' exceptions. (DISCOVERYACCESS-5822)
+
 ## v1.1.2
 - Call slip items should display on the pending requests tab. (DISCOVERYACCESS-5762)
 
