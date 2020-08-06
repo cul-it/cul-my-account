@@ -28,6 +28,7 @@ module MyAccount
       else
         session[:cuwebauth_return_path] = myaccount_path
         if ENV['DEBUG_USER'] && Rails.env.development?
+          Rails.logger.debug("mjc12test: Skipping auth, going with #{ENV['DEBUG_USER']}")
           index
         else
           redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
@@ -46,7 +47,7 @@ module MyAccount
         msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
         redirect_to "/catalog#index", :notice => msg.html_safe
       end
-
+      Rails.logger.debug("mjc12test: starting patron lookup")
       @patron = get_patron_info user
       if @patron.present?
         # Take care of any requested actions first based on query params
@@ -62,6 +63,7 @@ module MyAccount
         end
 
         # Retrieve and display account info 
+        Rails.logger.debug "mjc12test: Going into get_patron_stuff"
         @checkouts, @available_requests, @pending_requests, @fines, @bd_requests, msg = get_patron_stuff user
         if msg.length > 0
           redirect_to "/catalog#index", :notice => msg.html_safe
@@ -294,9 +296,14 @@ module MyAccount
     end
 
     def get_patron_info netid
-      response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
-      record = JSON.parse response.body
-      record[netid]
+      Rails.logger.debug("mjc12test: PATRONINFO for #{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}}")
+      begin
+        response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
+        record = JSON.parse response.body
+        record[netid]
+      rescue => error
+        Rails.logger.debug "mjc12test: ERROR in get_patron_info: #{error.message}" "#{error.backtrace.inspect}"
+      end
     end
 
     # This is the main lookup function. It retrieves a list of a user's requests and charged
@@ -306,9 +313,11 @@ module MyAccount
       record = nil
       msg = ""
       begin 
+        Rails.logger.debug "mjc12test: starting get_patron_stuff with #{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}}"
         response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
         record = JSON.parse response.body
       rescue => error
+        Rails.logger.debug "mjc12test: ERROR in get_patron_stuff: #{error.message}" "#{error.backtrace.inspect}"
         Rails.logger.error "MyAccount error: Could not find a patron entry for #{netid}"
         msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
         return [nil, nil, nil, nil, nil, msg]
