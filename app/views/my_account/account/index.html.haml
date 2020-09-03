@@ -4,6 +4,8 @@
 - if @patron.nil?
   %p ERROR: Your account information could not be retrieved. Please ask a librarian for help or report this using the feedback link below.
 - else
+  %div.alert.alert-warning.text-left{:style => "margin: 20px;"} 
+    %div{:style => "padding: 20px;"} Some Cornell books are currently not renewable via My Account. We are aware of this issue and are working on a solution. You will not incur fines for materials through September 30.
   %h2 
     Account information for 
     = "#{@patron['first_name']} #{@patron['last_name']}"
