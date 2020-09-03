@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.4
+- Display alert text regarding renewals issue.
+
 ## v1.1.3
 - Prevent 'undefined method strftime for nil:NilClass' exceptions. (DISCOVERYACCESS-5822)
 
