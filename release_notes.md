@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.5
+- Don't display the withdrawn status. (DISCOVERYACCESS-6433)
+
 ## v1.1.4
 - Display alert text regarding renewals issue.
 
