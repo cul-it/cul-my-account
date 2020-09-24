@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.6
+- Remove the renewals alert text from the index template.
+
 ## v1.1.5
 - Don't display the withdrawn status. (DISCOVERYACCESS-6433)
 
