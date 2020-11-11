@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.7
+- Rescue any RestClient errors in the account controller. (DISCOVERYACCESS-6181)
+
 ## v1.1.6
 - Remove the renewals alert text from the index template.
 
