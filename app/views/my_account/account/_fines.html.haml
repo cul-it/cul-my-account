@@ -1,4 +1,7 @@
-- if @fines.length == 0
+- if !@nofineinfo.nil?
+  %p
+    = @nofineinfo
+- elsif @fines.length == 0
   %p
     You have no fines or fees.
 - else
