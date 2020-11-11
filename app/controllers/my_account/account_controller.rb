@@ -41,6 +41,10 @@ module MyAccount
     end
 
     def index
+      if request.headers["REQUEST_METHOD"] == "HEAD"
+        head :no_content
+        return
+      end
       # Master disable -- this kicks the user out of My Account before anything gets going
       if ENV['DISABLE_MY_ACCOUNT']
         msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
