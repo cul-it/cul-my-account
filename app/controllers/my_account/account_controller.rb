@@ -41,6 +41,10 @@ module MyAccount
     end
 
     def index
+      if request.headers["REQUEST_METHOD"] == "HEAD"
+        head :no_content
+        return
+      end
       # Master disable -- this kicks the user out of My Account before anything gets going
       if ENV['DISABLE_MY_ACCOUNT']
         msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
@@ -371,24 +375,37 @@ module MyAccount
         fine_detail << get_fine_detail(url)
       end
       fine_detail
+    rescue
+      Rails.logger.debug("tlw72 ****** could not retrieve fine information.")
+      @nofineinfo = "Could not retrieve fine information."
+      return []
     end
 
     def get_fine_detail fine_url
       response = RestClient.get fine_url
       xml = XmlSimple.xml_in response.body
-      xml['resource'][0]['fine'][0]    
+      xml['resource'][0]['fine'][0] 
+    rescue
+       Rails.logger.debug("tlw72 ****** could not retrieve fine detail.")
+       return ""
     end
 
     def patron_id(netid)
       response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
       record = JSON.parse(response.body)
       record[netid]['patron_id']
+    rescue
+      Rails.logger.debug("tlw72 ****** could not retrieve patron id.")
+      return ""
     end
 
     def patron_barcode(netid)
       response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
       record = JSON.parse(response.body)
       record[netid]['barcode']
+    rescue
+      Rails.logger.debug("tlw72 ****** could not retrieve patron barcode.")
+      return ""
     end
 
     def get_bd_requests(netid)
