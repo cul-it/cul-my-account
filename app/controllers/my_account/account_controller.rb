@@ -64,7 +64,6 @@ module MyAccount
           items_to_cancel = params.select { |param| param.match(/select\-.+/) }
           cancel items_to_cancel if items_to_cancel.present?
         end
-
         # Retrieve and display account info 
         @checkouts, @available_requests, @pending_requests, @fines, @bd_requests, msg = get_patron_stuff user
         if msg.length > 0
@@ -247,8 +246,10 @@ module MyAccount
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
     # Requested items could be Voyager items, ILLiad, or Borrow Direct -- so use whichever API is appropriate
     def cancel items
+      # For cancellation the param value contains the ttpe, so build a hash to reference in the loop below.
+      id_hash = items.transform_keys{ |k| k.gsub("select-","") }
       request_ids = ids_from_strings items
-      Rails.logger.debug "mjc12test: items #{request_ids}"
+      Rails.logger.debug "mjc12test: items to cancel #{request_ids}"
       request_ids.each do |id|
         if id.match(/^COR/)
           # TODO: implement this
@@ -259,8 +260,10 @@ module MyAccount
         else
           # do a Voyager cancel
           http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+          # What's the ttype? Call slips get a different url than holds and recalls.
+          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/callslips/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}" if id_hash[id] == "C"
           # Remember that Voyager uses the '/holds/' path for both holds and recalls in order to confuse us
-          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/holds/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
+          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/holds/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}" if id_hash[id] != "C"
           response = RestClient.delete(url, {})
         end
       end
