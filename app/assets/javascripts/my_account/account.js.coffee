@@ -13,6 +13,11 @@ account =
       checked = $(this).prop('checked')
       $('tr.item input:checkbox').prop('checked', checked)
 
+    # Take user to BD site from pending tab. Keeps the param values
+    # from being displayed in the browser.
+    $('#bd-link').click ->
+      window.location.replace("https://bd.relaisd2d.com/?LS=CORNELL&PI=255100026799501")
+
     # Enable/disable action buttons if any checkbox is selected
     $('input:checkbox').click ->
       account.setActionButtonState()

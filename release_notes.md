@@ -1,5 +1,9 @@
 # Release Notes - my-account
 
+## v1.1.8
+- Don't display checkbox for BD and ILL on pending tab. (DISCOVERYACCESS-6692)
+- Callslip cancellations require their own url. (DISCOVERYACCESS-6692)
+
 ## v1.1.7
 - Rescue any RestClient errors in the account controller. (DISCOVERYACCESS-6181)
 
