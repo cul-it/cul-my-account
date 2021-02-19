@@ -4,6 +4,7 @@
 - if @pending_requests.length == 0 
   %p
     You have no pending requests.
+  %a{:id => "bd-link", :href => "javascript:void(0)"}
 - else
   = form_tag({controller: :account, action: :index}, :id => 'pending-requests-form') do
     %table#pending-requests-table.table.table-striped.table-responsive
@@ -45,6 +46,6 @@
 - if has_bd_pending
   %p
     Note: cancel your Borrow Direct requests by going to 
-    %a{:id => "bd-link", :href => "javascript:void(0)"}
+    %a{:href => "http://resolver.library.cornell.edu/NET/parsebd?redirect=yes"}
       their website.
  
