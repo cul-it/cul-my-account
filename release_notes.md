@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.1.9
+- Fix the Borrow Direct cancel link and move it to the template.
+
 ## v1.1.8
 - Don't display checkbox for BD and ILL on pending tab. (DISCOVERYACCESS-6692)
 - Callslip cancellations require their own url. (DISCOVERYACCESS-6692)
