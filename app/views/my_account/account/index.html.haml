@@ -16,7 +16,10 @@
     %li.nav-item{:role => "presentation"}
       = link_to "Pending requests (#{@pending_requests.count})", "#pending-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
     %li.nav-item{:role => "presentation"}
-      = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
+      - if !@nofineinfo.nil?
+        = link_to "Fines and fees", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
+      - else
+        = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
 
   %div.tab-content
     %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}

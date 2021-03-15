@@ -1,5 +1,24 @@
 # Release Notes - my-account
 
+## v1.1.9
+- Fix the Borrow Direct cancel link and move it to the template.
+
+## v1.1.8
+- Don't display checkbox for BD and ILL on pending tab. (DISCOVERYACCESS-6692)
+- Callslip cancellations require their own url. (DISCOVERYACCESS-6692)
+
+## v1.1.7
+- Rescue any RestClient errors in the account controller. (DISCOVERYACCESS-6181)
+
+## v1.1.6
+- Remove the renewals alert text from the index template.
+
+## v1.1.5
+- Don't display the withdrawn status. (DISCOVERYACCESS-6433)
+
+## v1.1.4
+- Display alert text regarding renewals issue.
+
 ## v1.1.3
 - Prevent 'undefined method strftime for nil:NilClass' exceptions. (DISCOVERYACCESS-5822)
 
