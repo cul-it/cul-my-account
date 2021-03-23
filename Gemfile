@@ -13,3 +13,4 @@ gemspec
 # To use a debugger
 # gem 'byebug', group: [:development, :test]
 
+gem 'cul-folio-edge', :path => '/Users/matt/code/cul/d&a/cul-folio-edge'
