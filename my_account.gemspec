@@ -22,6 +22,7 @@ Gem::Specification.new do |s|
   s.add_dependency "xml-simple"
   s.add_dependency 'rest-client'
   s.add_dependency 'borrow_direct'
+  s.add_dependency 'cul-folio-edge'
 
   s.add_development_dependency "sqlite3"
 end

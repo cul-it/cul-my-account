@@ -5,7 +5,7 @@ module MyAccount
     # is populated in the record. If a catalog record exists (based on bib id)
     # then return a link; otherwise return a plain string.
     def cased_title_link item
-      display_title = item['ou_title'].present? ? item['ou_title'].titleize : item['tl'].titleize
+      display_title = item['item']['title'].titleize
       # HACK: There is nothing in the retrieved record that explicitly states whether
       # a catalog record exists for it or not. (Once Borrow Direct -- and maybe ILL 
       # items are charged to a patron, they become temporary Voyager records almost
@@ -21,6 +21,7 @@ module MyAccount
     # up from time to time but are inscrutable to users.
     def status_display item
       status = item['vstatus'] || item['status']
+      return "" if status.nil? 
       status == 'pahr' ? '' : status.gsub("Charged","Checked Out").gsub("Recall Request Checked Out", "Recall Request, Checked Out").gsub("/Withdrawn","")
     end
 

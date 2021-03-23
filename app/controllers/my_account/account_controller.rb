@@ -3,6 +3,7 @@ require_dependency "my_account/application_controller"
 require 'rest-client'
 require 'json'
 require 'xmlsimple'
+require 'cul/folio/edge'
 
 module MyAccount
 
@@ -66,11 +67,14 @@ module MyAccount
         end
         # Retrieve and display account info 
         @checkouts, @available_requests, @pending_requests, @fines, @bd_requests, msg = get_patron_stuff user
+
         if msg.length > 0
           redirect_to "/catalog#index", :notice => msg.html_safe
         else
           @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
-          @checkouts.sort! { |a,b| a['od'] && b['od'] ? a['od'] <=> b['od'] : a['od'] ? -1 : 1 }   # sort by due date
+          @checkouts.sort! { |a,b| a['dueDate']  <=> b['dueDate']  } 
+          Rails.logger.debug "mjc12test: Still going 2"
+
           # HACK: the API call that is used to build the hash of renewable (yes/no) status for checked-out
           # items times out with a nasty server error if the user has too many charged items. For now, arbitrarily
           # do this only for small collections of items. (This means that users with large collections won't see the
@@ -82,27 +86,30 @@ module MyAccount
           # check those, too. If all three criteria meet, add a "is_bd" value to the checkout out item to grab
           # in the template. Also, if the system is "illiad" or there's a TransactionNumber, we have an ILL item.
           # add a "is_ill" value to checkout that can also be grabbed in the template.
-          if @checkouts.length > 0
-            @checkouts.each do |chk|
-              if @bd_requests.length > 0
-                # there's often (always?) a white space at the end of a BD title in voyager. Lose it.
-                chk_title = chk["ou_title"].present? ? chk["ou_title"].sub(/\s+\Z/, "") : chk["tl"].sub(/\s+\Z/, "")
-                bd_array = @bd_requests.select {|book| book["tl"] ==  chk_title}
-                if bd_array.length > 0 && chk["lo"].length == 0 && chk["callno"].length == 0
-                  chk["is_bd"] = true
-                end
-              end
-              if chk["system"] == "illiad" || chk["TransactionNumber"].present?
-                chk["is_ill"] = true
-              end
-            end
-            #Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)          
-          end
+
+          # TODO: Fix this for FOLIO
+          # if @checkouts.length > 0
+          #   @checkouts.each do |chk|
+          #     if @bd_requests.length > 0
+          #       # there's often (always?) a white space at the end of a BD title in voyager. Lose it.
+          #       chk_title = chk["ou_title"].present? ? chk["ou_title"].sub(/\s+\Z/, "") : chk["tl"].sub(/\s+\Z/, "")
+          #       bd_array = @bd_requests.select {|book| book["tl"] ==  chk_title}
+          #       if bd_array.length > 0 && chk["lo"].length == 0 && chk["callno"].length == 0
+          #         chk["is_bd"] = true
+          #       end
+          #     end
+          #     if chk["system"] == "illiad" || chk["TransactionNumber"].present?
+          #       chk["is_ill"] = true
+          #     end
+          #   end
+          #   #Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)          
+          # end
           
-          if @checkouts.length <= 100
-            @renewable_lookup_hash = get_renewable_lookup user
-            Rails.logger.info(@renewable_lookup_hash.inspect)
-          end
+          # TODO: Fix this for FOLIO
+          # if @checkouts.length <= 100
+          #   @renewable_lookup_hash = get_renewable_lookup user
+          #   Rails.logger.info(@renewable_lookup_hash.inspect)
+          # end
           
           # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
           if params['button'] == 'export-checkouts'
@@ -309,9 +316,52 @@ module MyAccount
     # This is the main lookup function. It retrieves a list of a user's requests and charged
     # items using the ilsapi CGI script.
     # DISCOVERYACCESS-5558 add msg for the error handling
+    #
+    # Account information (Voyager, BD, ILL) was provided by the ilsapiE.cgi script. Besides a
+    # 'patron' JSON object, it provided an 'items' array. Each item is an object representing an
+    # item from Voyager, ILL, or Borrow Direct.
+    # For the move to FOLIO, we use the EdgePatron API to look up a user's account info, which comes
+    # back (via the CUL FOLIO Edge gem) looking like this:
+    # { :account=>
+    #     {"totalCharges"=>
+    #       {"amount"=>0.0, "isoCurrencyCode"=>"USD"}, 
+    #       "totalChargesCount"=>0, 
+    #       "totalLoans"=>2, 
+    #       "totalHolds"=>0, 
+    #       "charges"=>[], 
+    #       "holds"=>[], 
+    #       "loans"=>[
+    #         {"id"=>"c6ce747e-e210-4eb7-a72d-ea7116e803b4",
+    #          "item"=>{
+    #            "instanceId"=>"69640328-788e-43fc-9c3c-af39e243f3b7", 
+    #            "itemId"=>"eedd13c4-7d40-4b1e-8f77-b0b9d19a896b", 
+    #            "title"=>"ABA Journal"}, 
+    #          "loanDate"=>"2021-03-19T14:42:32.000+0000", 
+    #          "dueDate"=>"2021-05-18T23:59:59.000+0000", 
+    #          "overdue"=>false}, 
+    #         {"id"=>"c372ee00-a89f-4d9c-ba8a-9316fe43e47e", 
+    #           "item"=>{"instanceId"=>"cf23adf0-61ba-4887-bf82-956c4aae2260", 
+    #             "itemId"=>"88d326f0-5d94-4c00-a497-7fefebbd724a",
+    #             "title"=>"Temeraire", 
+    #             "author"=>"Novik, Naomi"}, 
+    #           "loanDate"=>"2021-03-19T14:42:56.000+0000", 
+    #           "dueDate"=>"2021-03-19T15:42:56.000+0000", 
+    #           "overdue"=>false}
+    #       ]
+    #     }, 
+    #   :error=>nil, 
+    #   :code=>200
+    # } 
+    #
+    # If we assume that ilsapiE.cgi is rewritten to *only* return ILL results, then that simplifies the
+    # parsing below greatly. No need to try to figure out whether something is a charged item or a request
     def get_patron_stuff netid
       record = nil
       msg = ""
+
+      folio_account_data = get_folio_accountinfo netid
+      Rails.logger.debug "mjc12test: Start parsing"
+
       begin 
         response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
         record = JSON.parse response.body
@@ -320,54 +370,66 @@ module MyAccount
         msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
         return [nil, nil, nil, nil, nil, msg]
       end
-      checkouts = []
+
+      checkouts = folio_account_data[:account]['loans']
       pending_requests = []
       available_requests = []
+
+      # Parse the results of the ilsapiE/ILLiad lookup. Loans (from FOLIO) are handled separately
       record['items'].each do |i|
         # TODO: items returned with a status of 'finef' appear to be duplicates, only
         # indicating that a fine or fee is applied to that item. So we don't need them
         # in this list? But maybe check the fine-related functions below to see if we
         # need to do anything with this
+        # TODO 2: Is this still relevant with FOLIO? Can ILL items have this status?
         next if i['status'] == 'finef'
 
-        # 'ttype' appears to be for a Voyager request - H, R, or C for hold, recall, call slip
-        # NOTE: This can also be a BD item (or ILL?) that has been checked out (system becomes Voyager
-        # when that happens, at least for BD)
-        if i['system'] == 'voyager' && (i['ttype'] != 'H' && i['ttype'] != 'R' && i['ttype'] != 'C')
+        # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
+        # id for potential cancellations.
+        # HACK: substitute request id for item id
+        # TODO: come up with a better way of doing this
+        i['iid'] = i['tid'] # not sure why 'tid' is used in the ILSAPI return - "transaction ID"?
+        # add a special "item id" for ILLiad items
+        if i['system'] == 'illiad'
+          i['iid'] = "illiad-#{i['TransactionNumber']}" 
+          i['requestDate'] = DateTime.parse(i['TransactionDate']).strftime("%-m/%-d/%y")
+        end
+          
+        if i['status'] == 'waiting'
+          # If the due date is an empty string, this line in the haml file throws an exception:
+          # c['DueDate']).to_date.strftime('%m/%d/%y'). (DISCOVERYACCESS-5822)
+          if i['DueDate'] == ''
+            i['DueDate'] = nil
+          end
+          available_requests << i
+        elsif i['status'] == 'chrged'
+          # TODO: Is this still relevant with FOLIO? Can an ILL item have this status?
+          i['status'] = 'Charged'
           checkouts << i
         else
-          # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
-          # id for potential cancellations.
-          # HACK: substitute request id for item id
-          # TODO: come up with a better way of doing this
-          i['iid'] = i['tid'] # not sure why 'tid' is used in the ILSAPI return - "transaction ID"?
-          # add a special "item id" for ILLiad items
-          if i['system'] == 'illiad'
-            i['iid'] = "illiad-#{i['TransactionNumber']}" 
-            i['requestDate'] = DateTime.parse(i['TransactionDate']).strftime("%-m/%-d/%y")
-          end
-            
-          if i['status'] == 'waiting'
-            # If the due date is an empty string, this line in the haml file throws an exception:
-            # c['DueDate']).to_date.strftime('%m/%d/%y'). (DISCOVERYACCESS-5822)
-            if i['DueDate'] == ''
-              i['DueDate'] = nil
-            end
-            available_requests << i
-          elsif i['status'] == 'chrged'
-            i['status'] = 'Charged'
-            checkouts << i
-          else
-            pending_requests << i
-          end
+          pending_requests << i
         end
-       # i['system'] != 'voyager' || i['ttype'].present? ? pending_requests << i : checkouts << i
       end
+
+      Rails.logger.debug "mjc12test: Done with parsing"
+      # TODO: Replace with FOLIO
       fines = get_patron_fines netid
       bd_items = get_bd_requests netid
       [checkouts, available_requests, pending_requests, fines, bd_items, msg]
     end
 
+    # Use the FOLIO EdgePatron API to retrieve a user's account, and modify the data structure to match
+    # what we want for MyAccount
+    def get_folio_accountinfo netid
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+     # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
+      account = CUL::FOLIO::Edge.patron_account(url, tenant, token[:token], {:username => netid})
+     # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
+    end
+
+    # TODO: Replace with FOLIO
     def get_patron_fines netid
       response = RestClient.get "#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=1@#{ENV['VOYAGER_DB']}"
       xml = XmlSimple.xml_in response.body
@@ -384,6 +446,7 @@ module MyAccount
       return []
     end
 
+    # TODO: Replace with FOLIO
     def get_fine_detail fine_url
       response = RestClient.get fine_url
       xml = XmlSimple.xml_in response.body
@@ -393,6 +456,7 @@ module MyAccount
        return ""
     end
 
+    # TODO: Replace with FOLIO
     def patron_id(netid)
       response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
       record = JSON.parse(response.body)
@@ -402,6 +466,7 @@ module MyAccount
       return ""
     end
 
+    # TODO: Replace with FOLIO
     def patron_barcode(netid)
       response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
       record = JSON.parse(response.body)
