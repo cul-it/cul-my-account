@@ -4,7 +4,7 @@
 - if @patron.nil?
   %p ERROR: Your account information could not be retrieved. Please ask a librarian for help or report this using the feedback link below.
 - else
-  %h2 
+  %h2.mt-4 
     Account information for 
     = "#{@patron['first_name']} #{@patron['last_name']}"
 
