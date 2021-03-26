@@ -59,7 +59,7 @@ module MyAccount
           Rails.logger.debug "mjc12test: Going into renew"
           items_to_renew = params.select { |param| param.match(/select\-.+/) }
           params['button'] = nil
-          renew(items_to_renew) if items_to_renew.present?
+          renew(user, items_to_renew) if items_to_renew.present?
         elsif params['button'] == 'cancel'
           Rails.logger.debug "mjc12test: Going into cancel"
           items_to_cancel = params.select { |param| param.match(/select\-.+/) }
@@ -150,7 +150,7 @@ module MyAccount
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
-    def renew items
+    def renew netid, items
       Rails.logger.debug "mjc12test: Going into renew with patron info: #{@patron}"
       if @patron['status'] != 'Active'
         flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
@@ -168,57 +168,64 @@ module MyAccount
           renewable_item_ids = item_ids
           unrenewable_item_ids = []
         end
-        if params['num_checkouts'] && renewable_item_ids.length == params['num_checkouts'].to_i
-          renew_all
-        else
-          Rails.logger.debug "mjc12test: renewable item_ids #{renewable_item_ids}"
-          Rails.logger.debug "mjc12test: unrenewable item_ids #{unrenewable_item_ids}"
+        # if params['num_checkouts'] && renewable_item_ids.length == params['num_checkouts'].to_i
+        #   renew_all
+        # else
+        Rails.logger.debug "mjc12test: renewable item_ids #{renewable_item_ids}"
+        Rails.logger.debug "mjc12test: unrenewable item_ids #{unrenewable_item_ids}"
 
-          # Invoke Voyager APIs to do the actual renewals
-          errors = false
-          successful_renewal_count = 0
-          renewable_item_ids.each do |id|
-            # Check for ILLiad item
-            if id.start_with? 'illiad'
-              transaction_id = id.split(/-/)[1]
-              response = RestClient.get "https://ill-access.library.cornell.edu/illrenew.cgi?netid=#{@patron['netid']}&iid=#{transaction_id}"
-              response = JSON.parse response.body
-              Rails.logger.debug "mjc12test: got renew response: #{response['error']}"
-              if response['error'].present?
-                error_messages << "Could not renew item in ILLiad"
-                Rails.logger.error "My Account: Couldn't renew ILLiad item with transaction ID #{transaction_id}. Request returned error: #{response['error']}"
-                errors = true
-              else
-                successful_renewal_count += 1
-              end
+        # Invoke Voyager APIs to do the actual renewals
+        errors = false
+        successful_renewal_count = 0
+        renewable_item_ids.each do |id|
+          # Check for ILLiad item
+          if id.start_with? 'illiad'
+            transaction_id = id.split(/-/)[1]
+            response = RestClient.get "https://ill-access.library.cornell.edu/illrenew.cgi?netid=#{@patron['netid']}&iid=#{transaction_id}"
+            response = JSON.parse response.body
+            Rails.logger.debug "mjc12test: got renew response: #{response['error']}"
+            if response['error'].present?
+              error_messages << "Could not renew item in ILLiad"
+              Rails.logger.error "My Account: Couldn't renew ILLiad item with transaction ID #{transaction_id}. Request returned error: #{response['error']}"
+              errors = true
             else
-              http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-              url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-              Rails.logger.debug "mjc12test: Trying to renew with url: #{url}"
-              response = RestClient.post(url, {})
-              Rails.logger.debug("COME ON: " + response.body.inspect)
-              xml = XmlSimple.xml_in response.body
-              Rails.logger.debug "mjc12test: response #{xml}"
-              if xml && xml["reply-code"][0] == '6'
-                error_messages << "Item could not be renewed due to an error."
-                Rails.logger.error "My Account: loan does not exist (id: #{id}). XML returned: #{xml}"
-                errors = true                
-              else                
-                response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0] 
-              end
-              if xml && xml['reply-code'][0] != '0' 
-                error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
-                Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
-                errors = true
-              elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
-                error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
-                Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
-                errors = true
-              else
-                successful_renewal_count += 1
-              end
+              successful_renewal_count += 1
             end
+          else
+            url = ENV['OKAPI_URL']
+            tenant = ENV['OKAPI_TENANT']
+            token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+           # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
+            response = CUL::FOLIO::Edge.renew_item(url, tenant, token[:token], netid, id)
+            # http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+            # url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
+            Rails.logger.debug "mjc12test: Trying to renew with url: #{url}, tenant: #{tenant}"
+            # response = CUL::FOLIO::Edge.renew_item()
+            # response = RestClient.post(url, {})
+            Rails.logger.debug("mjc12test: renew response: #{response}")
+            # xml = XmlSimple.xml_in response.body
+            # Rails.logger.debug "mjc12test: response #{xml}"
+            if response[:code] > 201
+              error_messages << "Item could not be renewed due to an error."
+              Rails.logger.error "My Account: couldn't renew item #{id}. API returned: #{response[:error]}"
+              errors = true                
+            else  
+              successful_renewal_count += 1
+              
+              # response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0] 
+            end
+            # if xml && xml['reply-code'][0] != '0' 
+            #   error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
+            #   Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+            #   errors = true
+            # elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
+            #   error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
+            #   Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+            #   errors = true
+            # else
+            # end
           end
+          # end
 
           if renewable_item_ids.count == 1 && successful_renewal_count == 1 && errors == false
             flash[:notice] = 'This item has been renewed.'
@@ -413,7 +420,26 @@ module MyAccount
 
       Rails.logger.debug "mjc12test: Done with parsing"
       # TODO: Replace with FOLIO
-      fines = get_patron_fines netid
+      #fines = get_patron_fines netid
+      fines = folio_account_data[:account]['charges']
+      fines = JSON.parse('[
+        {
+          "item" : {
+            "instanceId" : "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+            "itemId" : "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+            "title" : "Some Book About Something",
+            "author" : "Some Guy; Another Guy"
+          },
+          "chargeAmount" : {
+            "amount" : 50.0,
+            "isoCurrencyCode" : "USD"
+          },
+          "accrualDate" : "2018-01-31T00:00:01Z",
+          "state" : "Paid Partially",
+          "reason" : "damage - rebinding",
+          "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
+        }
+      ]')
       bd_items = get_bd_requests netid
       [checkouts, available_requests, pending_requests, fines, bd_items, msg]
     end

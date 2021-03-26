@@ -25,12 +25,11 @@ module MyAccount
       status == 'pahr' ? '' : status.gsub("Charged","Checked Out").gsub("Recall Request Checked Out", "Recall Request, Checked Out").gsub("/Withdrawn","")
     end
 
-    # Return a 'system' data tag for a checkout. Can be Voyager or Illiad for now. Note that
-    # this is *not* the same as the 'system' field in the item metadata, which apparently always reads
-    # 'voyager' regardless when an item is checked out. Instead, this goes on the assumption that
+    # Return a 'system' data tag for a checkout. Can be FOLIO or Illiad for now. Note that
+    # this is *not* the same as the 'system' field in the item metadata. Instead, this goes on the assumption that
     # a TransactionNumber indicates an Illiad loan.
     def system_tag item
-      item['TransactionNumber'].present? ? 'illiad' : 'voyager'
+      item['TransactionNumber'].present? ? 'illiad' : 'folio'
     end
   end
 end
