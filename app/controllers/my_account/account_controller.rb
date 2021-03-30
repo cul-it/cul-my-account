@@ -235,8 +235,10 @@ module MyAccount
           if unrenewable_item_ids.count > 0
             error_messages << 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
           end
-          error_messages = error_messages.join('<br/>').html_safe
-          flash[:error] = error_messages if error_messages.present?
+          if error_messages.present?
+            error_messages = error_messages.join('<br/>').html_safe
+            flash[:error] = error_messages 
+          end
         end
         params.select! { |param| !param.match(/select\-.+/) }
       end
@@ -294,21 +296,26 @@ module MyAccount
       item_ids = ids_from_strings items
       ris_output = ''
       item_ids.each do |id|
-        item = @checkouts.detect { |i| i['iid'] == id }
+        record = @checkouts.detect { |i| i['item']['itemId'] == id }
         # TODO: the TY field may need to be made dynamic to account for different material types -
         # see https://en.wikipedia.org/wiki/RIS_(file_format). But currently the item record passed in
         # does not indicate type.
-        ris_output += "TY  - BOOK\n"
-        ris_output += "CY  - #{item['ou_pp']}\n"
-        ris_output += "PY  - #{item['ou_yr']}\n"
-        ris_output += "PB  - #{item['ou_pb']}\n"
-        ris_output += "T1  - #{item['ou_title']}\n"
-        ris_output += "AU  - #{item['au']}\n"
-        ris_output += "SN  - #{item['ou_isbn']}\n"
-        # LA  - English
-        ris_output += "UR  - http://newcatalog.library.cornell.edu/catalog/#{item['bid']}\n"
-        ris_output += "CN  - #{item['callno']}\n"
-        ris_output += "ER  -\n"
+        if record['item']
+          item = record['item']
+          ris_output += "TY  - BOOK\n"
+          # ris_output += "CY  - #{item['ou_pp']}\n"
+          # ris_output += "PY  - #{item['ou_yr']}\n"
+          # ris_output += "PB  - #{item['ou_pb']}\n"
+          # ris_output += "T1  - #{item['ou_title']}\n"
+          ris_output += "T1  - #{item['title']}\n" if item['title']
+          # ris_output += "AU  - #{item['au']}\n"
+          ris_output += "AU  - #{item['author']}\n" if item['author']
+          # ris_output += "SN  - #{item['ou_isbn']}\n"
+          # LA  - English
+          # ris_output += "UR  - http://newcatalog.library.cornell.edu/catalog/#{item['bid']}\n"
+          # ris_output += "CN  - #{item['callno']}\n"
+          ris_output += "ER  -\n"
+        end
       end
 
       send_data ris_output, filename: 'citation.ris', type: 'text/ris'
@@ -422,24 +429,24 @@ module MyAccount
       # TODO: Replace with FOLIO
       #fines = get_patron_fines netid
       fines = folio_account_data[:account]['charges']
-      fines = JSON.parse('[
-        {
-          "item" : {
-            "instanceId" : "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
-            "itemId" : "7d9dfe70-0158-489d-a7ed-2789eac277b3",
-            "title" : "Some Book About Something",
-            "author" : "Some Guy; Another Guy"
-          },
-          "chargeAmount" : {
-            "amount" : 50.0,
-            "isoCurrencyCode" : "USD"
-          },
-          "accrualDate" : "2018-01-31T00:00:01Z",
-          "state" : "Paid Partially",
-          "reason" : "damage - rebinding",
-          "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
-        }
-      ]')
+      # fines = JSON.parse('[
+      #   {
+      #     "item" : {
+      #       "instanceId" : "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+      #       "itemId" : "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+      #       "title" : "Some Book About Something",
+      #       "author" : "Some Guy; Another Guy"
+      #     },
+      #     "chargeAmount" : {
+      #       "amount" : 50.0,
+      #       "isoCurrencyCode" : "USD"
+      #     },
+      #     "accrualDate" : "2018-01-31T00:00:01Z",
+      #     "state" : "Paid Partially",
+      #     "reason" : "damage - rebinding",
+      #     "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
+      #   }
+      # ]')
       bd_items = get_bd_requests netid
       [checkouts, available_requests, pending_requests, fines, bd_items, msg]
     end
