@@ -41,6 +41,11 @@ module MyAccount
       # to log in.
     end
 
+    def ajax
+      # EXPERIMENT
+      render json: { :result => "test data" }
+    end
+
     def index
       if request.headers["REQUEST_METHOD"] == "HEAD"
         head :no_content
@@ -66,57 +71,63 @@ module MyAccount
           cancel items_to_cancel if items_to_cancel.present?
         end
         # Retrieve and display account info 
-        @checkouts, @available_requests, @pending_requests, @fines, @bd_requests, msg = get_patron_stuff user
+        json_response = JSON.parse(get_patron_stuff(user))
+        @checkouts = json_response['checkouts']
+        @available_requests = json_response['available']
+        @pending_requests = json_response['pending']
+        @fines = json_response['fines']
+        @bd_requests = json_response['BD']
+        # msg = json_response['message']
 
-        if msg.length > 0
-          redirect_to "/catalog#index", :notice => msg.html_safe
-        else
-          @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
-          @checkouts.sort! { |a,b| a['dueDate']  <=> b['dueDate']  } 
-          Rails.logger.debug "mjc12test: Still going 2"
+        # if msg.length > 0
+        #   redirect_to "/catalog#index", :notice => msg.html_safe
+        # else
+        #   @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
+        #   @checkouts.sort! { |a,b| a['dueDate']  <=> b['dueDate']  } 
+        #   Rails.logger.debug "mjc12test: Still going 2"
 
-          # HACK: the API call that is used to build the hash of renewable (yes/no) status for checked-out
-          # items times out with a nasty server error if the user has too many charged items. For now, arbitrarily
-          # do this only for small collections of items. (This means that users with large collections won't see the
-          # warning labels that certain items can't be renewed ... but the renewal process itself should still work.)
+        #   # HACK: the API call that is used to build the hash of renewable (yes/no) status for checked-out
+        #   # items times out with a nasty server error if the user has too many charged items. For now, arbitrarily
+        #   # do this only for small collections of items. (This means that users with large collections won't see the
+        #   # warning labels that certain items can't be renewed ... but the renewal process itself should still work.)
           
-          # HACK (tlw72): if the title of a BD request = the title of an item that's checked out but shows
-          # "voyager" as the system, it's a good bet -- maybe -- that checked out item is a BD request.
-          # The location (lo) and callnumber (callno) of the checked out item should also be null, so
-          # check those, too. If all three criteria meet, add a "is_bd" value to the checkout out item to grab
-          # in the template. Also, if the system is "illiad" or there's a TransactionNumber, we have an ILL item.
-          # add a "is_ill" value to checkout that can also be grabbed in the template.
+        #   # HACK (tlw72): if the title of a BD request = the title of an item that's checked out but shows
+        #   # "voyager" as the system, it's a good bet -- maybe -- that checked out item is a BD request.
+        #   # The location (lo) and callnumber (callno) of the checked out item should also be null, so
+        #   # check those, too. If all three criteria meet, add a "is_bd" value to the checkout out item to grab
+        #   # in the template. Also, if the system is "illiad" or there's a TransactionNumber, we have an ILL item.
+        #   # add a "is_ill" value to checkout that can also be grabbed in the template.
 
-          # TODO: Fix this for FOLIO
-          # if @checkouts.length > 0
-          #   @checkouts.each do |chk|
-          #     if @bd_requests.length > 0
-          #       # there's often (always?) a white space at the end of a BD title in voyager. Lose it.
-          #       chk_title = chk["ou_title"].present? ? chk["ou_title"].sub(/\s+\Z/, "") : chk["tl"].sub(/\s+\Z/, "")
-          #       bd_array = @bd_requests.select {|book| book["tl"] ==  chk_title}
-          #       if bd_array.length > 0 && chk["lo"].length == 0 && chk["callno"].length == 0
-          #         chk["is_bd"] = true
-          #       end
-          #     end
-          #     if chk["system"] == "illiad" || chk["TransactionNumber"].present?
-          #       chk["is_ill"] = true
-          #     end
-          #   end
-          #   #Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)          
-          # end
+        #   # TODO: Fix this for FOLIO
+        #   # if @checkouts.length > 0
+        #   #   @checkouts.each do |chk|
+        #   #     if @bd_requests.length > 0
+        #   #       # there's often (always?) a white space at the end of a BD title in voyager. Lose it.
+        #   #       chk_title = chk["ou_title"].present? ? chk["ou_title"].sub(/\s+\Z/, "") : chk["tl"].sub(/\s+\Z/, "")
+        #   #       bd_array = @bd_requests.select {|book| book["tl"] ==  chk_title}
+        #   #       if bd_array.length > 0 && chk["lo"].length == 0 && chk["callno"].length == 0
+        #   #         chk["is_bd"] = true
+        #   #       end
+        #   #     end
+        #   #     if chk["system"] == "illiad" || chk["TransactionNumber"].present?
+        #   #       chk["is_ill"] = true
+        #   #     end
+        #   #   end
+        #   #   #Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)          
+        #   # end
           
-          # TODO: Fix this for FOLIO
-          # if @checkouts.length <= 100
-          #   @renewable_lookup_hash = get_renewable_lookup user
-          #   Rails.logger.info(@renewable_lookup_hash.inspect)
-          # end
+        #   # TODO: Fix this for FOLIO
+        #   # if @checkouts.length <= 100
+        #   #   @renewable_lookup_hash = get_renewable_lookup user
+        #   #   Rails.logger.info(@renewable_lookup_hash.inspect)
+        #   # end
           
-          # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
-          if params['button'] == 'export-checkouts'
-            items_to_export = params.select { |param| param.match(/select\-.+/) }
-            export items_to_export if items_to_export.present?
-          end
-        end
+        #   # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
+        #   if params['button'] == 'export-checkouts'
+        #     items_to_export = params.select { |param| param.match(/select\-.+/) }
+        #     export items_to_export if items_to_export.present?
+        #   end
+        # end
       end
     end
 
@@ -448,7 +459,14 @@ module MyAccount
       #   }
       # ]')
       bd_items = get_bd_requests netid
-      [checkouts, available_requests, pending_requests, fines, bd_items, msg]
+      render json: {
+        "checkouts" => checkouts, 
+        "available" => available_requests, 
+        "pending" => pending_requests, 
+        "fines" => fines, 
+        "BD" => bd_items, 
+        "message" => msg
+      }
     end
 
     # Use the FOLIO EdgePatron API to retrieve a user's account, and modify the data structure to match

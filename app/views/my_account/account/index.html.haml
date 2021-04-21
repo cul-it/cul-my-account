@@ -21,7 +21,7 @@
       - else
         = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
 
-  %div.tab-content
+  %div{:class => 'tab-content', :id => 'accountData', :data => { netid: "mjc12" }}
     %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
       = render :partial => 'checkouts'
     %div#available-requests.tab-pane.fade{:role => "tabpanel"}

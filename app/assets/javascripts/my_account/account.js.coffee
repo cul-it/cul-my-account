@@ -3,6 +3,26 @@ $(document).ready ->
 
 account =
   onLoad: () ->
+    # EXPERIMENTS
+    $.ajax({
+      url: "/myaccount/ajax"
+      type: "GET"
+      error: (jqXHR, textStatus, errorThrown) ->
+        console.log("got error")
+      success: (data, textStatus, jqXHR) ->
+        console.log("success!", data)
+    })
+    console.log("Testing data load", $('#accountData').data('netid'))
+    $.ajax({
+      url: "/myaccount/get_patron_stuff"
+      type: "GET"
+      data: {netid: "mjc12"}
+      error: (jqXHR, textStatus, errorThrown) ->
+        console.log("got error 2")
+      success: (data, textStatus, jqXHR) ->
+        console.log("success 2!", data)
+    })
+
     # Enable tab navigation
     $('.nav-tabs a').click ->
       $(this).tab('show')
