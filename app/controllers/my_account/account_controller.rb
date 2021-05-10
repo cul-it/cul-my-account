@@ -338,6 +338,7 @@ module MyAccount
       record[netid]
     end
 
+    # DEPRECATED
     # This is the main lookup function. It retrieves a list of a user's requests and charged
     # items using the ilsapi CGI script.
     # DISCOVERYACCESS-5558 add msg for the error handling
@@ -385,7 +386,7 @@ module MyAccount
       msg = ""
 
       netid = params['netid']
-      folio_account_data = get_folio_accountinfo netid
+      # folio_account_data = get_folio_accountinfo netid
       Rails.logger.debug "mjc12test: Start parsing"
 
       begin 
@@ -397,7 +398,7 @@ module MyAccount
         return [nil, nil, nil, nil, nil, msg]
       end
 
-      checkouts = folio_account_data[:account]['loans']
+      # checkouts = folio_account_data[:account]['loans']
       pending_requests = []
       available_requests = []
 
@@ -440,7 +441,7 @@ module MyAccount
       Rails.logger.debug "mjc12test: Done with parsing"
       # TODO: Replace with FOLIO
       #fines = get_patron_fines netid
-      fines = folio_account_data[:account]['charges']
+      # fines = folio_account_data[:account]['charges']
       # fines = JSON.parse('[
       #   {
       #     "item" : {
@@ -468,13 +469,14 @@ module MyAccount
       #   "BD" => bd_items, 
       #   "message" => msg
       # }
-      @checkouts = checkouts
+      # @checkouts = checkouts
       # respond_to do |format|
       #   format.js
       # end
-      render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: checkouts }}
+      # render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: checkouts }}
     end
 
+    # DEPRECATED
     # Use the FOLIO EdgePatron API to retrieve a user's account, and modify the data structure to match
     # what we want for MyAccount
     def get_folio_accountinfo netid
@@ -486,22 +488,47 @@ module MyAccount
      # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
     end
 
-    # TODO: Replace with FOLIO
-    def get_patron_fines netid
-      response = RestClient.get "#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-      xml = XmlSimple.xml_in response.body
-      fines = xml['fines'] ? xml['fines'][0]['institution'][0]['fine'] : []
-      fine_detail = []
-      fines.each do |f|
-        url = f['href'].gsub('http://127.0.0.1:7014/', 'https://catalog.library.cornell.edu/')
-        fine_detail << get_fine_detail(url)
-      end
-      fine_detail
-    rescue
-      Rails.logger.debug("tlw72 ****** could not retrieve fine information.")
-      @nofineinfo = "Could not retrieve fine information."
-      return []
+    # Use the FOLIO EdgePatron API to retrieve a user's account information. This provides lists of checkouts/
+    # charged items and fines/fees. This is called by AJAX, so the result is handled there as well.
+    def get_folio_data
+      netid = params['netid']
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+     # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
+      account = CUL::FOLIO::Edge.patron_account(url, tenant, token[:token], {:username => netid})
+     # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
+      render json: account
     end
+
+    # Render the _checkouts partial in response to an AJAX call
+    def ajax_checkouts
+      @checkouts = params['checkouts'].values.to_a
+      render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: @checkouts }}
+    end
+
+    # Render the _checkouts partial in response to an AJAX call
+    def ajax_fines
+      @fines = params['fines'].values.to_a
+      render json: { record: render_to_string('_fines', :layout => false), locals: { fines: @fines }}
+    end
+
+    # # TODO: Replace with FOLIO
+    # def get_patron_fines netid
+    #   response = RestClient.get "#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=1@#{ENV['VOYAGER_DB']}"
+    #   xml = XmlSimple.xml_in response.body
+    #   fines = xml['fines'] ? xml['fines'][0]['institution'][0]['fine'] : []
+    #   fine_detail = []
+    #   fines.each do |f|
+    #     url = f['href'].gsub('http://127.0.0.1:7014/', 'https://catalog.library.cornell.edu/')
+    #     fine_detail << get_fine_detail(url)
+    #   end
+    #   fine_detail
+    # rescue
+    #   Rails.logger.debug("tlw72 ****** could not retrieve fine information.")
+    #   @nofineinfo = "Could not retrieve fine information."
+    #   return []
+    # end
 
     # TODO: Replace with FOLIO
     def get_fine_detail fine_url

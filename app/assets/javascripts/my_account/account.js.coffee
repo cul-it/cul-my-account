@@ -3,27 +3,23 @@ $(document).ready ->
 
 account =
   onLoad: () ->
-    # EXPERIMENTS
+    # Main data loading section
+    
+    netid = $('#accountData').data('netid')
+
+    # Query the FOLIO edge-patron API to retrieve user's checkouts and fines/fees.
+    # The account object is passed along to separate handlers to process each
+    # type of data individually.
     $.ajax({
-      url: "/myaccount/ajax"
-      type: "GET"
+      url: "/myaccount/get_folio_data"
+      type: "POST"
+      data: {netid: netid}
       error: (jqXHR, textStatus, errorThrown) ->
         console.log("got error")
       success: (data, textStatus, jqXHR) ->
         console.log("success!", data)
-    })
-    netid = $('#accountData').data('netid')
-
-    $.ajax({
-      url: "/myaccount/get_patron_stuff"
-      type: "POST"
-      data: {netid: netid}
-      # dataType: "json"
-      error: (jqXHR, textStatus, errorThrown) ->
-        console.log("got error 2", errorThrown)
-      success: (data, textStatus, jqXHR) ->
-        $("#checkouts").html(data.record)
-        $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
+        account.showCheckouts(data)
+        account.showFines(data)
     })
 
     # Enable tab navigation
@@ -62,3 +58,33 @@ account =
     else if (activeTab == 'pending-requests')
       $('#cancel').prop('disabled', buttonsDisabled)
       $('#export-pending-requests').prop('disabled', buttonsDisabled)
+
+  # Populate checkouts in the UI
+  showCheckouts: (accountData) ->
+    $.ajax({
+      url: "/myaccount/ajax_checkouts"
+      type: "POST"
+      data: { checkouts: accountData.account.loans }
+      # dataType: "json"
+      error: (jqXHR, textStatus, errorThrown) ->
+        console.log("got error 2", errorThrown)
+      success: (data, textStatus, jqXHR) ->
+        $("#checkouts").html(data.record)
+        $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
+    })
+
+  # Populate fines/fees in the UI
+  showFines: (accountData) ->
+    $.ajax({
+      url: "/myaccount/ajax_fines"
+      type: "POST"
+      data: { fines: accountData.account.charges }
+      # dataType: "json"
+      error: (jqXHR, textStatus, errorThrown) ->
+        console.log("got error 2", errorThrown)
+      success: (data, textStatus, jqXHR) ->
+        console.log("fine result", accountData)
+        fineTotal = '$' + accountData.account.totalCharges.amount
+        $("#fines").html(data.record)
+        $('#finesTab').html('Fines and fees (' + fineTotal + ')')
+    })

@@ -25,7 +25,7 @@
       - if !@nofineinfo.nil?
         = link_to "Fines and fees", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
       - else
-        = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
+        = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }, :id => "finesTab"
 
   %div{:class => 'tab-content', :id => 'accountData', :data => { netid: @patron['netid'] }}
     %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
@@ -36,5 +36,5 @@
       = render :partial => 'available_requests'
     -# %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
     -#   = render :partial => 'pending_requests'
-    -# %div#fines.tab-pane.fade{:role => "tabpanel"}
-    -#   = render :partial => 'fines'
+    %div#fines.tab-pane.fade{:role => "tabpanel"}
+      = render :partial => 'fines'
