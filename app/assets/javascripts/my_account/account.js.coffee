@@ -12,15 +12,18 @@ account =
       success: (data, textStatus, jqXHR) ->
         console.log("success!", data)
     })
-    console.log("Testing data load", $('#accountData').data('netid'))
+    netid = $('#accountData').data('netid')
+
     $.ajax({
       url: "/myaccount/get_patron_stuff"
-      type: "GET"
-      data: {netid: "mjc12"}
+      type: "POST"
+      data: {netid: netid}
+      # dataType: "json"
       error: (jqXHR, textStatus, errorThrown) ->
-        console.log("got error 2")
+        console.log("got error 2", errorThrown)
       success: (data, textStatus, jqXHR) ->
-        console.log("success 2!", data)
+        $("#checkouts").html(data.record)
+        $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
     })
 
     # Enable tab navigation

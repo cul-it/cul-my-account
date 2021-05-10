@@ -1,6 +1,12 @@
 = javascript_include_tag 'application'
 = javascript_include_tag 'my_account/account'
 
+-# TEMP VARS
+- @checkouts = []
+- @available_requests = []
+- @pending_requests = []
+- @fines = []
+
 - if @patron.nil?
   %p ERROR: Your account information could not be retrieved. Please ask a librarian for help or report this using the feedback link below.
 - else
@@ -10,7 +16,7 @@
 
   %ul.nav.nav-tabs{:role => "tablist"}
     %li.nav-item{:role => "presentation"}
-      = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }
+      = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }, :id => "checkoutsTab"
     %li.nav-item{:role => "presentation"}
       = link_to "Ready for pickup (#{@available_requests.count})", "#available-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
     %li.nav-item{:role => "presentation"}
@@ -21,12 +27,14 @@
       - else
         = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
 
-  %div{:class => 'tab-content', :id => 'accountData', :data => { netid: "mjc12" }}
+  %div{:class => 'tab-content', :id => 'accountData', :data => { netid: @patron['netid'] }}
     %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
-      = render :partial => 'checkouts'
+      %p Loading account data ....
+
+    -#   = render :partial => 'checkouts'
     %div#available-requests.tab-pane.fade{:role => "tabpanel"}
       = render :partial => 'available_requests'
-    %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
-      = render :partial => 'pending_requests'
-    %div#fines.tab-pane.fade{:role => "tabpanel"}
-      = render :partial => 'fines'
+    -# %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
+    -#   = render :partial => 'pending_requests'
+    -# %div#fines.tab-pane.fade{:role => "tabpanel"}
+    -#   = render :partial => 'fines'

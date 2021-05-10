@@ -60,24 +60,24 @@ module MyAccount
       @patron = get_patron_info user
       if @patron.present?
         # Take care of any requested actions first based on query params
-        if params['button'] == 'renew'
-          Rails.logger.debug "mjc12test: Going into renew"
-          items_to_renew = params.select { |param| param.match(/select\-.+/) }
-          params['button'] = nil
-          renew(user, items_to_renew) if items_to_renew.present?
-        elsif params['button'] == 'cancel'
-          Rails.logger.debug "mjc12test: Going into cancel"
-          items_to_cancel = params.select { |param| param.match(/select\-.+/) }
-          cancel items_to_cancel if items_to_cancel.present?
-        end
-        # Retrieve and display account info 
-        json_response = JSON.parse(get_patron_stuff(user))
-        @checkouts = json_response['checkouts']
-        @available_requests = json_response['available']
-        @pending_requests = json_response['pending']
-        @fines = json_response['fines']
-        @bd_requests = json_response['BD']
-        # msg = json_response['message']
+        # if params['button'] == 'renew'
+        #   Rails.logger.debug "mjc12test: Going into renew"
+        #   items_to_renew = params.select { |param| param.match(/select\-.+/) }
+        #   params['button'] = nil
+        #   renew(user, items_to_renew) if items_to_renew.present?
+        # elsif params['button'] == 'cancel'
+        #   Rails.logger.debug "mjc12test: Going into cancel"
+        #   items_to_cancel = params.select { |param| param.match(/select\-.+/) }
+        #   cancel items_to_cancel if items_to_cancel.present?
+        # end
+        # # Retrieve and display account info 
+        # json_response = JSON.parse(get_patron_stuff(user))
+        # @checkouts = json_response['checkouts']
+        # @available_requests = json_response['available']
+        # @pending_requests = json_response['pending']
+        # @fines = json_response['fines']
+        # @bd_requests = json_response['BD']
+        # # msg = json_response['message']
 
         # if msg.length > 0
         #   redirect_to "/catalog#index", :notice => msg.html_safe
@@ -380,10 +380,11 @@ module MyAccount
     #
     # If we assume that ilsapiE.cgi is rewritten to *only* return ILL results, then that simplifies the
     # parsing below greatly. No need to try to figure out whether something is a charged item or a request
-    def get_patron_stuff netid
+    def get_patron_stuff
       record = nil
       msg = ""
 
+      netid = params['netid']
       folio_account_data = get_folio_accountinfo netid
       Rails.logger.debug "mjc12test: Start parsing"
 
@@ -459,14 +460,19 @@ module MyAccount
       #   }
       # ]')
       bd_items = get_bd_requests netid
-      render json: {
-        "checkouts" => checkouts, 
-        "available" => available_requests, 
-        "pending" => pending_requests, 
-        "fines" => fines, 
-        "BD" => bd_items, 
-        "message" => msg
-      }
+      # render json: {
+      #   "checkouts" => checkouts, 
+      #   "available" => available_requests, 
+      #   "pending" => pending_requests, 
+      #   "fines" => fines, 
+      #   "BD" => bd_items, 
+      #   "message" => msg
+      # }
+      @checkouts = checkouts
+      # respond_to do |format|
+      #   format.js
+      # end
+      render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: checkouts }}
     end
 
     # Use the FOLIO EdgePatron API to retrieve a user's account, and modify the data structure to match

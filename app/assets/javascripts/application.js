@@ -15,4 +15,3 @@
 //
 //= require_tree ./my_account/account
 
-alert('hello');

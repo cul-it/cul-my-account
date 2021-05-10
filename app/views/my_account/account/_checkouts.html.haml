@@ -1,9 +1,10 @@
-- Rails.logger.debug "mjc12test: RLH #{@renewable_lookup_hash}"
+- Rails.logger.debug "mjc12test: RLH #{@renewable_lookup_hash}, checkouts: #{@checkouts}"
 
 - if @checkouts.length == 0 
   %p
     You have no items checked out.
 - else
+  - Rails.logger.debug "mjc12test: starting checkouts display"
   = form_tag({controller: :account, action: :index}, :id => 'checkouts-form') do
     %div.table-responsive
       %table#checkouts-table.table.table-striped
