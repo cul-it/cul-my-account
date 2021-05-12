@@ -19,10 +19,15 @@ module MyAccount
 
     # Return a user-readable item status message. This will filter out the 'pahr' statuses that turn
     # up from time to time but are inscrutable to users.
+    # def status_display item
+    #   status = item['vstatus'] || item['status']
+    #   return "" if status.nil? 
+    #   status == 'pahr' ? '' : status.gsub("Charged","Checked Out").gsub("Recall Request Checked Out", "Recall Request, Checked Out").gsub("/Withdrawn","")
+    # end
+
+    # Repurposed from previous method to display "overdue" where appropriate, or renewal status after an attempt to renew
     def status_display item
-      status = item['vstatus'] || item['status']
-      return "" if status.nil? 
-      status == 'pahr' ? '' : status.gsub("Charged","Checked Out").gsub("Recall Request Checked Out", "Recall Request, Checked Out").gsub("/Withdrawn","")
+      return "Overdue" if item['overdue'] == 'true'
     end
 
     # Return a 'system' data tag for a checkout. Can be FOLIO or Illiad for now. Note that
