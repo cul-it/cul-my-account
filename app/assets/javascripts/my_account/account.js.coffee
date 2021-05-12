@@ -14,9 +14,9 @@ account =
       url: "/myaccount/get_folio_data"
       type: "POST"
       data: {netid: netid}
-      error: (jqXHR, textStatus, errorThrown) ->
-        console.log("got error")
-      success: (data, textStatus, jqXHR) ->
+      error: (jqXHR, textStatus, error) ->
+        console.log("MyAccount error: couldn't retrieve user account data from FOLIO for #{netid} (#{error})")
+      success: (data) ->
         account.showCheckouts(data)
         account.showFines(data)
     })
@@ -26,9 +26,9 @@ account =
       url: "/myaccount/get_illiad_data"
       type: "POST"
       data: {netid: netid}
-      error: (jqXHR, textStatus, errorThrown) ->
-        console.log("got error")
-      success: (data, textStatus, jqXHR) ->
+      error: (jqXHR, textStatus, error) ->
+        console.log("MyAccount error: couldn't retrieve user account data from ILLiad for #{netid} (#{error})")
+      success: (data) ->
         account.showRequests(data)
     })
 
@@ -75,63 +75,48 @@ account =
       url: "/myaccount/ajax_checkouts"
       type: "POST"
       data: { checkouts: accountData.account.loans }
-      # dataType: "json"
-      error: (jqXHR, textStatus, errorThrown) ->
-        console.log("got error 2", errorThrown)
-      success: (data, textStatus, jqXHR) ->
+      error: (jqXHR, textStatus, error) ->
+        console.log("MyAccount error: couldn't render checkouts template (#{error})")
+      success: (data) ->
         $("#checkouts").html(data.record)
         $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
     })
 
   # Populate fines/fees in the UI
   showFines: (accountData) ->
-    console.log("passing through fines", accountData)
-
     $.ajax({
       url: "/myaccount/ajax_fines"
       type: "POST"
       data: { fines: accountData.account.charges }
-      # dataType: "json"
-      error: (jqXHR, textStatus, errorThrown) ->
-        console.log("got error 2", errorThrown)
-      success: (data, textStatus, jqXHR) ->
+      error: (jqXHR, textStatus, error) ->
+        console.log("MyAccount error: couldn't render fines template (#{error})")
+      success: (data) ->
         fineTotal = '$' + accountData.account.totalCharges.amount
-        $("#fines").html(data.record)
+        $('#fines').html(data.record)
         $('#finesTab').html('Fines and fees (' + fineTotal + ')')
     })
 
   # Populate requests in the UI
   showRequests: (requests) ->
-    console.log("passing through requests", requests)
+    # Available requests tab
     $.ajax({
       url: "/myaccount/ajax_illiad_available"
       type: "POST"
-      data: { requests: requests.pending }
-      # dataType: "json"
-      error: (jqXHR, textStatus, errorThrown) ->
-        console.log("got error 2", errorThrown)
-      success: (data, textStatus, jqXHR) ->
-        console.log("success", data)
-        $("#available-requests").html(data.record)
-
-        # fineTotal = '$' + accountData.account.totalCharges.amount
-        # $("#fines").html(data.record)
-        # $('#finesTab').html('Fines and fees (' + fineTotal + ')')
+      data: { requests: requests.available }
+      error: (jqXHR, textStatus, error) ->
+        console.log("MyAccount error: couldn't render available requests template (#{error})")
+      success: (data) ->
+        $('#available-requests').html(data.record)
+        $('#availableTab').html('Ready for pickup (' + data.locals.available_requests.length + ')')
     })
+    # Pending requests tab
     $.ajax({
       url: "/myaccount/ajax_illiad_pending"
       type: "POST"
       data: { requests: requests.pending }
-      # dataType: "json"
-      error: (jqXHR, textStatus, errorThrown) ->
-        console.log("got error 2", errorThrown)
-      success: (data, textStatus, jqXHR) ->
-        console.log("success p", data)
-
+      error: (jqXHR, textStatus, error) ->
+        console.log("MyAccount error: couldn't render pending requests template (#{error})")
+      success: (data) ->
         $("#pending-requests").html(data.record)
-
-        # console.log("fine result", accountData)
-        # fineTotal = '$' + accountData.account.totalCharges.amount
-        # $("#fines").html(data.record)
-        # $('#finesTab').html('Fines and fees (' + fineTotal + ')')
+        $('#pendingTab').html('Pending requests (' + data.locals.pending_requests.length + ')')
     })

@@ -439,55 +439,10 @@ module MyAccount
       end
 
       Rails.logger.debug "mjc12test: Done with parsing"
-      # TODO: Replace with FOLIO
-      #fines = get_patron_fines netid
-      # fines = folio_account_data[:account]['charges']
-      # fines = JSON.parse('[
-      #   {
-      #     "item" : {
-      #       "instanceId" : "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
-      #       "itemId" : "7d9dfe70-0158-489d-a7ed-2789eac277b3",
-      #       "title" : "Some Book About Something",
-      #       "author" : "Some Guy; Another Guy"
-      #     },
-      #     "chargeAmount" : {
-      #       "amount" : 50.0,
-      #       "isoCurrencyCode" : "USD"
-      #     },
-      #     "accrualDate" : "2018-01-31T00:00:01Z",
-      #     "state" : "Paid Partially",
-      #     "reason" : "damage - rebinding",
-      #     "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
-      #   }
-      # ]')
+
       bd_items = get_bd_requests netid
-      # render json: {
-      #   "checkouts" => checkouts, 
-      #   "available" => available_requests, 
-      #   "pending" => pending_requests, 
-      #   "fines" => fines, 
-      #   "BD" => bd_items, 
-      #   "message" => msg
-      # }
-      # @checkouts = checkouts
-      # respond_to do |format|
-      #   format.js
-      # end
-      # render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: checkouts }}
 
       render json: { pending: pending_requests, available: available_requests }
-    end
-
-    # DEPRECATED
-    # Use the FOLIO EdgePatron API to retrieve a user's account, and modify the data structure to match
-    # what we want for MyAccount
-    def get_folio_accountinfo netid
-      url = ENV['OKAPI_URL']
-      tenant = ENV['OKAPI_TENANT']
-      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-     # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
-      account = CUL::FOLIO::Edge.patron_account(url, tenant, token[:token], {:username => netid})
-     # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
     end
 
     # Use the FOLIO EdgePatron API to retrieve a user's account information. This provides lists of checkouts/
@@ -526,33 +481,6 @@ module MyAccount
     def ajax_illiad_pending
       @pending_requests = params['requests']&.values.to_a
       render json: { record: render_to_string('_pending_requests', :layout => false), locals: { pending_requests: @pending_requests }}
-    end
-
-    # # TODO: Replace with FOLIO
-    # def get_patron_fines netid
-    #   response = RestClient.get "#{ENV['VXWS_URL']}/patron/#{patron_id(netid)}/circulationActions/debt/fines?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-    #   xml = XmlSimple.xml_in response.body
-    #   fines = xml['fines'] ? xml['fines'][0]['institution'][0]['fine'] : []
-    #   fine_detail = []
-    #   fines.each do |f|
-    #     url = f['href'].gsub('http://127.0.0.1:7014/', 'https://catalog.library.cornell.edu/')
-    #     fine_detail << get_fine_detail(url)
-    #   end
-    #   fine_detail
-    # rescue
-    #   Rails.logger.debug("tlw72 ****** could not retrieve fine information.")
-    #   @nofineinfo = "Could not retrieve fine information."
-    #   return []
-    # end
-
-    # TODO: Replace with FOLIO
-    def get_fine_detail fine_url
-      response = RestClient.get fine_url
-      xml = XmlSimple.xml_in response.body
-      xml['resource'][0]['fine'][0] 
-    rescue
-       Rails.logger.debug("tlw72 ****** could not retrieve fine detail.")
-       return ""
     end
 
     # TODO: Replace with FOLIO
