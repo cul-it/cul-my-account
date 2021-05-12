@@ -17,7 +17,7 @@
             %th{:scope => 'col', :class => 'myacct-col-20'} Author
             %th{:scope => 'col', :class => 'myacct-col-20'} Status
         %tbody
-          - @checkouts.each do |c|
+          - @checkouts.sort_by { |c| c['dueDate'] }.each do |c|
             %tr.item{:id => "#{c['item']['itemId']}", :data => {:system => system_tag(c)}}
               %td
                 = label_tag "select-#{c['item']['itemId']}", 'Select', { :class => 'sr-only' }
