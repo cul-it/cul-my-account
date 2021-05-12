@@ -1,5 +1,9 @@
 # Release Notes - my-account
 
+## v2.0
+- Rewrite code to use FOLIO as a data source instead of Voyager (DISCOVERYACCESS-6993)
+- Rewrite code to load sections of the user record via AJAX
+
 ## v1.1.9
 - Fix the Borrow Direct cancel link and move it to the template.
 
