@@ -18,9 +18,9 @@
     %li.nav-item{:role => "presentation"}
       = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }, :id => "checkoutsTab"
     %li.nav-item{:role => "presentation"}
-      = link_to "Ready for pickup (#{@available_requests.count})", "#available-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }
+      = link_to "Ready for pickup (#{@available_requests.count})", "#available-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }, :id => "availableTab"
     %li.nav-item{:role => "presentation"}
-      = link_to "Pending requests (#{@pending_requests.count})", "#pending-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }
+      = link_to "Pending requests (#{@pending_requests.count})", "#pending-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }, :id => "pendingTab"
     %li.nav-item{:role => "presentation"}
       - if !@nofineinfo.nil?
         = link_to "Fines and fees", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
@@ -34,7 +34,7 @@
     -#   = render :partial => 'checkouts'
     %div#available-requests.tab-pane.fade{:role => "tabpanel"}
       = render :partial => 'available_requests'
-    -# %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
-    -#   = render :partial => 'pending_requests'
+    %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
+      = render :partial => 'pending_requests'
     %div#fines.tab-pane.fade{:role => "tabpanel"}
       = render :partial => 'fines'

@@ -17,9 +17,19 @@ account =
       error: (jqXHR, textStatus, errorThrown) ->
         console.log("got error")
       success: (data, textStatus, jqXHR) ->
-        console.log("success!", data)
         account.showCheckouts(data)
         account.showFines(data)
+    })
+
+    # Query the ILLiad CGI scripts to retrieve user's item requests
+    $.ajax({
+      url: "/myaccount/get_illiad_data"
+      type: "POST"
+      data: {netid: netid}
+      error: (jqXHR, textStatus, errorThrown) ->
+        console.log("got error")
+      success: (data, textStatus, jqXHR) ->
+        account.showRequests(data)
     })
 
     # Enable tab navigation
@@ -75,6 +85,8 @@ account =
 
   # Populate fines/fees in the UI
   showFines: (accountData) ->
+    console.log("passing through fines", accountData)
+
     $.ajax({
       url: "/myaccount/ajax_fines"
       type: "POST"
@@ -83,8 +95,43 @@ account =
       error: (jqXHR, textStatus, errorThrown) ->
         console.log("got error 2", errorThrown)
       success: (data, textStatus, jqXHR) ->
-        console.log("fine result", accountData)
         fineTotal = '$' + accountData.account.totalCharges.amount
         $("#fines").html(data.record)
         $('#finesTab').html('Fines and fees (' + fineTotal + ')')
+    })
+
+  # Populate requests in the UI
+  showRequests: (requests) ->
+    console.log("passing through requests", requests)
+    $.ajax({
+      url: "/myaccount/ajax_illiad_available"
+      type: "POST"
+      data: { requests: requests.pending }
+      # dataType: "json"
+      error: (jqXHR, textStatus, errorThrown) ->
+        console.log("got error 2", errorThrown)
+      success: (data, textStatus, jqXHR) ->
+        console.log("success", data)
+        $("#available-requests").html(data.record)
+
+        # fineTotal = '$' + accountData.account.totalCharges.amount
+        # $("#fines").html(data.record)
+        # $('#finesTab').html('Fines and fees (' + fineTotal + ')')
+    })
+    $.ajax({
+      url: "/myaccount/ajax_illiad_pending"
+      type: "POST"
+      data: { requests: requests.pending }
+      # dataType: "json"
+      error: (jqXHR, textStatus, errorThrown) ->
+        console.log("got error 2", errorThrown)
+      success: (data, textStatus, jqXHR) ->
+        console.log("success p", data)
+
+        $("#pending-requests").html(data.record)
+
+        # console.log("fine result", accountData)
+        # fineTotal = '$' + accountData.account.totalCharges.amount
+        # $("#fines").html(data.record)
+        # $('#finesTab').html('Fines and fees (' + fineTotal + ')')
     })

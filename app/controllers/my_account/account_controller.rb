@@ -381,7 +381,7 @@ module MyAccount
     #
     # If we assume that ilsapiE.cgi is rewritten to *only* return ILL results, then that simplifies the
     # parsing below greatly. No need to try to figure out whether something is a charged item or a request
-    def get_patron_stuff
+    def get_illiad_data
       record = nil
       msg = ""
 
@@ -432,7 +432,7 @@ module MyAccount
         elsif i['status'] == 'chrged'
           # TODO: Is this still relevant with FOLIO? Can an ILL item have this status?
           i['status'] = 'Charged'
-          checkouts << i
+          # checkouts << i
         else
           pending_requests << i
         end
@@ -474,6 +474,8 @@ module MyAccount
       #   format.js
       # end
       # render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: checkouts }}
+
+      render json: { pending: pending_requests, available: available_requests }
     end
 
     # DEPRECATED
@@ -503,14 +505,27 @@ module MyAccount
 
     # Render the _checkouts partial in response to an AJAX call
     def ajax_checkouts
-      @checkouts = params['checkouts'].values.to_a
+      @checkouts = params['checkouts']&.values.to_a
       render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: @checkouts }}
     end
 
     # Render the _checkouts partial in response to an AJAX call
     def ajax_fines
-      @fines = params['fines'].values.to_a
+      @fines = params['fines']&.values.to_a
+      Rails.logger.debug "mjc12test: FIN: #{params['fines']}"
+
       render json: { record: render_to_string('_fines', :layout => false), locals: { fines: @fines }}
+    end
+
+    def ajax_illiad_available
+      @available_requests = params['requests']&.values.to_a
+      #Rails.logger.debug "mjc12test: AR1: #{requests}"
+      render json: { record: render_to_string('_available_requests', :layout => false), locals: { available_requests: @available_requests }}
+    end
+
+    def ajax_illiad_pending
+      @pending_requests = params['requests']&.values.to_a
+      render json: { record: render_to_string('_pending_requests', :layout => false), locals: { pending_requests: @pending_requests }}
     end
 
     # # TODO: Replace with FOLIO
