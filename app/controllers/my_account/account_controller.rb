@@ -467,17 +467,16 @@ module MyAccount
     # Render the _checkouts partial in response to an AJAX call
     def ajax_fines
       @fines = params['fines']&.values.to_a
-      Rails.logger.debug "mjc12test: FIN: #{params['fines']}"
-
       render json: { record: render_to_string('_fines', :layout => false), locals: { fines: @fines }}
     end
 
+    # Render the _available_requests partial in response to an AJAX call
     def ajax_illiad_available
       @available_requests = params['requests']&.values.to_a
-      #Rails.logger.debug "mjc12test: AR1: #{requests}"
       render json: { record: render_to_string('_available_requests', :layout => false), locals: { available_requests: @available_requests }}
     end
 
+    # Render the _pending_requests partial in response to an AJAX call
     def ajax_illiad_pending
       @pending_requests = params['requests']&.values.to_a
       render json: { record: render_to_string('_pending_requests', :layout => false), locals: { pending_requests: @pending_requests }}

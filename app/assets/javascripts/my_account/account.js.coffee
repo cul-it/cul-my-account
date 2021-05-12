@@ -36,7 +36,11 @@ account =
     $('.nav-tabs a').click ->
       $(this).tab('show')
       account.setActionButtonState($(this).attr('href'))
-      
+
+  ######### END OF ONLOAD FUNCTION ###########
+
+  # Set up JS events after the content is loaded (see showCheckouts())
+  setEvents: () ->
     # Select/deselect all checkboxes when clicked
     $('input:checkbox.select-all').click ->
       checked = $(this).prop('checked')
@@ -46,7 +50,7 @@ account =
     $('input:checkbox').click ->
       account.setActionButtonState()
 
-    # Disable action buttons on intial page load
+    # Disable action buttons
     account.setActionButtonState()
 
   # Enable or disable the action buttons for the current open tab
@@ -80,6 +84,7 @@ account =
       success: (data) ->
         $("#checkouts").html(data.record)
         $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
+        account.setEvents()
     })
 
   # Populate fines/fees in the UI
