@@ -65,6 +65,8 @@ account =
     buttonsDisabled = $('#' + activeTab + ' input:checkbox:checked').length == 0
 
     if (activeTab == 'checkouts')
+      $('#renew').click ->
+        account.renewItems()
       $('#renew').prop('disabled', buttonsDisabled)
       $('#export-checkouts').prop('disabled', buttonsDisabled)
     else if (activeTab == 'available-requests')
@@ -125,3 +127,33 @@ account =
         $("#pending-requests").html(data.record)
         $('#pendingTab').html('Pending requests (' + data.locals.pending_requests.length + ')')
     })
+
+  renewItems: () ->
+    netid = $('#accountData').data('netid')
+    ids = []
+    $('#checkouts input:checked').each () -> ids.push(this.id)
+
+    # HACK - trim off the first array item if it doesn't contain an ID (it's the 'select all' checkbox)
+    ids.shift() if ids[0] == ''
+
+    ids.forEach (id) ->
+      $.ajax({
+        url: "/myaccount/ajax_renew"
+        type: "POST"
+        data: { netid: netid, itemId: id }
+        error: (jqXHR, textStatus, error) ->
+          console.log("MyAccount error: Unable to renew item #{id} (#{error})")
+          account.updateItemStatus(id, { code: 400 })
+        success: (result) ->
+          # N.B. This operation succeeds if the CUL::FOLIO::Edge gem returns a response correctly.
+          # That does not mean that *renewal* has succeeded; for that, check the response code
+          # in result
+          account.updateItemStatus(id, result)
+      })
+
+  # Using the item ID, show the status of a renewal operation in the appropriate table row.
+  # result will be an object with an :error property and a :code (HTTP code) property.
+  updateItemStatus: (id, result) ->
+    message = if result.code < 300 then 'Renewed' else 'Renewal failed'
+    $("##{id} td.status").html(message)
+    

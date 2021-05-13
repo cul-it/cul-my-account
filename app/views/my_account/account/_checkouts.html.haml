@@ -3,43 +3,43 @@
     You have no items checked out.
 - else
   - Rails.logger.debug "mjc12test: starting checkouts display"
-  = form_tag({controller: :account, action: :index}, :id => 'checkouts-form') do
-    %div.table-responsive
-      %table#checkouts-table.table.table-striped
-        %thead
-          %tr
-            %th{:scope => 'col', :class => 'myacct-col-5'}
-              = check_box_tag 'toggle-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-              %span.sr-only
-                Select all
-            %th{:scope => 'col', :class => 'myacct-col-10'} Due date
-            %th{:scope => 'col', :class => 'myacct-col-50'} Title
-            %th{:scope => 'col', :class => 'myacct-col-20'} Author
-            %th{:scope => 'col', :class => 'myacct-col-20'} Status
-        %tbody
-          - @checkouts.sort_by { |c| c['dueDate'] }.each do |c|
-            %tr.item{:id => "#{c['item']['itemId']}", :data => {:system => system_tag(c)}}
-              %td
-                = label_tag "select-#{c['item']['itemId']}", 'Select', { :class => 'sr-only' }
-                = check_box_tag "select-#{c['item']['itemId']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
-              %td
-                = c['dueDate'] ? c['dueDate'].to_date.strftime('%-m/%-d/%y') : ''
-              %td
-                %div
-                  = cased_title_link c
-                - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
-                  %div.badge.badge-secondary
-                    This item cannot be renewed.
-                - if c['is_bd']
-                  %div.badge.badge-primary
-                    Borrow Direct
-                - if c['is_ill']
-                  %div.badge.badge-success
-                    Interlibrary Loan
-              %td
-                =c['item']['author']
-              %td
-                = status_display c
-      = hidden_field_tag 'num_checkouts', @checkouts.length
-      = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
-      = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-checkouts', :value => 'export-checkouts', :class => 'btn btn-danger'
+  //= form_tag({controller: :account, action: :handle_actions}, :remote => true, :id => 'checkouts-form') do
+  %div.table-responsive
+    %table#checkouts-table.table.table-striped
+      %thead
+        %tr
+          %th{:scope => 'col', :class => 'myacct-col-5'}
+            = check_box_tag 'toggle-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+            %span.sr-only
+              Select all
+          %th{:scope => 'col', :class => 'myacct-col-10'} Due date
+          %th{:scope => 'col', :class => 'myacct-col-50'} Title
+          %th{:scope => 'col', :class => 'myacct-col-20'} Author
+          %th{:scope => 'col', :class => 'myacct-col-20'} Status
+      %tbody
+        - @checkouts.sort_by { |c| c['dueDate'] }.each do |c|
+          %tr.item{:id => "#{c['item']['itemId']}", :data => {:system => system_tag(c)}}
+            %td
+              = label_tag "#{c['item']['itemId']}", 'Select', { :class => 'sr-only' }
+              = check_box_tag "#{c['item']['itemId']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
+            %td
+              = c['dueDate'] ? c['dueDate'].to_date.strftime('%-m/%-d/%y') : ''
+            %td
+              %div
+                = cased_title_link c
+              - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
+                %div.badge.badge-secondary
+                  This item cannot be renewed.
+              - if c['is_bd']
+                %div.badge.badge-primary
+                  Borrow Direct
+              - if c['is_ill']
+                %div.badge.badge-success
+                  Interlibrary Loan
+            %td
+              =c['item']['author']
+            %td.status
+              = status_display c
+    = hidden_field_tag 'num_checkouts', @checkouts.length
+    = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
+    = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-checkouts', :value => 'export-checkouts', :class => 'btn btn-danger'

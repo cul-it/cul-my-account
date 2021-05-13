@@ -1,7 +1,7 @@
 = javascript_include_tag 'application'
 = javascript_include_tag 'my_account/account'
 
--# TEMP VARS
+-# Initial values (prior to ajax account loading)
 - @checkouts = []
 - @available_requests = []
 - @pending_requests = []
@@ -16,25 +16,20 @@
 
   %ul.nav.nav-tabs{:role => "tablist"}
     %li.nav-item{:role => "presentation"}
-      = link_to "Checked out (#{@checkouts.count})", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }, :id => "checkoutsTab"
+      = link_to "Checked out", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }, :id => "checkoutsTab"
     %li.nav-item{:role => "presentation"}
-      = link_to "Ready for pickup (#{@available_requests.count})", "#available-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }, :id => "availableTab"
+      = link_to "Ready for pickup", "#available-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }, :id => "availableTab"
     %li.nav-item{:role => "presentation"}
-      = link_to "Pending requests (#{@pending_requests.count})", "#pending-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }, :id => "pendingTab"
+      = link_to "Pending requests", "#pending-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }, :id => "pendingTab"
     %li.nav-item{:role => "presentation"}
-      - if !@nofineinfo.nil?
-        = link_to "Fines and fees", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }
-      - else
-        = link_to "Fines and fees (#{@fines.count})", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }, :id => "finesTab"
+      = link_to "Fines and fees", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }, :id => "finesTab"
 
   %div{:class => 'tab-content', :id => 'accountData', :data => { netid: @patron['netid'] }}
     %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
       %p Loading account data ....
-
-    -#   = render :partial => 'checkouts'
     %div#available-requests.tab-pane.fade{:role => "tabpanel"}
-      = render :partial => 'available_requests'
+      //= render :partial => 'available_requests'
     %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
-      = render :partial => 'pending_requests'
+      //= render :partial => 'pending_requests'
     %div#fines.tab-pane.fade{:role => "tabpanel"}
-      = render :partial => 'fines'
+      //= render :partial => 'fines'

@@ -41,11 +41,6 @@ module MyAccount
       # to log in.
     end
 
-    def ajax
-      # EXPERIMENT
-      render json: { :result => "test data" }
-    end
-
     def index
       if request.headers["REQUEST_METHOD"] == "HEAD"
         head :no_content
@@ -132,143 +127,155 @@ module MyAccount
     end
 
     # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
-    def ids_from_strings items
-      Rails.logger.debug "mjc12test: items: #{items}"
-      items.keys.map { |item, value| item.match(/select\-(.+)/)[1] }
-    end
+    # def ids_from_strings items
+    #   Rails.logger.debug "mjc12test: items: #{items}"
+    #   items.keys.map { |item, value| item.match(/select\-(.+)/)[1] }
+    # end
 
     # Use one of the Voyager API to retrieve a list of checked-out items that includes a canRenew
     # property. Use this to return a lookup hash based on item ID for later use. Unfortunately, if a patron
     # has hundreds of items checked out, this can time out on the Voyager side.  
-    def get_renewable_lookup patron
-      return nil if @patron.nil?
-      http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-      Rails.logger.debug "mjc12test: patron #{@patron}"
-      url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-      #response = RestClient.get(url)
-      response = RestClient::Request.execute(method: :get, url: url, timeout: 120)
-      xml = XmlSimple.xml_in response.body
-      loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
-      #Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
-      ##############
-      # loans.each do |loan|
-      #   if (rand > 0.8)
-      #     loan['canRenew'] = 'N'
-      #   end
-      # end
-      ###############
-      loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h unless loans.nil?
-    end
+    # def get_renewable_lookup patron
+    #   return nil if @patron.nil?
+    #   http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+    #   Rails.logger.debug "mjc12test: patron #{@patron}"
+    #   url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?patron_homedb=1@#{ENV['VOYAGER_DB']}"
+    #   #response = RestClient.get(url)
+    #   response = RestClient::Request.execute(method: :get, url: url, timeout: 120)
+    #   xml = XmlSimple.xml_in response.body
+    #   loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
+    #   #Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
+    #   ##############
+    #   # loans.each do |loan|
+    #   #   if (rand > 0.8)
+    #   #     loan['canRenew'] = 'N'
+    #   #   end
+    #   # end
+    #   ###############
+    #   loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h unless loans.nil?
+    # end
 
     # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
-    def renew netid, items
-      Rails.logger.debug "mjc12test: Going into renew with patron info: #{@patron}"
-      if @patron['status'] != 'Active'
-        flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
-      else
-        error_messages = []
-        # Retrieve the list of item IDs that have been selected for renewal
-        item_ids = ids_from_strings items
-        # if @checkouts.length <= 100 
-        #   @renewable_lookup_hash ||= get_renewable_lookup user
-        # end
-        if @renewable_lookup_hash.present?
-          renewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'Y' }
-          unrenewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'N' }
-        else
-          renewable_item_ids = item_ids
-          unrenewable_item_ids = []
-        end
-        # if params['num_checkouts'] && renewable_item_ids.length == params['num_checkouts'].to_i
-        #   renew_all
-        # else
-        Rails.logger.debug "mjc12test: renewable item_ids #{renewable_item_ids}"
-        Rails.logger.debug "mjc12test: unrenewable item_ids #{unrenewable_item_ids}"
+    # def renew netid, items
+    #   Rails.logger.debug "mjc12test: Going into renew with patron info: #{@patron}"
+    #   if @patron['status'] != 'Active'
+    #     flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
+    #   else
+    #     error_messages = []
+    #     # Retrieve the list of item IDs that have been selected for renewal
+    #     item_ids = ids_from_strings items
+    #     # if @checkouts.length <= 100 
+    #     #   @renewable_lookup_hash ||= get_renewable_lookup user
+    #     # end
+    #     if @renewable_lookup_hash.present?
+    #       renewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'Y' }
+    #       unrenewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'N' }
+    #     else
+    #       renewable_item_ids = item_ids
+    #       unrenewable_item_ids = []
+    #     end
+    #     # if params['num_checkouts'] && renewable_item_ids.length == params['num_checkouts'].to_i
+    #     #   renew_all
+    #     # else
+    #     Rails.logger.debug "mjc12test: renewable item_ids #{renewable_item_ids}"
+    #     Rails.logger.debug "mjc12test: unrenewable item_ids #{unrenewable_item_ids}"
 
-        # Invoke Voyager APIs to do the actual renewals
-        errors = false
-        successful_renewal_count = 0
-        renewable_item_ids.each do |id|
-          # Check for ILLiad item
-          if id.start_with? 'illiad'
-            transaction_id = id.split(/-/)[1]
-            response = RestClient.get "https://ill-access.library.cornell.edu/illrenew.cgi?netid=#{@patron['netid']}&iid=#{transaction_id}"
-            response = JSON.parse response.body
-            Rails.logger.debug "mjc12test: got renew response: #{response['error']}"
-            if response['error'].present?
-              error_messages << "Could not renew item in ILLiad"
-              Rails.logger.error "My Account: Couldn't renew ILLiad item with transaction ID #{transaction_id}. Request returned error: #{response['error']}"
-              errors = true
-            else
-              successful_renewal_count += 1
-            end
-          else
-            url = ENV['OKAPI_URL']
-            tenant = ENV['OKAPI_TENANT']
-            token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-           # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
-            response = CUL::FOLIO::Edge.renew_item(url, tenant, token[:token], netid, id)
-            # http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-            # url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-            Rails.logger.debug "mjc12test: Trying to renew with url: #{url}, tenant: #{tenant}"
-            # response = CUL::FOLIO::Edge.renew_item()
-            # response = RestClient.post(url, {})
-            Rails.logger.debug("mjc12test: renew response: #{response}")
-            # xml = XmlSimple.xml_in response.body
-            # Rails.logger.debug "mjc12test: response #{xml}"
-            if response[:code] > 201
-              error_messages << "Item could not be renewed due to an error."
-              Rails.logger.error "My Account: couldn't renew item #{id}. API returned: #{response[:error]}"
-              errors = true                
-            else  
-              successful_renewal_count += 1
+    #     # Invoke Voyager APIs to do the actual renewals
+    #     errors = false
+    #     successful_renewal_count = 0
+    #     renewable_item_ids.each do |id|
+    #       # Check for ILLiad item
+    #       if id.start_with? 'illiad'
+    #         transaction_id = id.split(/-/)[1]
+    #         response = RestClient.get "https://ill-access.library.cornell.edu/illrenew.cgi?netid=#{@patron['netid']}&iid=#{transaction_id}"
+    #         response = JSON.parse response.body
+    #         Rails.logger.debug "mjc12test: got renew response: #{response['error']}"
+    #         if response['error'].present?
+    #           error_messages << "Could not renew item in ILLiad"
+    #           Rails.logger.error "My Account: Couldn't renew ILLiad item with transaction ID #{transaction_id}. Request returned error: #{response['error']}"
+    #           errors = true
+    #         else
+    #           successful_renewal_count += 1
+    #         end
+    #       else
+    #         url = ENV['OKAPI_URL']
+    #         tenant = ENV['OKAPI_TENANT']
+    #         token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+    #        # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
+    #         response = CUL::FOLIO::Edge.renew_item(url, tenant, token[:token], netid, id)
+    #         # http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+    #         # url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
+    #         Rails.logger.debug "mjc12test: Trying to renew with url: #{url}, tenant: #{tenant}"
+    #         # response = CUL::FOLIO::Edge.renew_item()
+    #         # response = RestClient.post(url, {})
+    #         Rails.logger.debug("mjc12test: renew response: #{response}")
+    #         # xml = XmlSimple.xml_in response.body
+    #         # Rails.logger.debug "mjc12test: response #{xml}"
+    #         if response[:code] > 201
+    #           error_messages << "Item could not be renewed due to an error."
+    #           Rails.logger.error "My Account: couldn't renew item #{id}. API returned: #{response[:error]}"
+    #           errors = true                
+    #         else  
+    #           successful_renewal_count += 1
               
-              # response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0] 
-            end
-            # if xml && xml['reply-code'][0] != '0' 
-            #   error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
-            #   Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
-            #   errors = true
-            # elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
-            #   error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
-            #   Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
-            #   errors = true
-            # else
-            # end
-          end
-          # end
+    #           # response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0] 
+    #         end
+    #         # if xml && xml['reply-code'][0] != '0' 
+    #         #   error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
+    #         #   Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+    #         #   errors = true
+    #         # elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
+    #         #   error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
+    #         #   Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
+    #         #   errors = true
+    #         # else
+    #         # end
+    #       end
+    #       # end
 
-          if renewable_item_ids.count == 1 && successful_renewal_count == 1 && errors == false
-            flash[:notice] = 'This item has been renewed.'
-          elsif successful_renewal_count > 1
-            flash[:notice] = "#{successful_renewal_count} items were renewed."
-          end
-          if unrenewable_item_ids.count > 0
-            error_messages << 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
-          end
-          if error_messages.present?
-            error_messages = error_messages.join('<br/>').html_safe
-            flash[:error] = error_messages 
-          end
-        end
-        params.select! { |param| !param.match(/select\-.+/) }
-      end
+    #       if renewable_item_ids.count == 1 && successful_renewal_count == 1 && errors == false
+    #         flash[:notice] = 'This item has been renewed.'
+    #       elsif successful_renewal_count > 1
+    #         flash[:notice] = "#{successful_renewal_count} items were renewed."
+    #       end
+    #       if unrenewable_item_ids.count > 0
+    #         error_messages << 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
+    #       end
+    #       if error_messages.present?
+    #         error_messages = error_messages.join('<br/>').html_safe
+    #         flash[:error] = error_messages 
+    #       end
+    #     end
+    #     params.select! { |param| !param.match(/select\-.+/) }
+    #   end
+    # end
+
+    # Use the CUL::FOLIO::Edge gem to renew an item. Operation is triggered via AJAX.
+    def ajax_renew
+      netid = params['netid']
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+      # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
+      result = CUL::FOLIO::Edge.renew_item(url, tenant, token[:token], netid, params['itemId'])
+      # Rails.logger.debug("mjc12test: Got FOLIO result #{result.inspect}")
+      render json: result
     end
 
-    def renew_all
-      Rails.logger.debug "mjc12test: Renewing all!"
-      http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-      url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?institution=1@LOCAL&patron_homedb=1@#{ENV['VOYAGER_DB']}"
-      response = RestClient.post(url, {})
-      xml = XmlSimple.xml_in response.body
-        Rails.logger.debug "mjc12test: response from renew all: #{xml}"
-      if xml && xml['reply-code'][0] != '0'
-        flash[:error] = "There was an error when trying to renew all items: " + xml['reply-text'][0]
-        Rails.logger.error "My Account: couldn't renew all items. XML returned: #{xml}"
-      else
-        flash[:notice] = 'All items were renewed.'
-      end
-    end
+    # def renew_all
+    #   Rails.logger.debug "mjc12test: Renewing all!"
+    #   http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+    #   url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?institution=1@LOCAL&patron_homedb=1@#{ENV['VOYAGER_DB']}"
+    #   response = RestClient.post(url, {})
+    #   xml = XmlSimple.xml_in response.body
+    #     Rails.logger.debug "mjc12test: response from renew all: #{xml}"
+    #   if xml && xml['reply-code'][0] != '0'
+    #     flash[:error] = "There was an error when trying to renew all items: " + xml['reply-text'][0]
+    #     Rails.logger.error "My Account: couldn't renew all items. XML returned: #{xml}"
+    #   else
+    #     flash[:notice] = 'All items were renewed.'
+    #   end
+    # end
 
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
     # Requested items could be Voyager items, ILLiad, or Borrow Direct -- so use whichever API is appropriate
