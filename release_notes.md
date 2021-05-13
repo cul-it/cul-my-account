@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v1.2.2
+- Add read-only mode using MY_ACCOUNT_READONLY ENV flag (DISCOVERYACCESS-7019)
+
 ## v1.2.1
 - Add temporary service interruptions link. (DISCOVERYACCESS-7094)
 
