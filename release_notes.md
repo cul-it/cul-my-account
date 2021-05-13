@@ -1,7 +1,13 @@
 # Release Notes - my-account
 
+## v1.2.3
+- Modify the text of temporary service interruptions alert. (DISCOVERYACCESS-7094)
+
+## v1.2.2
+- Add read-only mode using MY_ACCOUNT_READONLY ENV flag (DISCOVERYACCESS-7019)
+
 ## v1.2.1
-- Add temporary service interruptions link. (DISCOVERYACCESS-7094)
+- Add temporary service interruptions alert. (DISCOVERYACCESS-7094)
 
 ## v1.2.0
 - Apply mt-4 class to the first h2 heading.
