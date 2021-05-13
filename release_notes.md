@@ -1,5 +1,11 @@
 # Release Notes - my-account
 
+## v1.2.1
+- Add temporary service interruptions link. (DISCOVERYACCESS-7094)
+
+## v1.2.0
+- Apply mt-4 class to the first h2 heading.
+
 ## v1.1.9
 - Fix the Borrow Direct cancel link and move it to the template.
 
