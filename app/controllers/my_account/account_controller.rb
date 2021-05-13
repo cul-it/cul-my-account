@@ -74,9 +74,9 @@ module MyAccount
         # @bd_requests = json_response['BD']
         # # msg = json_response['message']
 
-        # if msg.length > 0
-        #   redirect_to "/catalog#index", :notice => msg.html_safe
-        # else
+        if msg.length > 0
+          redirect_to "/catalog#index", :notice => msg.html_safe
+        end
         #   @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
         #   @checkouts.sort! { |a,b| a['dueDate']  <=> b['dueDate']  } 
         #   Rails.logger.debug "mjc12test: Still going 2"
@@ -310,40 +310,40 @@ module MyAccount
 
     end
 
-    def export items
-      item_ids = ids_from_strings items
-      ris_output = ''
-      item_ids.each do |id|
-        record = @checkouts.detect { |i| i['item']['itemId'] == id }
-        # TODO: the TY field may need to be made dynamic to account for different material types -
-        # see https://en.wikipedia.org/wiki/RIS_(file_format). But currently the item record passed in
-        # does not indicate type.
-        if record['item']
-          item = record['item']
-          ris_output += "TY  - BOOK\n"
-          # ris_output += "CY  - #{item['ou_pp']}\n"
-          # ris_output += "PY  - #{item['ou_yr']}\n"
-          # ris_output += "PB  - #{item['ou_pb']}\n"
-          # ris_output += "T1  - #{item['ou_title']}\n"
-          ris_output += "T1  - #{item['title']}\n" if item['title']
-          # ris_output += "AU  - #{item['au']}\n"
-          ris_output += "AU  - #{item['author']}\n" if item['author']
-          # ris_output += "SN  - #{item['ou_isbn']}\n"
-          # LA  - English
-          # ris_output += "UR  - http://newcatalog.library.cornell.edu/catalog/#{item['bid']}\n"
-          # ris_output += "CN  - #{item['callno']}\n"
-          ris_output += "ER  -\n"
-        end
-      end
+    # def export items
+    #   item_ids = ids_from_strings items
+    #   ris_output = ''
+    #   item_ids.each do |id|
+    #     record = @checkouts.detect { |i| i['item']['itemId'] == id }
+    #     # TODO: the TY field may need to be made dynamic to account for different material types -
+    #     # see https://en.wikipedia.org/wiki/RIS_(file_format). But currently the item record passed in
+    #     # does not indicate type.
+    #     if record['item']
+    #       item = record['item']
+    #       ris_output += "TY  - BOOK\n"
+    #       # ris_output += "CY  - #{item['ou_pp']}\n"
+    #       # ris_output += "PY  - #{item['ou_yr']}\n"
+    #       # ris_output += "PB  - #{item['ou_pb']}\n"
+    #       # ris_output += "T1  - #{item['ou_title']}\n"
+    #       ris_output += "T1  - #{item['title']}\n" if item['title']
+    #       # ris_output += "AU  - #{item['au']}\n"
+    #       ris_output += "AU  - #{item['author']}\n" if item['author']
+    #       # ris_output += "SN  - #{item['ou_isbn']}\n"
+    #       # LA  - English
+    #       # ris_output += "UR  - http://newcatalog.library.cornell.edu/catalog/#{item['bid']}\n"
+    #       # ris_output += "CN  - #{item['callno']}\n"
+    #       ris_output += "ER  -\n"
+    #     end
+    #   end
 
-      send_data ris_output, filename: 'citation.ris', type: 'text/ris'
-    end
+    #   send_data ris_output, filename: 'citation.ris', type: 'text/ris'
+    # end
 
-    def get_patron_info netid
-      response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
-      record = JSON.parse response.body
-      record[netid]
-    end
+    # def get_patron_info netid
+    #   response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
+    #   record = JSON.parse response.body
+    #   record[netid]
+    # end
 
     # DEPRECATED
     # This is the main lookup function. It retrieves a list of a user's requests and charged
