@@ -41,5 +41,11 @@
             %td.status
               = status_display c
     = hidden_field_tag 'num_checkouts', @checkouts.length
-    = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
+    - if ENV['MY_ACCOUNT_READONLY']
+      %span
+        Note: The system is running in read-only mode. Items cannot be renewed, and requests cannot be cancelled. Please ask a librarian for assistance if needed.
+      %br
+      %br
+    - else
+      = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
     = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-checkouts', :value => 'export-checkouts', :class => 'btn btn-danger'

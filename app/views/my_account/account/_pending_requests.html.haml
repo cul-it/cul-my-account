@@ -36,7 +36,13 @@
               = c['ou_aulast'] || c['au']
             %td
               = request_types[c['ttype'] || c['system']]
-    = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
+    - if ENV['MY_ACCOUNT_READONLY']
+      %span
+        Note: The system is running in read-only mode. Items cannot be renewed, and requests cannot be cancelled. Please ask a librarian for assistance if needed.
+      %br
+      %br
+    - else
+      = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
     = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-pending-requests', :value => 'export-pending-requests', :class => 'btn btn-danger'
 - if has_ill_pending
   %p

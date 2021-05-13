@@ -3,6 +3,7 @@
 ## v2.0
 - Rewrite code to use FOLIO as a data source instead of Voyager (DISCOVERYACCESS-6993)
 - Rewrite code to load sections of the user record via AJAX
+- Implement read-only mode using MY_ACCOUNT_READONLY ENV flag (DISCOVERYACCESS-7019)
 
 ## v1.1.9
 - Fix the Borrow Direct cancel link and move it to the template.
