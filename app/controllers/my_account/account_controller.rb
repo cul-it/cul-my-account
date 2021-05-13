@@ -52,8 +52,8 @@ module MyAccount
         redirect_to "/catalog#index", :notice => msg.html_safe
       end
 
-      @patron = get_patron_info user
-      if @patron.present?
+      @netid = user
+      if @netid.present?
         # Take care of any requested actions first based on query params
         # if params['button'] == 'renew'
         #   Rails.logger.debug "mjc12test: Going into renew"
@@ -74,7 +74,7 @@ module MyAccount
         # @bd_requests = json_response['BD']
         # # msg = json_response['message']
 
-        if msg.length > 0
+        if msg && msg.length > 0
           redirect_to "/catalog#index", :notice => msg.html_safe
         end
         #   @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
@@ -450,6 +450,19 @@ module MyAccount
       bd_items = get_bd_requests netid
 
       render json: { pending: pending_requests, available: available_requests }
+    end
+
+    # Use the FOLIO EdgePatron API to retrieve a user's user record from FOLIO (*not* the user's account,
+    # which here refers to his/her checkouts and fines/fees). 
+    def get_user_record
+      netid = params['netid']
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+     # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
+      user = CUL::FOLIO::Edge.patron_record(url, tenant, token[:token], netid)
+     # Rails.logger.debug("mjc12test: Got FOLIO user #{user.inspect}")
+      render json: user
     end
 
     # Use the FOLIO EdgePatron API to retrieve a user's account information. This provides lists of checkouts/

@@ -37,6 +37,18 @@ account =
       $(this).tab('show')
       account.setActionButtonState($(this).attr('href'))
 
+    # Look up user's name from FOLIO
+    $.ajax({
+      url: "/myaccount/get_user_record"
+      type: "POST"
+      data: { netid: netid }
+      error: (jqXHR, textStatus, error) -> 
+        console.log("MyAccount error: couldn't retrieve user record from FOLIO for #{netid} (#{error})")
+      success: (data) ->
+        nameSection = data.user.personal
+        $('#userName').html("Account information for #{nameSection['firstName']} #{nameSection['lastName']}")
+    })
+
   ######### END OF ONLOAD FUNCTION ###########
 
   # Set up JS events after the content is loaded (see showCheckouts())

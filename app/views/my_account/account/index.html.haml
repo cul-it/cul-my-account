@@ -7,12 +7,10 @@
 - @pending_requests = []
 - @fines = []
 
-- if @patron.nil?
+- if @netid.nil?
   %p ERROR: Your account information could not be retrieved. Please ask a librarian for help or report this using the feedback link below.
 - else
-  %h2 
-    Account information for 
-    = "#{@patron['first_name']} #{@patron['last_name']}"
+  %h2#userName 
 
   %ul.nav.nav-tabs{:role => "tablist"}
     %li.nav-item{:role => "presentation"}
@@ -24,7 +22,7 @@
     %li.nav-item{:role => "presentation"}
       = link_to "Fines and fees", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }, :id => "finesTab"
 
-  %div{:class => 'tab-content', :id => 'accountData', :data => { netid: @patron['netid'] }}
+  %div{:class => 'tab-content', :id => 'accountData', :data => { netid: @netid }}
     %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
       %p Loading account data ....
     %div#available-requests.tab-pane.fade{:role => "tabpanel"}

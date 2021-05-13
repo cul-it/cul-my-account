@@ -1,6 +1,7 @@
 MyAccount::Engine.routes.draw do
   match '/login' => 'account#intro', via: [:get]
   match '/' => 'account#index', via: [:get, :post], as: 'myaccount'
+  match '/get_user_record' => 'account#get_user_record', via: [:post]
   match '/get_folio_data' => 'account#get_folio_data', via: [:post]
   match '/get_illiad_data' => 'account#get_illiad_data', via: [:post]
   match '/ajax_checkouts' => 'account#ajax_checkouts', via: [:post]
