@@ -10,6 +10,15 @@
 - if @netid.nil?
   %p ERROR: Your account information could not be retrieved. Please ask a librarian for help or report this using the feedback link below.
 - else
+  %div.service-alert
+    %div.alert.alert-warning{:style => "background-color:rgba(0,0,0,0.03);border-color:rgba(0,0,0,0.125);color:#222;padding: 14px 55px 0;"}
+      %p
+        Due to
+        = succeed ',' do
+          = link_to "service interruptions", "https://www.library.cornell.edu/pause"
+        items returned after June 21 will not clear until July 15. 
+      %p
+        Items with due dates between June 14 and July 12 will be automatically renewed during the week of June 7 and do not need to be returned during the service outage. The new due dates will be reflected on the "Checked out" tab.
   %h2#userName 
 
   %ul.nav.nav-tabs{:role => "tablist"}
