@@ -17,8 +17,12 @@ account =
       error: (jqXHR, textStatus, error) ->
         console.log("MyAccount error: couldn't retrieve user account data from FOLIO for #{netid} (#{error})")
       success: (data) ->
-        account.showCheckouts(data)
-        account.showFines(data)
+        if data.code < 300
+          account.showCheckouts(data)
+          account.showFines(data)
+        else
+          console.log("MyAccount error: couldn't retrieve user account data from FOLIO for #{netid} (#{data.error})")
+
     })
 
     # Query the ILLiad CGI scripts to retrieve user's item requests
