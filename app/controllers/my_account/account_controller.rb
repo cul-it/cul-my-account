@@ -53,202 +53,7 @@ module MyAccount
       end
 
       @netid = user
-      if @netid.present?
-        # Take care of any requested actions first based on query params
-        # if params['button'] == 'renew'
-        #   Rails.logger.debug "mjc12test: Going into renew"
-        #   items_to_renew = params.select { |param| param.match(/select\-.+/) }
-        #   params['button'] = nil
-        #   renew(user, items_to_renew) if items_to_renew.present?
-        # elsif params['button'] == 'cancel'
-        #   Rails.logger.debug "mjc12test: Going into cancel"
-        #   items_to_cancel = params.select { |param| param.match(/select\-.+/) }
-        #   cancel items_to_cancel if items_to_cancel.present?
-        # end
-        # # Retrieve and display account info 
-        # json_response = JSON.parse(get_patron_stuff(user))
-        # @checkouts = json_response['checkouts']
-        # @available_requests = json_response['available']
-        # @pending_requests = json_response['pending']
-        # @fines = json_response['fines']
-        # @bd_requests = json_response['BD']
-        # # msg = json_response['message']
-
-        if msg && msg.length > 0
-          redirect_to "/catalog#index", :notice => msg.html_safe
-        end
-        #   @pending_requests += @bd_requests.select{ |r| r['status'] != 'ON LOAN' && r['status'] != 'ON_LOAN' }
-        #   @checkouts.sort! { |a,b| a['dueDate']  <=> b['dueDate']  } 
-        #   Rails.logger.debug "mjc12test: Still going 2"
-
-        #   # HACK: the API call that is used to build the hash of renewable (yes/no) status for checked-out
-        #   # items times out with a nasty server error if the user has too many charged items. For now, arbitrarily
-        #   # do this only for small collections of items. (This means that users with large collections won't see the
-        #   # warning labels that certain items can't be renewed ... but the renewal process itself should still work.)
-          
-        #   # HACK (tlw72): if the title of a BD request = the title of an item that's checked out but shows
-        #   # "voyager" as the system, it's a good bet -- maybe -- that checked out item is a BD request.
-        #   # The location (lo) and callnumber (callno) of the checked out item should also be null, so
-        #   # check those, too. If all three criteria meet, add a "is_bd" value to the checkout out item to grab
-        #   # in the template. Also, if the system is "illiad" or there's a TransactionNumber, we have an ILL item.
-        #   # add a "is_ill" value to checkout that can also be grabbed in the template.
-
-        #   # TODO: Fix this for FOLIO
-        #   # if @checkouts.length > 0
-        #   #   @checkouts.each do |chk|
-        #   #     if @bd_requests.length > 0
-        #   #       # there's often (always?) a white space at the end of a BD title in voyager. Lose it.
-        #   #       chk_title = chk["ou_title"].present? ? chk["ou_title"].sub(/\s+\Z/, "") : chk["tl"].sub(/\s+\Z/, "")
-        #   #       bd_array = @bd_requests.select {|book| book["tl"] ==  chk_title}
-        #   #       if bd_array.length > 0 && chk["lo"].length == 0 && chk["callno"].length == 0
-        #   #         chk["is_bd"] = true
-        #   #       end
-        #   #     end
-        #   #     if chk["system"] == "illiad" || chk["TransactionNumber"].present?
-        #   #       chk["is_ill"] = true
-        #   #     end
-        #   #   end
-        #   #   #Rails.logger.debug("tlw72 > @checkouts = " + @checkouts.inspect)          
-        #   # end
-          
-        #   # TODO: Fix this for FOLIO
-        #   # if @checkouts.length <= 100
-        #   #   @renewable_lookup_hash = get_renewable_lookup user
-        #   #   Rails.logger.info(@renewable_lookup_hash.inspect)
-        #   # end
-          
-        #   # HACK: this has to follow the assignment of @checkouts so that we have the item data available for export
-        #   if params['button'] == 'export-checkouts'
-        #     items_to_export = params.select { |param| param.match(/select\-.+/) }
-        #     export items_to_export if items_to_export.present?
-        #   end
-        # end
-      end
     end
-
-    # Given an array of item "ids" (of the form 'select-<id>'), return an array of the bare IDs
-    # def ids_from_strings items
-    #   Rails.logger.debug "mjc12test: items: #{items}"
-    #   items.keys.map { |item, value| item.match(/select\-(.+)/)[1] }
-    # end
-
-    # Use one of the Voyager API to retrieve a list of checked-out items that includes a canRenew
-    # property. Use this to return a lookup hash based on item ID for later use. Unfortunately, if a patron
-    # has hundreds of items checked out, this can time out on the Voyager side.  
-    # def get_renewable_lookup patron
-    #   return nil if @patron.nil?
-    #   http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-    #   Rails.logger.debug "mjc12test: patron #{@patron}"
-    #   url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-    #   #response = RestClient.get(url)
-    #   response = RestClient::Request.execute(method: :get, url: url, timeout: 120)
-    #   xml = XmlSimple.xml_in response.body
-    #   loans = xml['loans'] && xml['loans'][0]['institution'][0]['loan']
-    #   #Rails.logger.debug "mjc12test: loans found #{loans} for xml #{xml}"
-    #   ##############
-    #   # loans.each do |loan|
-    #   #   if (rand > 0.8)
-    #   #     loan['canRenew'] = 'N'
-    #   #   end
-    #   # end
-    #   ###############
-    #   loans.map { |loan| [loan['href'][/\|(\d+)\?/,1], loan['canRenew']] }.to_h unless loans.nil?
-    # end
-
-    # Given a list of item "ids" (of the form 'select-<id>'), renew them (if possible) using the Voyager API
-    # def renew netid, items
-    #   Rails.logger.debug "mjc12test: Going into renew with patron info: #{@patron}"
-    #   if @patron['status'] != 'Active'
-    #     flash[:error] = 'There is a problem with your account. The selected items could not be renewed.'
-    #   else
-    #     error_messages = []
-    #     # Retrieve the list of item IDs that have been selected for renewal
-    #     item_ids = ids_from_strings items
-    #     # if @checkouts.length <= 100 
-    #     #   @renewable_lookup_hash ||= get_renewable_lookup user
-    #     # end
-    #     if @renewable_lookup_hash.present?
-    #       renewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'Y' }
-    #       unrenewable_item_ids = item_ids.select { |iid| @renewable_lookup_hash[iid] == 'N' }
-    #     else
-    #       renewable_item_ids = item_ids
-    #       unrenewable_item_ids = []
-    #     end
-    #     # if params['num_checkouts'] && renewable_item_ids.length == params['num_checkouts'].to_i
-    #     #   renew_all
-    #     # else
-    #     Rails.logger.debug "mjc12test: renewable item_ids #{renewable_item_ids}"
-    #     Rails.logger.debug "mjc12test: unrenewable item_ids #{unrenewable_item_ids}"
-
-    #     # Invoke Voyager APIs to do the actual renewals
-    #     errors = false
-    #     successful_renewal_count = 0
-    #     renewable_item_ids.each do |id|
-    #       # Check for ILLiad item
-    #       if id.start_with? 'illiad'
-    #         transaction_id = id.split(/-/)[1]
-    #         response = RestClient.get "https://ill-access.library.cornell.edu/illrenew.cgi?netid=#{@patron['netid']}&iid=#{transaction_id}"
-    #         response = JSON.parse response.body
-    #         Rails.logger.debug "mjc12test: got renew response: #{response['error']}"
-    #         if response['error'].present?
-    #           error_messages << "Could not renew item in ILLiad"
-    #           Rails.logger.error "My Account: Couldn't renew ILLiad item with transaction ID #{transaction_id}. Request returned error: #{response['error']}"
-    #           errors = true
-    #         else
-    #           successful_renewal_count += 1
-    #         end
-    #       else
-    #         url = ENV['OKAPI_URL']
-    #         tenant = ENV['OKAPI_TENANT']
-    #         token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-    #        # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
-    #         response = CUL::FOLIO::Edge.renew_item(url, tenant, token[:token], netid, id)
-    #         # http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-    #         # url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}"
-    #         Rails.logger.debug "mjc12test: Trying to renew with url: #{url}, tenant: #{tenant}"
-    #         # response = CUL::FOLIO::Edge.renew_item()
-    #         # response = RestClient.post(url, {})
-    #         Rails.logger.debug("mjc12test: renew response: #{response}")
-    #         # xml = XmlSimple.xml_in response.body
-    #         # Rails.logger.debug "mjc12test: response #{xml}"
-    #         if response[:code] > 201
-    #           error_messages << "Item could not be renewed due to an error."
-    #           Rails.logger.error "My Account: couldn't renew item #{id}. API returned: #{response[:error]}"
-    #           errors = true                
-    #         else  
-    #           successful_renewal_count += 1
-              
-    #           # response_loan_info = xml && xml['renewal'][0]['institution'][0]['loan'][0] 
-    #         end
-    #         # if xml && xml['reply-code'][0] != '0' 
-    #         #   error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error:  " + xml['reply-text'][0]
-    #         #   Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
-    #         #   errors = true
-    #         # elsif response_loan_info && response_loan_info['renewalStatus'][0] != 'Success' 
-    #         #   error_messages << "Item '#{response_loan_info['title'][0]}' could not be renewed due to an error: " + response_loan_info['renewalStatus'][0]
-    #         #   Rails.logger.error "My Account: couldn't renew item #{id}. XML returned: #{xml}"
-    #         #   errors = true
-    #         # else
-    #         # end
-    #       end
-    #       # end
-
-    #       if renewable_item_ids.count == 1 && successful_renewal_count == 1 && errors == false
-    #         flash[:notice] = 'This item has been renewed.'
-    #       elsif successful_renewal_count > 1
-    #         flash[:notice] = "#{successful_renewal_count} items were renewed."
-    #       end
-    #       if unrenewable_item_ids.count > 0
-    #         error_messages << 'Some items were skipped because they could not be renewed. Ask a librarian for more information.'
-    #       end
-    #       if error_messages.present?
-    #         error_messages = error_messages.join('<br/>').html_safe
-    #         flash[:error] = error_messages 
-    #       end
-    #     end
-    #     params.select! { |param| !param.match(/select\-.+/) }
-    #   end
-    # end
 
     # Use the CUL::FOLIO::Edge gem to renew an item. Operation is triggered via AJAX.
     def ajax_renew
@@ -261,21 +66,6 @@ module MyAccount
       # Rails.logger.debug("mjc12test: Got FOLIO result #{result.inspect}")
       render json: result
     end
-
-    # def renew_all
-    #   Rails.logger.debug "mjc12test: Renewing all!"
-    #   http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-    #   url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/loans?institution=1@LOCAL&patron_homedb=1@#{ENV['VOYAGER_DB']}"
-    #   response = RestClient.post(url, {})
-    #   xml = XmlSimple.xml_in response.body
-    #     Rails.logger.debug "mjc12test: response from renew all: #{xml}"
-    #   if xml && xml['reply-code'][0] != '0'
-    #     flash[:error] = "There was an error when trying to renew all items: " + xml['reply-text'][0]
-    #     Rails.logger.error "My Account: couldn't renew all items. XML returned: #{xml}"
-    #   else
-    #     flash[:notice] = 'All items were renewed.'
-    #   end
-    # end
 
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
     # Requested items could be Voyager items, ILLiad, or Borrow Direct -- so use whichever API is appropriate
@@ -308,84 +98,14 @@ module MyAccount
         flash[:notice] = 'Your requests have been cancelled.'
       end
 
-    end
+    end 
 
-    # def export items
-    #   item_ids = ids_from_strings items
-    #   ris_output = ''
-    #   item_ids.each do |id|
-    #     record = @checkouts.detect { |i| i['item']['itemId'] == id }
-    #     # TODO: the TY field may need to be made dynamic to account for different material types -
-    #     # see https://en.wikipedia.org/wiki/RIS_(file_format). But currently the item record passed in
-    #     # does not indicate type.
-    #     if record['item']
-    #       item = record['item']
-    #       ris_output += "TY  - BOOK\n"
-    #       # ris_output += "CY  - #{item['ou_pp']}\n"
-    #       # ris_output += "PY  - #{item['ou_yr']}\n"
-    #       # ris_output += "PB  - #{item['ou_pb']}\n"
-    #       # ris_output += "T1  - #{item['ou_title']}\n"
-    #       ris_output += "T1  - #{item['title']}\n" if item['title']
-    #       # ris_output += "AU  - #{item['au']}\n"
-    #       ris_output += "AU  - #{item['author']}\n" if item['author']
-    #       # ris_output += "SN  - #{item['ou_isbn']}\n"
-    #       # LA  - English
-    #       # ris_output += "UR  - http://newcatalog.library.cornell.edu/catalog/#{item['bid']}\n"
-    #       # ris_output += "CN  - #{item['callno']}\n"
-    #       ris_output += "ER  -\n"
-    #     end
-    #   end
-
-    #   send_data ris_output, filename: 'citation.ris', type: 'text/ris'
-    # end
-
-    # def get_patron_info netid
-    #   response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
-    #   record = JSON.parse response.body
-    #   record[netid]
-    # end
-
-    # DEPRECATED
-    # This is the main lookup function. It retrieves a list of a user's requests and charged
-    # items using the ilsapi CGI script.
+    # Retrieves a list of a user's requests and charged items using the ilsapi CGI script.
     # DISCOVERYACCESS-5558 add msg for the error handling
     #
     # Account information (Voyager, BD, ILL) was provided by the ilsapiE.cgi script. Besides a
     # 'patron' JSON object, it provided an 'items' array. Each item is an object representing an
     # item from Voyager, ILL, or Borrow Direct.
-    # For the move to FOLIO, we use the EdgePatron API to look up a user's account info, which comes
-    # back (via the CUL FOLIO Edge gem) looking like this:
-    # { :account=>
-    #     {"totalCharges"=>
-    #       {"amount"=>0.0, "isoCurrencyCode"=>"USD"}, 
-    #       "totalChargesCount"=>0, 
-    #       "totalLoans"=>2, 
-    #       "totalHolds"=>0, 
-    #       "charges"=>[], 
-    #       "holds"=>[], 
-    #       "loans"=>[
-    #         {"id"=>"c6ce747e-e210-4eb7-a72d-ea7116e803b4",
-    #          "item"=>{
-    #            "instanceId"=>"69640328-788e-43fc-9c3c-af39e243f3b7", 
-    #            "itemId"=>"eedd13c4-7d40-4b1e-8f77-b0b9d19a896b", 
-    #            "title"=>"ABA Journal"}, 
-    #          "loanDate"=>"2021-03-19T14:42:32.000+0000", 
-    #          "dueDate"=>"2021-05-18T23:59:59.000+0000", 
-    #          "overdue"=>false}, 
-    #         {"id"=>"c372ee00-a89f-4d9c-ba8a-9316fe43e47e", 
-    #           "item"=>{"instanceId"=>"cf23adf0-61ba-4887-bf82-956c4aae2260", 
-    #             "itemId"=>"88d326f0-5d94-4c00-a497-7fefebbd724a",
-    #             "title"=>"Temeraire", 
-    #             "author"=>"Novik, Naomi"}, 
-    #           "loanDate"=>"2021-03-19T14:42:56.000+0000", 
-    #           "dueDate"=>"2021-03-19T15:42:56.000+0000", 
-    #           "overdue"=>false}
-    #       ]
-    #     }, 
-    #   :error=>nil, 
-    #   :code=>200
-    # } 
-    #
     # If we assume that ilsapiE.cgi is rewritten to *only* return ILL results, then that simplifies the
     # parsing below greatly. No need to try to figure out whether something is a charged item or a request
     def get_illiad_data
@@ -394,7 +114,7 @@ module MyAccount
 
       netid = params['netid']
       # folio_account_data = get_folio_accountinfo netid
-      Rails.logger.debug "mjc12test: Start parsing"
+      # Rails.logger.debug "mjc12test: Start parsing"
 
       begin 
         response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
