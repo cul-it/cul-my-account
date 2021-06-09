@@ -204,6 +204,23 @@ module MyAccount
       render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: @checkouts }}
     end
 
+    # Use the FOLIO gem to retrieve an instance's HRID (i.e., bib id) given its UUID. Token is included
+    # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls
+    def ajax_catalog_link
+      instanceId = params['instanceId']
+      token = params['token'] || CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])[:token]
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      # Get instance HRID (e.g., bibid) for the record
+      response = CUL::FOLIO::Edge.instance_record(url, tenant, token, instanceId)
+      link = nil
+      if response[:code] < 300
+        link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}"
+      end
+      #Rails.logger.debug "mjc12test: got response #{response[:instance]['hrid']} for #{instanceId} with link #{link}"
+      render json: { link: link }
+    end
+
     # Render the _checkouts partial in response to an AJAX call
     def ajax_fines
       @fines = params['fines']&.values.to_a

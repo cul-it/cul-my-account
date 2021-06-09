@@ -102,7 +102,25 @@ account =
       success: (data) ->
         $("#checkouts").html(data.record)
         $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
+        # Add catalog links to the titles in the table
+        data.locals.checkouts.forEach (checkout) ->
+          account.addCatalogLink(checkout)
         account.setEvents()
+    })
+
+  # Given a checkout entry, call an ajax method to determine its instance bibid
+  # and create a link to the catalog record, then add the link to the displayed title
+  addCatalogLink: (entry) ->
+    $.ajax({
+      url: "/myaccount/ajax_catalog_link"
+      type: "POST"
+      data: { instanceId: entry.item.instanceId }
+      error: (jqXHR, textStatus, error) ->
+        console.log("MyAccount error: couldn't add catalog link for #{entry.id} (#{error})")
+      success: (data) ->
+        # Find the correct item title and add the link
+        title = $("##{entry.item.itemId} .title").html()
+        $("##{entry.item.itemId} .title").html("<a href='#{data.link}'>#{title}</>")
     })
 
   # Populate fines/fees in the UI

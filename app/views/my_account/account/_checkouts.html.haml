@@ -25,11 +25,11 @@
             %td
               = c['dueDate'] ? c['dueDate'].to_date.strftime('%-m/%-d/%y') : ''
             %td
-              %div
+              %div.title
                 = cased_title_link c
-              - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
-                %div.badge.badge-secondary
-                  This item cannot be renewed.
+              -# - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
+              -#   %div.badge.badge-secondary
+              -#     This item cannot be renewed.
               - if c['is_bd']
                 %div.badge.badge-primary
                   Borrow Direct
