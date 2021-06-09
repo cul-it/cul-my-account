@@ -208,9 +208,9 @@ module MyAccount
     # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls
     def ajax_catalog_link
       instanceId = params['instanceId']
-      token = params['token'] || CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])[:token]
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
+      token = params['token'] || CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])[:token]
       # Get instance HRID (e.g., bibid) for the record
       response = CUL::FOLIO::Edge.instance_record(url, tenant, token, instanceId)
       link = nil
