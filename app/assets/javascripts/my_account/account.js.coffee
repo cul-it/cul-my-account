@@ -10,31 +10,35 @@ account =
     # Query the FOLIO edge-patron API to retrieve user's checkouts and fines/fees.
     # The account object is passed along to separate handlers to process each
     # type of data individually.
-    $.ajax({
+    folioAccountLookup = $.ajax({
       url: "/myaccount/get_folio_data"
       type: "POST"
-      data: {netid: netid}
-      error: (jqXHR, textStatus, error) ->
-        console.log("MyAccount error: couldn't retrieve user account data from FOLIO for #{netid} (#{error})")
+      data: { netid }
       success: (data) ->
         if data.code < 300
           account.showCheckouts(data)
           account.showFines(data)
-        else
-          console.log("MyAccount error: couldn't retrieve user account data from FOLIO for #{netid} (#{data.error})")
-
     })
 
     # Query the ILLiad CGI scripts to retrieve user's item requests
-    $.ajax({
+    illiadAccountLookup = $.ajax({
       url: "/myaccount/get_illiad_data"
       type: "POST"
-      data: {netid: netid}
-      error: (jqXHR, textStatus, error) ->
-        console.log("MyAccount error: couldn't retrieve user account data from ILLiad for #{netid} (#{error})")
-      success: (data) ->
-        account.showRequests(data)
+      data: { netid }
     })
+
+    # FOLIO account data is needed for both the checkouts pane and the requests panes. Requests in FOLIO
+    # have to be combined with requests from ILLiad and BD, though, which takes a bit of manipulation.
+    # So we use .when() here to do both lookups before proceeding
+    $.when(folioAccountLookup, illiadAccountLookup).done (folioAccount, illiadAccount) ->
+      if folioAccount[0].code > 200
+        console.log("MyAccount error: couldn't retrieve user account data from FOLIO (#{folioAccount[0].error})")
+        $("#checkouts").html("<span>Couldn't retrieve account information. Please ask a librarian for assistance.</span>")
+      if illiadAccount[0] == undefined
+        console.log("MyAccount error: couldn't retrieve user account data from ILLiad")
+      account.showRequests(folioAccount[0].account.holds, illiadAccount[0])
+    (error) ->
+      console.log("MyAccount error in combining account lookup results (#{error})")
 
     # Enable tab navigation
     $('.nav-tabs a').click ->
@@ -138,12 +142,29 @@ account =
     })
 
   # Populate requests in the UI
-  showRequests: (requests) ->
+  showRequests: (folioData, illiadData) ->
+    console.log("Going in with FD, ID", folioData, illiadData)
+
+    # Combine ILLiad requests and FOLIO requests into the same arrays
+    available = illiadData.available
+    pending = illiadData.pending
+    folioData.forEach (entry) ->
+      # This is a weak way of determining available/pending status. Come up with something better?
+      requestObj = {
+        tl: entry.item.title,
+        lo: entry.pickupLocationId
+        requestDate: entry.requestDate
+      }
+      if entry.status.match /^Open/
+        pending.push requestObj
+      else
+        available.push requestObj
+
     # Available requests tab
     $.ajax({
       url: "/myaccount/ajax_illiad_available"
       type: "POST"
-      data: { requests: requests.available }
+      data: { requests: available }
       error: (jqXHR, textStatus, error) ->
         console.log("MyAccount error: couldn't render available requests template (#{error})")
       success: (data) ->
@@ -154,7 +175,7 @@ account =
     $.ajax({
       url: "/myaccount/ajax_illiad_pending"
       type: "POST"
-      data: { requests: requests.pending }
+      data: { requests: pending }
       error: (jqXHR, textStatus, error) ->
         console.log("MyAccount error: couldn't render pending requests template (#{error})")
       success: (data) ->
