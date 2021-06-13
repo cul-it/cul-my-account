@@ -69,36 +69,47 @@ module MyAccount
 
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
     # Requested items could be Voyager items, ILLiad, or Borrow Direct -- so use whichever API is appropriate
-    def cancel items
-      # For cancellation the param value contains the ttpe, so build a hash to reference in the loop below.
-      id_hash = items.transform_keys{ |k| k.gsub("select-","") }
-      request_ids = ids_from_strings items
-      Rails.logger.debug "mjc12test: items to cancel #{request_ids}"
-      request_ids.each do |id|
-        if id.match(/^COR/)
-          # TODO: implement this
-          # do a Borrow Direct cancel
-        elsif id.match(/^illiad/)
-          # TODO: implement this
-          # do an ILLiad cancel
-        else
-          # do a Voyager cancel
-          http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
-          # What's the ttype? Call slips get a different url than holds and recalls.
-          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/callslips/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}" if id_hash[id] == "C"
-          # Remember that Voyager uses the '/holds/' path for both holds and recalls in order to confuse us
-          url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/holds/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}" if id_hash[id] != "C"
-          response = RestClient.delete(url, {})
-        end
-      end
+    # def cancel items
+    #   # For cancellation the param value contains the ttpe, so build a hash to reference in the loop below.
+    #   id_hash = items.transform_keys{ |k| k.gsub("select-","") }
+    #   request_ids = ids_from_strings items
+    #   Rails.logger.debug "mjc12test: items to cancel #{request_ids}"
+    #   request_ids.each do |id|
+    #     if id.match(/^COR/)
+    #       # TODO: implement this
+    #       # do a Borrow Direct cancel
+    #     elsif id.match(/^illiad/)
+    #       # TODO: implement this
+    #       # do an ILLiad cancel
+    #     else
+    #       # do a Voyager cancel
+    #       http = Net::HTTP.new("#{ENV['MY_ACCOUNT_VOYAGER_URL']}")
+    #       # What's the ttype? Call slips get a different url than holds and recalls.
+    #       url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/callslips/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}" if id_hash[id] == "C"
+    #       # Remember that Voyager uses the '/holds/' path for both holds and recalls in order to confuse us
+    #       url = "#{ENV['MY_ACCOUNT_VOYAGER_URL']}/patron/#{@patron['patron_id']}/circulationActions/requests/holds/1@#{ENV['VOYAGER_DB']}%7C#{id}?patron_homedb=1@#{ENV['VOYAGER_DB']}" if id_hash[id] != "C"
+    #       response = RestClient.delete(url, {})
+    #     end
+    #   end
 
-      if request_ids.count == 1
-        flash[:notice] = 'Your request has been cancelled.'
-      elsif request_ids.count > 1
-        flash[:notice] = 'Your requests have been cancelled.'
-      end
+    #   if request_ids.count == 1
+    #     flash[:notice] = 'Your request has been cancelled.'
+    #   elsif request_ids.count > 1
+    #     flash[:notice] = 'Your requests have been cancelled.'
+    #   end
 
-    end 
+    # end 
+    
+    # Use the CUL::FOLIO::Edge gem to cancel a request. Operation is triggered via AJAX.
+    def ajax_cancel
+      netid = params['netid']
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+      result = CUL::FOLIO::Edge.cancel_request(url, tenant, token[:token], netid, params['requestId'])
+
+      render json: result
+    end
 
     # Retrieves a list of a user's requests and charged items using the ilsapi CGI script.
     # DISCOVERYACCESS-5558 add msg for the error handling

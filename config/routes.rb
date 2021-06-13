@@ -9,5 +9,6 @@ MyAccount::Engine.routes.draw do
   match '/ajax_illiad_pending' => 'account#ajax_illiad_pending', via: [:post]
   match '/ajax_fines' => 'account#ajax_fines', via: [:post]
   match '/ajax_renew' => 'account#ajax_renew', via: [:post]
+  match '/ajax_cancel' => 'account#ajax_cancel', via: [:post]
   match '/ajax_catalog_link' => 'account#ajax_catalog_link', via: [:post]
 end

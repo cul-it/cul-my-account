@@ -89,11 +89,23 @@ account =
         account.renewItems()
       $('#renew').prop('disabled', buttonsDisabled)
       $('#export-checkouts').prop('disabled', buttonsDisabled)
-    else if (activeTab == 'available-requests')
-      $('#export-available-requests').prop('disabled', buttonsDisabled)
     else if (activeTab == 'pending-requests')
       $('#cancel').prop('disabled', buttonsDisabled)
-      $('#export-pending-requests').prop('disabled', buttonsDisabled)
+      $('#cancel').click ->
+        account.debounce(account.cancelItems(), 5000)
+
+  debounce: (func, threshold, execAsap) ->
+    timeout = null
+    (args...) ->
+      obj = this
+      delayed = ->
+        func.apply(obj, args) unless execAsap
+        timeout = null
+      if timeout
+        clearTimeout(timeout)
+      else if (execAsap)
+        func.apply(obj, args)
+      timeout = setTimeout delayed, threshold || 100
 
   # Populate checkouts in the UI
   showCheckouts: (accountData) ->
@@ -143,18 +155,17 @@ account =
 
   # Populate requests in the UI
   showRequests: (folioData, illiadData) ->
-    console.log("Going in with FD, ID", folioData, illiadData)
-
     # Combine ILLiad requests and FOLIO requests into the same arrays
     available = illiadData.available
     pending = illiadData.pending
     folioData.forEach (entry) ->
-      # This is a weak way of determining available/pending status. Come up with something better?
       requestObj = {
+        iid: entry.requestId, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
         tl: entry.item.title,
-        lo: entry.pickupLocationId
+        lo: entry.pickupLocationId,
         requestDate: entry.requestDate
       }
+      # This is a weak way of determining available/pending status. Come up with something better?
       if entry.status.match /^Open/
         pending.push requestObj
       else
@@ -170,6 +181,7 @@ account =
       success: (data) ->
         $('#available-requests').html(data.record)
         $('#availableTab').html('Ready for pickup (' + data.locals.available_requests.length + ')')
+        account.setEvents()
     })
     # Pending requests tab
     $.ajax({
@@ -181,6 +193,7 @@ account =
       success: (data) ->
         $("#pending-requests").html(data.record)
         $('#pendingTab').html('Pending requests (' + data.locals.pending_requests.length + ')')
+        account.setEvents()
     })
 
   renewItems: () ->
@@ -206,9 +219,44 @@ account =
           account.updateItemStatus(id, result)
       })
 
+  cancelItems: () ->
+    netid = $('#accountData').data('netid')
+    ids = []
+    $('#pending-requests input:checked').each () -> ids.push(this.id)
+
+    # HACK - trim off the first array item if it doesn't contain an ID (it's the 'select all' checkbox)
+    ids.shift() if ids[0] == ''
+
+    ids.forEach (id) ->
+      console.log("Canceling #{id}")
+      $.ajax({
+        url: "/myaccount/ajax_cancel"
+        type: "POST"
+        data: { netid: netid, requestId: id }
+        error: (jqXHR, textStatus, error) ->
+          console.log("MyAccount error: Unable to cancel request #{id} (#{error})")
+          account.updateItemStatus(id, { code: 400 })
+        success: (result) ->
+          # N.B. This operation succeeds if the CUL::FOLIO::Edge gem returns a response correctly.
+          # That does not mean that *cancellation* has succeeded; for that, check the response code
+          # in result
+          if result.code < 300 
+            account.removeEntry(id)
+          else
+            console.log("MyAccount error: Unable to cancel request #{id} (#{result.error})")
+      })
+
   # Using the item ID, show the status of a renewal operation in the appropriate table row.
   # result will be an object with an :error property and a :code (HTTP code) property.
   updateItemStatus: (id, result) ->
     message = if result.code < 300 then 'Renewed' else 'Renewal failed'
     $("##{id} td.status").html(message)
-    
+
+  # For a successufully cancelled request, remove the entry from the table
+  removeEntry: (id) ->
+    # Remove entry from the DOM
+    $("##{id}").remove()
+    # numRequests = requests.length
+    # $('#pendingTab').html('Pending requests (' + numRequests + ')')
+    # if numRequests < 1
+    #   $('#pending-requests').html('<p>You have no pending requests.</p>')
