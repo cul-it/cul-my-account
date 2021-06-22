@@ -37,13 +37,14 @@ account =
       if illiadAccount[0] == undefined
         console.log("MyAccount error: couldn't retrieve user account data from ILLiad")
       account.showRequests(folioAccount[0].account.holds, illiadAccount[0])
+      .then () ->
+        #account.setEvents()
     (error) ->
       console.log("MyAccount error in combining account lookup results (#{error})")
 
     # Enable tab navigation
     $('.nav-tabs a').click ->
-      $(this).tab('show')
-      account.setActionButtonState($(this).attr('href'))
+      $(this).tab('show').then -> account.setActionButtonState()
 
     # Look up user's name from FOLIO
     $.ajax({
@@ -59,53 +60,29 @@ account =
 
   ######### END OF ONLOAD FUNCTION ###########
 
-  # Set up JS events after the content is loaded (see showCheckouts())
-  setEvents: () ->
-    # Select/deselect all checkboxes when clicked
-    $('input:checkbox.select-all').click ->
-      checked = $(this).prop('checked')
-      $('tr.item input:checkbox').prop('checked', checked)
-
-    # Enable/disable action buttons if any checkbox is selected
-    $('input:checkbox').click ->
-      account.setActionButtonState()
-
-    # Disable action buttons
-    account.setActionButtonState()
-
   # Enable or disable the action buttons for the current open tab
   # based on whether any items are selected in that tab
-  setActionButtonState: (tab = null) ->
-    activeTab = tab || $('.tab-pane.active').attr('id')
-    # if a tab is passed in as a parameter, it's an href with an anchor (#) that we
-    # don't want
-    if (activeTab[0] == '#')
-      activeTab = activeTab.substring(1)
-
-    buttonsDisabled = $('#' + activeTab + ' input:checkbox:checked').length == 0
+  setActionButtonState: () ->
+    activeTab = $('.tab-pane.active').attr('id')
+    buttonsDisabled = $('#' + activeTab + ' input:checkbox:checked').length < 1
+    console.log("ButtonsDisabled", buttonsDisabled, activeTab)
 
     if (activeTab == 'checkouts')
-      $('#renew').click ->
-        account.renewItems()
       $('#renew').prop('disabled', buttonsDisabled)
-      $('#export-checkouts').prop('disabled', buttonsDisabled)
     else if (activeTab == 'pending-requests')
+      console.log("settitng button", buttonsDisabled)
       $('#cancel').prop('disabled', buttonsDisabled)
-      $('#cancel').click ->
-        account.debounce(account.cancelItems(), 5000)
 
-  debounce: (func, threshold, execAsap) ->
-    timeout = null
-    (args...) ->
-      obj = this
-      delayed = ->
-        func.apply(obj, args) unless execAsap
-        timeout = null
-      if timeout
-        clearTimeout(timeout)
-      else if (execAsap)
-        func.apply(obj, args)
-      timeout = setTimeout delayed, threshold || 100
+  setEventHandlers: () ->
+    # Select/deselect all checkboxes when clicked
+    $("input:checkbox.select-all").click ->
+      checked = $(this).prop('checked')
+      $('tr.item input:checkbox').prop('checked', checked)
+      account.setActionButtonState()
+
+    # Enable/disable action buttons if any checkbox is selected
+    $("input:checkbox").click ->
+      account.setActionButtonState()
 
   # Populate checkouts in the UI
   showCheckouts: (accountData) ->
@@ -121,7 +98,8 @@ account =
         # Add catalog links to the titles in the table
         data.locals.checkouts.forEach (checkout) ->
           account.addCatalogLink(checkout)
-        account.setEvents()
+        account.setActionButtonState()
+        account.setEventHandlers()
     })
 
   # Given a checkout entry, call an ajax method to determine its instance bibid
@@ -181,7 +159,8 @@ account =
       success: (data) ->
         $('#available-requests').html(data.record)
         $('#availableTab').html('Ready for pickup (' + data.locals.available_requests.length + ')')
-        account.setEvents()
+        account.setActionButtonState()
+        account.setEventHandlers()
     })
     # Pending requests tab
     $.ajax({
@@ -193,7 +172,8 @@ account =
       success: (data) ->
         $("#pending-requests").html(data.record)
         $('#pendingTab').html('Pending requests (' + data.locals.pending_requests.length + ')')
-        account.setEvents()
+        account.setActionButtonState()
+        account.setEventHandlers()
     })
 
   renewItems: () ->
