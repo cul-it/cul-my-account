@@ -44,7 +44,8 @@ account =
 
     # Enable tab navigation
     $('.nav-tabs a').click ->
-      $(this).tab('show').then -> account.setActionButtonState()
+      $(this).tab('show')
+      account.setActionButtonState()
 
     # Look up user's name from FOLIO
     $.ajax({
@@ -83,6 +84,10 @@ account =
     # Enable/disable action buttons if any checkbox is selected
     $("input:checkbox").click ->
       account.setActionButtonState()
+
+    # Renew button
+    $('#renew').click ->
+      account.renewItems()
 
   # Populate checkouts in the UI
   showCheckouts: (accountData) ->
