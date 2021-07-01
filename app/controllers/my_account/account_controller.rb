@@ -23,7 +23,7 @@ module MyAccount
         return
       end
 
-      Rails.logger.debug "mjc12test: authenticating"
+      #Rails.logger.debug "mjc12test: authenticating"
       if user.present?
         index
       else
