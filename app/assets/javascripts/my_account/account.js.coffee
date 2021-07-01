@@ -89,6 +89,10 @@ account =
     $('#renew').click ->
       account.renewItems()
 
+    # Cancel button
+    $('#cancel').click ->
+      account.cancelItems()
+
   # Populate checkouts in the UI
   showCheckouts: (accountData) ->
     $.ajax({
