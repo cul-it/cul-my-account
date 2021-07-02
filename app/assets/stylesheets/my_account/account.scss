@@ -14,7 +14,7 @@ body {
   Place all the styles related to the matching controller here.
   They will automatically be included in application.css.
 */
-#renew-running-spinner, #cancel-running-spinner {
+#request-loading-spinner, #renew-loading-spinner {
 	position: relative;
 	display: inline-block;
 	vertical-align: middle;

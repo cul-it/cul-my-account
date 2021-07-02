@@ -91,12 +91,12 @@ account =
 
     # Renew button
     $('#renew').click ->
-      $('#renew-running-spinner').spin('renewing')
+      $('#request-loading-spinner').spin('renewing')
       account.renewItems()
 
     # Cancel button
     $('#cancel').click ->
-      $('#cancel-running-spinner').spin('cancelling')
+      $('#request-loading-spinner').spin('cancelling')
       account.cancelItems()
 
   # Populate checkouts in the UI
@@ -210,10 +210,10 @@ account =
           account.setFlash('alert-success', "Some items could not be renewed")
         else
           account.setFlash('alert-success', "Renewal succeeded")
-        $('#renew-running-spinner').spin(false)
+        $('#request-loading-spinner').spin(false)
       .catch (error) ->
         account.setFlash('alert-success', "Some items could not be renewed")
-        $('#renew-running-spinner').spin(false)
+        $('#request-loading-spinner').spin(false)
 
   # Return a promise that renews a single item
   renewItem: (netid, id) ->
@@ -253,13 +253,19 @@ account =
       .then (result) ->
         errors = result.filter (r) -> r.error
         if errors != []
-          account.setFlash('alert-success', "Some requests could not be cancelled")
+          # TODO: This should display an error, obviously. But because of the duplicate requests bug,
+          # even successful cancel operations can appear to fail (because they're run a second time
+          # against a request that no longer exists). Thus, a vague response for now.
+          account.setFlash('alert-success', "Cancellation complete")
         else
-          account.setFlash('alert-success', "Cancellation succeeded")
-        $('#cancel-running-spinner').spin(false)
+          account.setFlash('alert-success', "Cancellation complete")
+        $('#request-loading-spinner').spin(false)
+        # This next bit is overkill for just trying to update the display -- it reloads the entire
+        # MyAccount page!
+        account.onLoad()
       .catch (error) ->
         account.setFlash('alert-success', "Some items could not be cancelled")
-        $('#cancel-running-spinner').spin(false)
+        $('#request-loading-spinner').spin(false)
 
   # Return a promise that cancels a single request
   cancelRequest: (netid, id) ->
