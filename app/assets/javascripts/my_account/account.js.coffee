@@ -199,7 +199,6 @@ account =
     # HACK - trim off the first array item if it doesn't contain an ID (it's the 'select all' checkbox)
     ids.shift() if ids[0] == ''
 
-    successfulRenewalCount = 0
     promises = []
     ids.forEach (id) ->
       promises.push(account.renewItem(netid, id).catch (error) -> return error)
@@ -246,8 +245,25 @@ account =
     # HACK - trim off the first array item if it doesn't contain an ID (it's the 'select all' checkbox)
     ids.shift() if ids[0] == ''
 
+    promises = []
     ids.forEach (id) ->
-      console.log("Canceling #{id}")
+      promises.push(account.cancelRequest(netid, id).catch (error) -> return error)
+
+    Promise.all(promises)
+      .then (result) ->
+        errors = result.filter (r) -> r.error
+        if errors != []
+          account.setFlash('alert-success', "Some requests could not be cancelled")
+        else
+          account.setFlash('alert-success', "Cancellation succeeded")
+        $('#cancel-running-spinner').spin(false)
+      .catch (error) ->
+        account.setFlash('alert-success', "Some items could not be cancelled")
+        $('#cancel-running-spinner').spin(false)
+
+  # Return a promise that cancels a single request
+  cancelRequest: (netid, id) ->
+    new Promise (resolve, reject) =>
       $.ajax({
         url: "/myaccount/ajax_cancel"
         type: "POST"
@@ -255,16 +271,18 @@ account =
         error: (jqXHR, textStatus, error) ->
           console.log("MyAccount error: Unable to cancel request #{id} (#{error})")
           account.updateItemStatus(id, { code: 400 })
+          reject new Error("Sending an error 2")
         success: (result) ->
           # N.B. This operation succeeds if the CUL::FOLIO::Edge gem returns a response correctly.
           # That does not mean that *cancellation* has succeeded; for that, check the response code
           # in result
           if result.code < 300 
             account.removeEntry(id)
+            resolve result
           else
             console.log("MyAccount error: Unable to cancel request #{id} (#{result.error})")
+            reject result
       })
-    $('#cancel-running-spinner').spin(false)
 
   # Using the item ID, show the status of a renewal operation in the appropriate table row.
   # result will be an object with an :error property and a :code (HTTP code) property.
