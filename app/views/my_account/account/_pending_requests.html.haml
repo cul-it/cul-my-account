@@ -44,6 +44,8 @@
     %br
   - else
     = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
+    %span{:id => 'cancel-running-spinner'}
+
 
 - if has_ill_pending
   %p

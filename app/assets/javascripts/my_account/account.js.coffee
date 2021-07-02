@@ -3,8 +3,12 @@ $(document).ready ->
 
 account =
   onLoad: () ->
+
+    # Handle display of flash messages
+    $(document).ajaxComplete (event, request) ->
+      account.ajaxComplete(event, request)
+
     # Main data loading section
-    
     netid = $('#accountData').data('netid')
 
     # Query the FOLIO edge-patron API to retrieve user's checkouts and fines/fees.
@@ -87,10 +91,12 @@ account =
 
     # Renew button
     $('#renew').click ->
+      $('#renew-running-spinner').spin('renewing')
       account.renewItems()
 
     # Cancel button
     $('#cancel').click ->
+      $('#cancel-running-spinner').spin('cancelling')
       account.cancelItems()
 
   # Populate checkouts in the UI
@@ -193,7 +199,26 @@ account =
     # HACK - trim off the first array item if it doesn't contain an ID (it's the 'select all' checkbox)
     ids.shift() if ids[0] == ''
 
+    successfulRenewalCount = 0
+    promises = []
     ids.forEach (id) ->
+      promises.push(account.renewItem(netid, id).catch (error) -> return error)
+
+    Promise.all(promises)
+      .then (result) ->
+        errors = result.filter (r) -> r.error
+        if errors != []
+          account.setFlash('alert-success', "Some items could not be renewed")
+        else
+          account.setFlash('alert-success', "Renewal succeeded")
+        $('#renew-running-spinner').spin(false)
+      .catch (error) ->
+        account.setFlash('alert-success', "Some items could not be renewed")
+        $('#renew-running-spinner').spin(false)
+
+  # Return a promise that renews a single item
+  renewItem: (netid, id) ->
+    new Promise (resolve, reject) =>
       $.ajax({
         url: "/myaccount/ajax_renew"
         type: "POST"
@@ -201,11 +226,16 @@ account =
         error: (jqXHR, textStatus, error) ->
           console.log("MyAccount error: Unable to renew item #{id} (#{error})")
           account.updateItemStatus(id, { code: 400 })
+          reject new Error("Sending an error 2")
         success: (result) ->
           # N.B. This operation succeeds if the CUL::FOLIO::Edge gem returns a response correctly.
           # That does not mean that *renewal* has succeeded; for that, check the response code
           # in result
           account.updateItemStatus(id, result)
+          if result.code < 300
+            resolve result
+          else
+            reject result
       })
 
   cancelItems: () ->
@@ -234,6 +264,7 @@ account =
           else
             console.log("MyAccount error: Unable to cancel request #{id} (#{result.error})")
       })
+    $('#cancel-running-spinner').spin(false)
 
   # Using the item ID, show the status of a renewal operation in the appropriate table row.
   # result will be an object with an :error property and a :code (HTTP code) property.
@@ -249,3 +280,36 @@ account =
     # $('#pendingTab').html('Pending requests (' + numRequests + ')')
     # if numRequests < 1
     #   $('#pending-requests').html('<p>You have no pending requests.</p>')
+
+
+  # The following approach and code for handling flash messages for AJAX calls are taken from
+  # https://gist.github.com/hbrandl/5253211
+
+  # ajax call to show flash messages when they are transmitted in the header
+  # this code assumes the following
+  #  1) you're using twitter-bootstrap 2.3 (although it will work if you don't)
+  #  2) you've got a div with the id flash_hook somewhere in your html code
+  ajaxComplete: (event, request) ->
+    if request
+      msg = request.getResponseHeader("X-Message")
+      alert_type = 'alert-success'
+      alert_type = 'alert-error' unless request.getResponseHeader("X-Message-Type").indexOf("error") is -1
+
+      unless request.getResponseHeader("X-Message-Type").indexOf("keep") is 0
+        account.setFlash(alert_type, msg)
+  
+  setFlash: (type, message) ->
+    #add flash message if there is any text to display
+    $("#main-flashes").replaceWith("<div id='flash_hook'>
+        <p>&nbsp;</p>
+            <div class='row'>
+              <div class='span10 offset1'>
+                <div class='alert " + type + "'>
+                  <button type='button' class='close' data-dismiss='alert'>&times;</button>
+                  " + message + "
+                </div>
+              </div>
+            </div>
+          </div>") if message
+    #delete the flash message (if it was there before) when an ajax request returns no flash message
+    $("#main-flashes").replaceWith("<div id='main-flashes'></div>") unless message
