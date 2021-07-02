@@ -1,5 +1,10 @@
 # Release Notes - my-account
 
+## v2.0.1
+- Use promises to renew and cancel
+- Add progress spinners to request buttons
+- Add flash messages
+
 ## v2.0
 - Rewrote code to use FOLIO as a data source instead of Voyager (DISCOVERYACCESS-6993)
 - Rewrote code to load sections of the user record via AJAX
