@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.0.2
+- Update text of temporary service interruptions alert. (DISCOVERYACCESS-7181)
+
 ## v2.0.1
 - Use promises to renew and cancel
 - Add progress spinners to request buttons
