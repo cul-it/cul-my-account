@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.0.4
+- Remove temporary service interruptions alert. (DISCOVERYACCESS-7182)
+
 ## v2.0.3
 - Remove guest ID login button. (DISCOVERYACCESS-7175)
 
