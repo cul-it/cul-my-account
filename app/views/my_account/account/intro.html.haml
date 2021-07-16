@@ -1,22 +1,8 @@
-%p Renew your books and check the status of your requests.
 .card
   .card-body.card-well
-    .row
-      .col-md-6
-        %h2 Cornell students, faculty, and staff
-        =link_to('Log in with your NetID', '/myaccount', {:class => 'btn btn-danger btn-lg'})
-      .col-md-5.guest-id
-        %h3 Guest borrowers
-        %p Library Card, Privilege Card and SUNY Card holders
-        =link_to('Login with your GuestID*', 'https://catalog.library.cornell.edu/cgi-bin/Pwebrecon.cgi?DB=local&amp;PAGE=First', {:class => 'btn btn-danger'})
-        .guest-id-info
-          %p
-            %small
-              *Click the "Patron Info" link after logging in.
-          %p
-            For questions about obtaining a GuestID, email
-            = succeed "." do
-              %a{:href => "mailto:libpublicservices@cornell.edu"} libpublicservices@cornell.edu
+    %h2 Log in
+    %p Renew your books and check the status of your requests.
+    =link_to('Log in with your NetID or GuestID', '/myaccount', {:class => 'btn btn-danger btn-lg'})
 
 %h3.mt-4 Interlibrary Loan
 =link_to('Renew Interlibrary Loan items','https://cornell.hosts.atlas-sys.com/nonetid/home.html')
