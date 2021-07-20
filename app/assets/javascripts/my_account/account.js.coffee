@@ -36,15 +36,15 @@ account =
     # So we use .when() here to do both lookups before proceeding
     $.when(folioAccountLookup, illiadAccountLookup).done (folioAccount, illiadAccount) ->
       if folioAccount[0].code > 200
-        console.log("MyAccount error: couldn't retrieve user account data from FOLIO (#{folioAccount[0].error})")
+        account.logError("couldn't retrieve user account data from FOLIO (#{folioAccount[0].error})")
         $("#checkouts").html("<span>Couldn't retrieve account information. Please ask a librarian for assistance.</span>")
       if illiadAccount[0] == undefined
-        console.log("MyAccount error: couldn't retrieve user account data from ILLiad")
+        account.logError("couldn't retrieve user account data from ILLiad")
       account.showRequests(folioAccount[0].account.holds, illiadAccount[0])
       .then () ->
         #account.setEvents()
     (error) ->
-      console.log("MyAccount error in combining account lookup results (#{error})")
+      account.logError("problem combining account lookup results (#{error})")
 
     # Enable tab navigation
     $('.nav-tabs a').click ->
@@ -57,7 +57,7 @@ account =
       type: "POST"
       data: { netid: netid }
       error: (jqXHR, textStatus, error) -> 
-        console.log("MyAccount error: couldn't retrieve user record from FOLIO for #{netid} (#{error})")
+        account.logError("couldn't retrieve user record from FOLIO for #{netid} (#{error})")
       success: (data) ->
         nameSection = data.user.personal
         $('#userName').html("Account information for #{nameSection['firstName']} #{nameSection['lastName']}")
@@ -70,12 +70,9 @@ account =
   setActionButtonState: () ->
     activeTab = $('.tab-pane.active').attr('id')
     buttonsDisabled = $('#' + activeTab + ' input:checkbox:checked').length < 1
-    console.log("ButtonsDisabled", buttonsDisabled, activeTab)
-
     if (activeTab == 'checkouts')
       $('#renew').prop('disabled', buttonsDisabled)
     else if (activeTab == 'pending-requests')
-      console.log("settitng button", buttonsDisabled)
       $('#cancel').prop('disabled', buttonsDisabled)
 
   setEventHandlers: () ->
@@ -90,12 +87,14 @@ account =
       account.setActionButtonState()
 
     # Renew button
-    $('#renew').click ->
+    $('#renew').click (e) ->
+      e.preventDefault()
       $('#request-loading-spinner').spin('renewing')
       account.renewItems()
 
     # Cancel button
-    $('#cancel').click ->
+    $('#cancel').click (e) ->
+      e.preventDefault()
       $('#request-loading-spinner').spin('cancelling')
       account.cancelItems()
 
@@ -106,7 +105,7 @@ account =
       type: "POST"
       data: { checkouts: accountData.account.loans }
       error: (jqXHR, textStatus, error) ->
-        console.log("MyAccount error: couldn't render checkouts template (#{error})")
+        account.logError("couldn't render checkouts template (#{error})")
       success: (data) ->
         $("#checkouts").html(data.record)
         $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
@@ -125,7 +124,7 @@ account =
       type: "POST"
       data: { instanceId: entry.item.instanceId }
       error: (jqXHR, textStatus, error) ->
-        console.log("MyAccount error: couldn't add catalog link for #{entry.id} (#{error})")
+        account.logError("couldn't add catalog link for #{entry.id} (#{error})")
       success: (data) ->
         # Find the correct item title and add the link
         title = $("##{entry.item.itemId} .title").html()
@@ -139,7 +138,7 @@ account =
       type: "POST"
       data: { fines: accountData.account.charges }
       error: (jqXHR, textStatus, error) ->
-        console.log("MyAccount error: couldn't render fines template (#{error})")
+        account.logError("couldn't render fines template (#{error})")
       success: (data) ->
         fineTotal = '$' + accountData.account.totalCharges.amount
         $('#fines').html(data.record)
@@ -170,7 +169,7 @@ account =
       type: "POST"
       data: { requests: available }
       error: (jqXHR, textStatus, error) ->
-        console.log("MyAccount error: couldn't render available requests template (#{error})")
+        account.logError("couldn't render available requests template (#{error})")
       success: (data) ->
         $('#available-requests').html(data.record)
         $('#availableTab').html('Ready for pickup (' + data.locals.available_requests.length + ')')
@@ -183,7 +182,7 @@ account =
       type: "POST"
       data: { requests: pending }
       error: (jqXHR, textStatus, error) ->
-        console.log("MyAccount error: couldn't render pending requests template (#{error})")
+        account.logError("couldn't render pending requests template (#{error})")
       success: (data) ->
         $("#pending-requests").html(data.record)
         $('#pendingTab').html('Pending requests (' + data.locals.pending_requests.length + ')')
@@ -217,13 +216,13 @@ account =
 
   # Return a promise that renews a single item
   renewItem: (netid, id) ->
-    new Promise (resolve, reject) =>
+    return new Promise (resolve, reject) =>
       $.ajax({
         url: "/myaccount/ajax_renew"
         type: "POST"
         data: { netid: netid, itemId: id }
         error: (jqXHR, textStatus, error) ->
-          console.log("MyAccount error: Unable to renew item #{id} (#{error})")
+          account.logError("unable to renew item #{id} (#{error})")
           account.updateItemStatus(id, { code: 400 })
           reject new Error("Sending an error 2")
         success: (result) ->
@@ -275,7 +274,7 @@ account =
         type: "POST"
         data: { netid: netid, requestId: id }
         error: (jqXHR, textStatus, error) ->
-          console.log("MyAccount error: Unable to cancel request #{id} (#{error})")
+          account.logError("Unable to cancel request #{id} (#{error})")
           account.updateItemStatus(id, { code: 400 })
           reject new Error("Sending an error 2")
         success: (result) ->
@@ -286,7 +285,7 @@ account =
             account.removeEntry(id)
             resolve result
           else
-            console.log("MyAccount error: Unable to cancel request #{id} (#{result.error})")
+            account.logError("Unable to cancel request #{id} (#{result.error})")
             reject result
       })
 
@@ -337,3 +336,6 @@ account =
           </div>") if message
     #delete the flash message (if it was there before) when an ajax request returns no flash message
     $("#main-flashes").replaceWith("<div id='main-flashes'></div>") unless message
+
+  logError: (message) ->
+    console.log("MyAccount error: #{message}")
