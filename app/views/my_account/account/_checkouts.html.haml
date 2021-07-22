@@ -17,7 +17,7 @@
           %th{:scope => 'col', :class => 'myacct-col-20'} Author
           %th{:scope => 'col', :class => 'myacct-col-20'} Status
       %tbody
-        - @checkouts.sort_by { |c| c['dueDate'] }.each do |c|
+        - @checkouts.sort_by { |c| [c['dueDate'], c['item']['title']] }.each do |c|
           %tr.item{:id => "#{c['item']['itemId']}", :data => {:system => system_tag(c)}}
             %td
               = label_tag "#{c['item']['itemId']}", 'Select', { :class => 'sr-only' }
@@ -49,3 +49,4 @@
     - else
       = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
       %span{:id => 'request-loading-spinner'}
+
