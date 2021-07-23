@@ -8,6 +8,7 @@
 
 ### Bug fixes
 - Multiple cancel/renew attempts no longer generated for a single button click
+- Resolved invalid date error with pending requests (DISCOVERYACCES-7218)
 
 ## v2.0.4
 - Remove temporary service interruptions alert. (DISCOVERYACCESS-7182)
