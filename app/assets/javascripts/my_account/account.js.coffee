@@ -98,6 +98,11 @@ account =
       $('#request-loading-spinner').spin('cancelling')
       account.cancelItems()
 
+    $('#test').click (e) ->
+      e.preventDefault()
+     # account.moveItemByDate($('#checkouts-table tbody tr:last').attr('id'))
+      account.moveItemByDate("779e9a48-082e-4fa2-b1e7-6d446fbec910")
+
   # Populate checkouts in the UI
   showCheckouts: (accountData) ->
     $.ajax({
@@ -109,12 +114,41 @@ account =
       success: (data) ->
         $("#checkouts").html(data.record)
         $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
+        console.log("First iem: ", $('#checkouts-table tbody tr:first').attr('id'))
         # Add catalog links to the titles in the table
         data.locals.checkouts.forEach (checkout) ->
           account.addCatalogLink(checkout)
         account.setActionButtonState()
         account.setEventHandlers()
     })
+
+  # Given an item ID, move that item down in the checkouts table
+  # so that it's in its proper place based on a new due date after renewal.
+  moveItemByDate: (id) ->
+    rows = $('#checkouts-table tbody tr')
+    console.log("rows", rows)
+
+    return if rows.length < 2
+
+    # Get the index of the specified row
+    oldIndex = 0
+    itemDueDate = undefined
+    rows.each (i, r) ->
+      if r.id == id
+        oldIndex = i
+        itemDueDateTxt = $(this).find('td.date').text().trim()
+        itemDueDate = new Date(itemDueDateTxt)
+      else
+        # Is there a more efficient way of doing this? Probably, probably.
+        currentRowDueDateTxt = $(this).find('td.date').text().trim()
+        currentRowDueDate = new Date(currentRowDueDateTxt)
+        if currentRowDueDate > itemDueDate
+          #console.log("Found insertion point at index #{i}")
+          # Move the item to this new location
+          $("##{id}").hide('slow', () ->
+            $(this).insertBefore(rows[i]).show('slow')
+          )
+          return false
 
   # Given a checkout entry, call an ajax method to determine its instance bibid
   # and create a link to the catalog record, then add the link to the displayed title
@@ -205,11 +239,13 @@ account =
     Promise.all(promises)
       .then (result) ->
         errors = result.filter (r) -> r.error
-        if errors != []
+        console.log("errors", errors)
+        if errors.length > 0
           account.setFlash('alert-success', "Some items could not be renewed")
         else
           account.setFlash('alert-success', "Renewal succeeded")
         $('#request-loading-spinner').spin(false)
+        window.scrollTo(0, 0)
       .catch (error) ->
         account.setFlash('alert-success', "Some items could not be renewed")
         $('#request-loading-spinner').spin(false)
@@ -294,6 +330,8 @@ account =
   updateItemStatus: (id, result) ->
     message = if result.code < 300 then 'Renewed' else 'Renewal failed'
     $("##{id} td.status").html(message)
+    # Move the item down in the table to keep it sorted by due date
+    account.moveItemByDate(id)
 
   # For a successufully cancelled request, remove the entry from the table
   removeEntry: (id) ->
@@ -317,23 +355,20 @@ account =
       msg = request.getResponseHeader("X-Message")
       alert_type = 'alert-success'
       alert_type = 'alert-error' unless request.getResponseHeader("X-Message-Type").indexOf("error") is -1
+      console.log("xmessagetype", request.getResponseHeader("X-Message-Type"))
 
       unless request.getResponseHeader("X-Message-Type").indexOf("keep") is 0
         account.setFlash(alert_type, msg)
   
   setFlash: (type, message) ->
-    #add flash message if there is any text to display
-    $("#main-flashes").replaceWith("<div id='flash_hook'>
-        <p>&nbsp;</p>
-            <div class='row'>
-              <div class='span10 offset1'>
-                <div class='alert " + type + "'>
-                  <button type='button' class='close' data-dismiss='alert'>&times;</button>
-                  " + message + "
-                </div>
-              </div>
-            </div>
-          </div>") if message
+    #console.log("Setting flash with message", message)
+    # Add flash message if there is any text to display
+    $("#main-flashes").replaceWith("<div id='main-flashes'>
+      <div class='alert " + type + "'>
+        <button type='button' class='close' data-dismiss='alert'>&times;</button>
+        #{message}
+      </div>
+    ") if message
     #delete the flash message (if it was there before) when an ajax request returns no flash message
     $("#main-flashes").replaceWith("<div id='main-flashes'></div>") unless message
 
