@@ -1,5 +1,14 @@
 # Release Notes - my-account
 
+## v2.0.5
+
+### Improvements
+- Better appearance of alert banners
+- Checkouts now sorted by both due date (primary) and title (secondary)
+
+### Bug fixes
+- Multiple cancel/renew attempts no longer generated for a single button click
+
 ## v2.0.4
 - Remove temporary service interruptions alert. (DISCOVERYACCESS-7182)
 
