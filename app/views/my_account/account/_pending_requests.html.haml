@@ -29,8 +29,8 @@
               = label_tag "#{c['iid']}", 'Select', { :class => 'sr-only' }
               = check_box_tag "#{c['iid']}", c['ttype'], false, { 'aria-label' => 'Select', :title => 'Select' }  
           %td
-            = c['requestDate'].to_date.strftime('%-m/%-d/%y') if c['requestDate'].length > 8
-            = c['requestDate'] if c['requestDate'].length < 9
+            = c['requestDate'].to_date.strftime('%-m/%-d/%y') if c['requestDate'].length > 10
+            = c['requestDate'] if c['requestDate'].length < 11
           %td
             = c['ou_title'] || c['tl']
           %td
