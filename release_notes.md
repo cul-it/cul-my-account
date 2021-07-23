@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.0.5
+- Resolved invalid date error with pending requests (DISCOVERYACCES-7218)
+
 ## v2.0.4
 - Remove temporary service interruptions alert. (DISCOVERYACCESS-7182)
 
