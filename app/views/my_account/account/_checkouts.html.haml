@@ -22,7 +22,7 @@
             %td
               = label_tag "#{c['item']['itemId']}", 'Select', { :class => 'sr-only' }
               = check_box_tag "#{c['item']['itemId']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
-            %td
+            %td.date
               = c['dueDate'] ? c['dueDate'].to_date.strftime('%-m/%-d/%y') : ''
             %td
               %div.title
