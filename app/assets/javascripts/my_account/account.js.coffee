@@ -124,31 +124,36 @@ account =
 
   # Given an item ID, move that item down in the checkouts table
   # so that it's in its proper place based on a new due date after renewal.
-  moveItemByDate: (id) ->
+  moveItemByDate: (id, newDueDate) ->
     rows = $('#checkouts-table tbody tr')
-    console.log("rows", rows)
+    #console.log("rows", rows)
 
     return if rows.length < 2
 
+    # Awkwardly newDueDate into a format we can use
+    # Input format is e.g. "2022-07-30T03:59:59.000+0000"
+    itemDueDate = new Date(newDueDate)
+    formattedDueDate = "#{itemDueDate.getMonth() + 1}/#{itemDueDate.getDate()}/#{itemDueDate.getFullYear().toString().slice(2)}"
+
     # Get the index of the specified row
     oldIndex = 0
-    itemDueDate = undefined
     rows.each (i, r) ->
       if r.id == id
         oldIndex = i
-        itemDueDateTxt = $(this).find('td.date').text().trim()
-        itemDueDate = new Date(itemDueDateTxt)
+        # Update due date in the table row
+        $(this).find('td.date').text(formattedDueDate)
       else
         # Is there a more efficient way of doing this? Probably, probably.
         currentRowDueDateTxt = $(this).find('td.date').text().trim()
         currentRowDueDate = new Date(currentRowDueDateTxt)
         if currentRowDueDate > itemDueDate
-          #console.log("Found insertion point at index #{i}")
+          console.log("Found insertion point at index #{i}")
           # Move the item to this new location
           $("##{id}").hide('slow', () ->
-            $(this).insertBefore(rows[i]).show('slow')
+             $(this).insertBefore(rows[i]).show('slow')
           )
           return false
+
 
   # Given a checkout entry, call an ajax method to determine its instance bibid
   # and create a link to the catalog record, then add the link to the displayed title
@@ -328,10 +333,12 @@ account =
   # Using the item ID, show the status of a renewal operation in the appropriate table row.
   # result will be an object with an :error property and a :code (HTTP code) property.
   updateItemStatus: (id, result) ->
-    message = if result.code < 300 then 'Renewed' else 'Renewal failed'
+    message = 'Renewal failed'
+    if result.code < 300
+      message = 'Renewed'
+      account.moveItemByDate(id, result.due_date)
     $("##{id} td.status").html(message)
     # Move the item down in the table to keep it sorted by due date
-    account.moveItemByDate(id)
 
   # For a successufully cancelled request, remove the entry from the table
   removeEntry: (id) ->
