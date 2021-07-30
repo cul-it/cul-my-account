@@ -9,6 +9,8 @@
 ### Bug fixes
 - Multiple cancel/renew attempts no longer generated for a single button click
 - Resolved invalid date error with pending requests (DISCOVERYACCES-7218)
+- Result of renewal attempts now reported correctly (DISCOVERYACCESS-2701)
+- Due dates are displayed correctly for local time zone
 
 ## v2.0.4
 - Remove temporary service interruptions alert. (DISCOVERYACCESS-7182)
