@@ -146,8 +146,13 @@ account =
         # Is there a more efficient way of doing this? Probably, probably.
         currentRowDueDateTxt = $(this).find('td.date').text().trim()
         currentRowDueDate = new Date(currentRowDueDateTxt)
-        if currentRowDueDate > itemDueDate
-          console.log("Found insertion point at index #{i}")
+        if i == rows.length - 1
+          # We've reached the last row, so just move the target row to the end
+          $("##{id}").hide('slow', () ->
+            $(this).insertAfter(rows[i]).show('slow')
+          )
+          return false
+        else if currentRowDueDate > itemDueDate
           # Move the item to this new location
           $("##{id}").hide('slow', () ->
              $(this).insertBefore(rows[i]).show('slow')
