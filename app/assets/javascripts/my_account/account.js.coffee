@@ -251,13 +251,16 @@ account =
         errors = result.filter (r) -> r.error
         console.log("errors", errors)
         if errors.length > 0
-          account.setFlash('alert-success', "Some items could not be renewed")
+          if errors.length >= ids.length
+            account.setFlash('alert-warning', "Renewal failed")
+          else
+            account.setFlash('alert-warning', "Some items could not be renewed")
         else
           account.setFlash('alert-success', "Renewal succeeded")
         $('#request-loading-spinner').spin(false)
         window.scrollTo(0, 0)
       .catch (error) ->
-        account.setFlash('alert-success', "Some items could not be renewed")
+        account.setFlash('alert-warning', "Some items could not be renewed")
         $('#request-loading-spinner').spin(false)
 
   # Return a promise that renews a single item
@@ -309,7 +312,7 @@ account =
         # MyAccount page!
         account.onLoad()
       .catch (error) ->
-        account.setFlash('alert-success', "Some items could not be cancelled")
+        account.setFlash('alert-warning', "Some items could not be cancelled")
         $('#request-loading-spinner').spin(false)
 
   # Return a promise that cancels a single request
@@ -367,7 +370,7 @@ account =
       msg = request.getResponseHeader("X-Message")
       alert_type = 'alert-success'
       alert_type = 'alert-error' unless request.getResponseHeader("X-Message-Type").indexOf("error") is -1
-      console.log("xmessagetype", request.getResponseHeader("X-Message-Type"))
+      console.log("xmessagetype", request.getResponseHeader("X-Message-Type"), alert_type)
 
       unless request.getResponseHeader("X-Message-Type").indexOf("keep") is 0
         account.setFlash(alert_type, msg)
