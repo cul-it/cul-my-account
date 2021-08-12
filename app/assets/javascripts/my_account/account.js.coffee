@@ -2,8 +2,13 @@ $(document).ready ->
   account.onLoad()
 
 account =
-  onLoad: () ->
-
+  requests: {
+    folio: [],
+    illiad: [],
+    bd: [],
+  }
+  onLoad: () -> 
+    
     # Handle display of flash messages
     $(document).ajaxComplete (event, request) ->
       account.ajaxComplete(event, request)
@@ -20,6 +25,7 @@ account =
       data: { netid }
       success: (data) ->
         if data.code < 300
+          account.requests.folio = data.account.holds
           account.showCheckouts(data)
           account.showFines(data)
     })
@@ -29,6 +35,22 @@ account =
       url: "/myaccount/get_illiad_data"
       type: "POST"
       data: { netid }
+      success: (data) ->
+        account.requests.illiad = data
+    })
+
+    $.ajax({
+      url: "/myaccount/get_bd_requests"
+      type: "POST"
+      data: { netid }
+      success: (data) ->
+        newData = []
+        for index, value of data
+          newData.push(value)
+        if newData.length > 0
+          account.requests.bd = data
+          account.showRequests(account.requests.folio, account.requests.illiad, account.requests.bd)
+
     })
 
     # FOLIO account data is needed for both the checkouts pane and the requests panes. Requests in FOLIO
@@ -40,7 +62,8 @@ account =
         $("#checkouts").html("<span>Couldn't retrieve account information. Please ask a librarian for assistance.</span>")
       if illiadAccount[0] == undefined
         account.logError("couldn't retrieve user account data from ILLiad")
-      account.showRequests(folioAccount[0].account.holds, illiadAccount[0])
+
+      account.showRequests(account.requests.folio, account.requests.illiad, account.requests.bd)
       .then () ->
         #account.setEvents()
     (error) ->
@@ -51,6 +74,7 @@ account =
       $(this).tab('show')
       account.setActionButtonState()
 
+    account.userRecord = null
     # Look up user's name from FOLIO
     $.ajax({
       url: "/myaccount/get_user_record"
@@ -59,6 +83,7 @@ account =
       error: (jqXHR, textStatus, error) -> 
         account.logError("couldn't retrieve user record from FOLIO for #{netid} (#{error})")
       success: (data) ->
+        account.userRecord = data.user
         nameSection = data.user.personal
         $('#userName').html("Account information for #{nameSection['firstName']} #{nameSection['lastName']}")
     })
@@ -114,7 +139,6 @@ account =
       success: (data) ->
         $("#checkouts").html(data.record)
         $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
-        console.log("First iem: ", $('#checkouts-table tbody tr:first').attr('id'))
         # Add catalog links to the titles in the table
         data.locals.checkouts.forEach (checkout) ->
           account.addCatalogLink(checkout)
@@ -126,8 +150,6 @@ account =
   # so that it's in its proper place based on a new due date after renewal.
   moveItemByDate: (id, newDueDate) ->
     rows = $('#checkouts-table tbody tr')
-    #console.log("rows", rows)
-
     return if rows.length < 2
 
     # Awkwardly newDueDate into a format we can use
@@ -190,10 +212,12 @@ account =
     })
 
   # Populate requests in the UI
-  showRequests: (folioData, illiadData) ->
+  showRequests: (folioData, illiadData, bdData) ->
     # Combine ILLiad requests and FOLIO requests into the same arrays
     available = illiadData.available
     pending = illiadData.pending
+
+    # Sort out the FOLIO request data into the format and category expected by the views
     folioData.forEach (entry) ->
       requestObj = {
         iid: entry.requestId, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
@@ -206,6 +230,26 @@ account =
         pending.push requestObj
       else
         available.push requestObj
+
+    # Do the same sorting with the Borrow Direct data
+    # BD entries look like this:
+    # {
+    #   au: <author>
+    #   iid: COR-<number>
+    #   status: <status>
+    #   system: "bd"
+    #   tl: <title>  
+    # }
+    # 
+    bdData.forEach (entry) ->
+      requestObj = {
+        iid: entry.iid, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
+        tl: entry.tl,
+        system: 'bd'
+      }
+      # TODO: Handle other statuses once they're known
+      pendingStatuses = ['ENTERED', 'IN_PROCESS', 'SHIPPED']
+      pending.push requestObj if pendingStatuses.includes(entry.status)
 
     # Available requests tab
     $.ajax({
@@ -370,13 +414,10 @@ account =
       msg = request.getResponseHeader("X-Message")
       alert_type = 'alert-success'
       alert_type = 'alert-error' unless request.getResponseHeader("X-Message-Type").indexOf("error") is -1
-      console.log("xmessagetype", request.getResponseHeader("X-Message-Type"), alert_type)
-
       unless request.getResponseHeader("X-Message-Type").indexOf("keep") is 0
         account.setFlash(alert_type, msg)
   
   setFlash: (type, message) ->
-    #console.log("Setting flash with message", message)
     # Add flash message if there is any text to display
     $("#main-flashes").replaceWith("<div id='main-flashes'>
       <div class='alert " + type + "'>

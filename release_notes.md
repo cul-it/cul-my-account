@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.0.6
+- Properly display Borrow Direct requests
+
 ## v2.0.5
 
 ### Improvements

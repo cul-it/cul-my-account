@@ -178,7 +178,9 @@ module MyAccount
 
       Rails.logger.debug "mjc12test: Done with parsing"
 
-      bd_items = get_bd_requests netid
+      #bd_items = get_bd_requests netid
+      bd_items = []
+      #Rails.logger.debug "mjc12test: got bd_items #{bd_items}"
 
       render json: { pending: pending_requests, available: available_requests }
     end
@@ -271,11 +273,13 @@ module MyAccount
       return ""
     end
 
-    def get_bd_requests(netid)
+    def get_bd_requests
+      netid = params['netid']
+
       # Using the BD API is an expensive operation, so use the Rails session to cache the
       # response the first time a user accesses her account
       Rails.logger.debug "mjc12test: Checking session  #{session['mjc12_bd_items']}"
-      return session[netid + '_bd_items'] if session[netid + '_bd_items']
+      #return session[netid + '_bd_items'] if session[netid + '_bd_items']
       Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup #{}"
 
       barcode = patron_barcode(netid)
@@ -311,7 +315,7 @@ module MyAccount
         cleaned_items << { 'tl' => item.title, 'au' => '', 'system' => 'bd', 'status' => item.request_status, 'iid' => item.request_number }
       end
       session[netid + '_bd_items'] = cleaned_items
-      cleaned_items
+      render json: cleaned_items
     end
 
     def user
