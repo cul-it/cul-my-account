@@ -39,7 +39,7 @@ account =
         account.requests.illiad = data
     })
 
-    $.ajax({
+    bdAccountLookup =$.ajax({
       url: "/myaccount/get_bd_requests"
       type: "POST"
       data: { netid }
@@ -49,14 +49,22 @@ account =
           newData.push(value)
         if newData.length > 0
           account.requests.bd = data
-          account.showRequests(account.requests.folio, account.requests.illiad, account.requests.bd)
+         # account.showRequests(account.requests.folio, account.requests.illiad, account.requests.bd)
 
     })
 
     # FOLIO account data is needed for both the checkouts pane and the requests panes. Requests in FOLIO
     # have to be combined with requests from ILLiad and BD, though, which takes a bit of manipulation.
     # So we use .when() here to do both lookups before proceeding
-    $.when(folioAccountLookup, illiadAccountLookup).done (folioAccount, illiadAccount) ->
+    # 
+    # HACK: I don't really want to include Borrow Direct in this -- part of the motivation for using so 
+    # much AJAX in this app was to keep the user from having to wait until the BD lookup is done, as that
+    # can be excruciatingly slow at times. But if we don't wait for it here, then we run into concurrency
+    # problems when populating the requests tabs and can get duplicate entries (for requests that are available
+    # and thus are listed both in FOLIO as a charged item and in BD as an available request). It would be good
+    # to figure out a better solution for this, but for now I'm including it here and forcing the whole thing
+    # to wait till BD is ready.
+    $.when(folioAccountLookup, illiadAccountLookup, bdAccountLookup).done (folioAccount, illiadAccount) ->
       if folioAccount[0].code > 200
         account.logError("couldn't retrieve user account data from FOLIO (#{folioAccount[0].error})")
         $("#checkouts").html("<span>Couldn't retrieve account information. Please ask a librarian for assistance.</span>")
@@ -226,7 +234,7 @@ account =
         requestDate: entry.requestDate
       }
       # This is a weak way of determining available/pending status. Come up with something better?
-      if entry.status.match /^Open/
+      if entry.status.match /^Open/ && !entry.status.match /Awaiting pickup/
         pending.push requestObj
       else
         available.push requestObj
@@ -241,15 +249,21 @@ account =
     #   tl: <title>  
     # }
     # 
+    # TODO: Handle other statuses once they're known
+    pendingStatuses = ['ENTERED', 'IN_PROCESS', 'SHIPPED']
+    availableStatuses = []
     bdData.forEach (entry) ->
       requestObj = {
         iid: entry.iid, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
         tl: entry.tl,
         system: 'bd'
       }
-      # TODO: Handle other statuses once they're known
-      pendingStatuses = ['ENTERED', 'IN_PROCESS', 'SHIPPED']
-      pending.push requestObj if pendingStatuses.includes(entry.status)
+      # This is a bit of a hack. An ON_LOAN item is really an available request, but at that point in
+      # the process it shows up as a FOLIO loan item; if we include this one in available_requests,
+      # we'll get a duplicate entry. So we'll ignore items with status ON_LOAN here.
+      if entry.status != 'ON_LOAN'
+        pending.push requestObj if pendingStatuses.includes(entry.status)
+        available.push requestObj if availableStatuses.includes(entry.status)
 
     # Available requests tab
     $.ajax({
@@ -293,7 +307,6 @@ account =
     Promise.all(promises)
       .then (result) ->
         errors = result.filter (r) -> r.error
-        console.log("errors", errors)
         if errors.length > 0
           if errors.length >= ids.length
             account.setFlash('alert-warning', "Renewal failed")

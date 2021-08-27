@@ -15,7 +15,7 @@
           %td
             = f['accrualDate'].to_date.strftime('%-m/%-d/%y')
           %td
-            = f['item']['title']
+            = f.dig('item', 'title')
           %td
             = f['reason']
           %td
