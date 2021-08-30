@@ -119,22 +119,12 @@ account =
     $("input:checkbox").click ->
       account.setActionButtonState()
 
-    # Renew button
-    $('#renew').click (e) ->
-      e.preventDefault()
-      $('#request-loading-spinner').spin('renewing')
-      account.renewItems()
-
     # Cancel button
     $('#cancel').click (e) ->
       e.preventDefault()
+      e.stopPropagation()
       $('#request-loading-spinner').spin('cancelling')
       account.cancelItems()
-
-    $('#test').click (e) ->
-      e.preventDefault()
-     # account.moveItemByDate($('#checkouts-table tbody tr:last').attr('id'))
-      account.moveItemByDate("779e9a48-082e-4fa2-b1e7-6d446fbec910")
 
   # Populate checkouts in the UI
   showCheckouts: (accountData) ->
@@ -147,12 +137,26 @@ account =
       success: (data) ->
         $("#checkouts").html(data.record)
         $('#checkoutsTab').html('Checked out (' + data.locals.checkouts.length + ')')
+        $('#renew').prop('disabled', true)
+        # Enable/disable action buttons if any checkbox is selected
+        $("input:checkbox").click ->
+          account.setActionButtonState()
+        # Set up renew button handler
+        $('#renew').click (e) ->
+          account.clearItemStatuses()
+          $('#request-loading-spinner').spin('renewing')
+          account.renewItems()
         # Add catalog links to the titles in the table
         data.locals.checkouts.forEach (checkout) ->
           account.addCatalogLink(checkout)
-        account.setActionButtonState()
-        account.setEventHandlers()
+
     })
+
+  # Clear all the "status" values in the checkouts pane. This is used at the
+  # beginning of a renew operation so that old statuses won't be confused
+  # with new ones.
+  clearItemStatuses: () ->
+    $('td.status').html('')
 
   # Given an item ID, move that item down in the checkouts table
   # so that it's in its proper place based on a new due date after renewal.
@@ -227,10 +231,11 @@ account =
 
     # Sort out the FOLIO request data into the format and category expected by the views
     folioData.forEach (entry) ->
+      res = account.getServicePoint(entry.pickupLocationId)
       requestObj = {
         iid: entry.requestId, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
         tl: entry.item.title,
-        lo: entry.pickupLocationId,
+        lo: account.getServicePoint(entry.pickupLocationId).discoveryDisplayName,
         requestDate: entry.requestDate
       }
       # This is a weak way of determining available/pending status. Come up with something better?
@@ -292,6 +297,18 @@ account =
         account.setEventHandlers()
     })
 
+  getServicePoint: (id) ->
+    $.ajax({
+      url: "myaccount/ajax_service_point"
+      type: "POST"
+      data: { sp_id: id }
+      error: (jqXHR, textStatus, error) ->
+        account.logError("couldn't find service point #{sp_id} (#{error})")
+      success: (data) ->
+        console.log("retrieved SP", data.service_point.discoveryDisplayName)
+        return data.service_point
+    })
+
   renewItems: () ->
     netid = $('#accountData').data('netid')
     ids = []
@@ -308,8 +325,14 @@ account =
       .then (result) ->
         errors = result.filter (r) -> r.error
         if errors.length > 0
+          reason = ''
+          if errors.length == 1
+            # If there's only one item being renewed, go ahead and show the error message
+            # (this could be extended in future to show errors for multiple items, maybe,
+            # but that might get confusing).
+            reason = " (#{errors[0].error.errors[0].message})"
           if errors.length >= ids.length
-            account.setFlash('alert-warning', "Renewal failed")
+            account.setFlash('alert-warning', "Renewal failed#{reason}")
           else
             account.setFlash('alert-warning', "Some items could not be renewed")
         else
@@ -398,12 +421,14 @@ account =
   # Using the item ID, show the status of a renewal operation in the appropriate table row.
   # result will be an object with an :error property and a :code (HTTP code) property.
   updateItemStatus: (id, result) ->
-    message = 'Renewal failed'
     if result.code < 300
       message = 'Renewed'
-      account.moveItemByDate(id, result.due_date)
+    else
+      message = 'Renewal failed'
     $("##{id} td.status").html(message)
-    # Move the item down in the table to keep it sorted by due date
+    if result.code < 300
+      # Move the item down in the table to keep it sorted by due date
+      account.moveItemByDate(id, result.due_date)
 
   # For a successufully cancelled request, remove the entry from the table
   removeEntry: (id) ->
