@@ -1,5 +1,9 @@
 # Release Notes - my-account
 
+## v2.0.7
+- Fix bug causing renewals to sometimes fail (or appear to fail) (DISCOVERYACCESS-7201 again)
+- Display pickup location names for available requests
+
 ## v2.0.6
 - Properly display Borrow Direct requests
 
