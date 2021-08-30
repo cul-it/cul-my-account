@@ -229,6 +229,12 @@ account =
     available = illiadData.available
     pending = illiadData.pending
 
+    # Determining which requests should appear as pending or available, from three disparate data sources,
+    # entails a number of awkward hacks. Here is the first one. If items from the ILL data feed have a
+    # TransactionStatus of "Checked out in FOLIO", they should be filtered out of the array because they'll
+    # be duplicated (with a more accurate status) in the FOLIO data
+    pending = pending.filter (r) -> r.TransactionStatus != 'Checked out in FOLIO'
+
     # Sort out the FOLIO request data into the format and category expected by the views
     folioData.forEach (entry) ->
       # Look up the service point based on its ID. getServicePoint() will try to dynamically update the status
