@@ -231,11 +231,12 @@ account =
 
     # Sort out the FOLIO request data into the format and category expected by the views
     folioData.forEach (entry) ->
-      res = account.getServicePoint(entry.pickupLocationId)
+      # Look up the service point based on its ID. getServicePoint() will try to dynamically update the status
+      # in the table when the result is ready
+      account.getServicePoint(entry.pickupLocationId, entry.requestId)
       requestObj = {
         iid: entry.requestId, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
         tl: entry.item.title,
-        lo: account.getServicePoint(entry.pickupLocationId).discoveryDisplayName,
         requestDate: entry.requestDate
       }
       # This is a weak way of determining available/pending status. Come up with something better?
@@ -297,7 +298,7 @@ account =
         account.setEventHandlers()
     })
 
-  getServicePoint: (id) ->
+  getServicePoint: (id, requestId) ->
     $.ajax({
       url: "myaccount/ajax_service_point"
       type: "POST"
@@ -305,7 +306,7 @@ account =
       error: (jqXHR, textStatus, error) ->
         account.logError("couldn't find service point #{sp_id} (#{error})")
       success: (data) ->
-        console.log("retrieved SP", data.service_point.discoveryDisplayName)
+        $("##{requestId} td.location").html(data.service_point.discoveryDisplayName)
         return data.service_point
     })
 
