@@ -218,6 +218,16 @@ module MyAccount
       render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: @checkouts }}
     end
 
+    # Retrieve a service point record from FOLIO
+    def ajax_service_point
+      sp_id = params['sp_id']
+      url = ENV['OKAPI_URL']
+      tenant = ENV['OKAPI_TENANT']
+      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+      sp = CUL::FOLIO::Edge.service_point(url, tenant, token[:token], sp_id)
+      render json: sp
+    end
+
     # Use the FOLIO gem to retrieve an instance's HRID (i.e., bib id) given its UUID. Token is included
     # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls
     def ajax_catalog_link
