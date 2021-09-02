@@ -246,7 +246,7 @@ account =
         requestDate: entry.requestDate
       }
       # This is a weak way of determining available/pending status. Come up with something better?
-      if entry.status.match /^Open/ && !entry.status.match /Awaiting pickup/
+      if entry.status.match(/^Open/) && !entry.status.match(/Awaiting pickup/)
         pending.push requestObj
       else
         available.push requestObj

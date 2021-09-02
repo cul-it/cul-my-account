@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.0.8
+- Fix bug causing pending requests to show as available
+
 ## v2.0.7
 - Fix bug causing renewals to sometimes fail (or appear to fail) (DISCOVERYACCESS-7201 again)
 - Display pickup location names for available requests
