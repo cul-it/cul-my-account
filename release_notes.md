@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.1.0
+- Add the ability to show alert messages at the top of the page from an alerts.yaml file
+
 ## v2.0.8
 - Fix bug causing pending requests to show as available
 
