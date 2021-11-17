@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.1.1
+- Guard against null results from ILLiad lookup
+
 ## v2.1
 - Add the ability to show alert messages at the top of the page from an alerts.yaml file
 

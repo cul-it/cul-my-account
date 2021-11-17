@@ -226,8 +226,8 @@ account =
   # Populate requests in the UI
   showRequests: (folioData, illiadData, bdData) ->
     # Combine ILLiad requests and FOLIO requests into the same arrays
-    available = illiadData.available
-    pending = illiadData.pending
+    available = illiadData?.available || []
+    pending = illiadData?.pending || []
 
     # Determining which requests should appear as pending or available, from three disparate data sources,
     # entails a number of awkward hacks. Here is the first one. If items from the ILL data feed have a
