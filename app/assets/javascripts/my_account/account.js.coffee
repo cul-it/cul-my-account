@@ -149,7 +149,6 @@ account =
         # Add catalog links to the titles in the table
         data.locals.checkouts.forEach (checkout) ->
           account.addCatalogLink(checkout)
-
     })
 
   # Clear all the "status" values in the checkouts pane. This is used at the
@@ -204,9 +203,10 @@ account =
       error: (jqXHR, textStatus, error) ->
         account.logError("couldn't add catalog link for #{entry.id} (#{error})")
       success: (data) ->
-        # Find the correct item title and add the link
-        title = $("##{entry.item.itemId} .title").html()
-        $("##{entry.item.itemId} .title").html("<a href='#{data.link}'>#{title}</>")
+        if data.link != null
+          # Find the correct item title and add the link
+          title = $("##{entry.item.itemId} .title").html()
+          $("##{entry.item.itemId} .title").html("<a href='#{data.link}'>#{title}</>")
     })
 
   # Populate fines/fees in the UI

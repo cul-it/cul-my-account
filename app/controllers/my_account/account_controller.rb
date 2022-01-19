@@ -253,9 +253,12 @@ module MyAccount
       response = CUL::FOLIO::Edge.instance_record(url, tenant, token, instanceId)
       link = nil
       if response[:code] < 300
-        link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}"
+        # Filter out Borrow Direct records -- they have an HRID that looks like a legit bibid, but
+        # it's something else BD-related. We can't link to those.
+        if response[:instance]['source'] != 'bd'
+          link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}"
+        end
       end
-      #Rails.logger.debug "mjc12test: got response #{response[:instance]['hrid']} for #{instanceId} with link #{link}"
       render json: { link: link }
     end
 

@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.1.2
+- Don't add links to checkout titles from Borrow Direct (DISCOVERYACCESS-7360)
+
 ## v2.1.1
 - Guard against null results from ILLiad lookup
 
