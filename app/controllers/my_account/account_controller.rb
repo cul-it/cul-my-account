@@ -242,9 +242,10 @@ module MyAccount
       render json: sp
     end
 
-    # Use the FOLIO gem to retrieve an instance's HRID (i.e., bib id) given its UUID. Token is included
-    # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls
-    def ajax_catalog_link
+    # Use the FOLIO gem to retrieve an instance's HRID (i.e., bib id) and source, given its UUID. Token is included
+    # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls. The
+    # source is needed later to derermine whether this is a BD or ILL or FOLIO item.
+    def ajax_catalog_link_and_source
       instanceId = params['instanceId']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
@@ -252,11 +253,16 @@ module MyAccount
       # Get instance HRID (e.g., bibid) for the record
       response = CUL::FOLIO::Edge.instance_record(url, tenant, token, instanceId)
       link = nil
+      source = nil
       if response[:code] < 300
-        link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}"
+        source = response[:instance]['source']
+        # Ignore Borrow Direct records for the link -- they have an HRID that looks like a legit bibid, but
+        # it's something else BD-related. We can't link to those.
+        if source != 'bd'
+          link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}"
+        end
       end
-      #Rails.logger.debug "mjc12test: got response #{response[:instance]['hrid']} for #{instanceId} with link #{link}"
-      render json: { link: link }
+      render json: { link: link, source: source }
     end
 
     # Render the _checkouts partial in response to an AJAX call

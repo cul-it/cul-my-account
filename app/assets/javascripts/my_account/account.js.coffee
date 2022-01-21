@@ -146,10 +146,9 @@ account =
           account.clearItemStatuses()
           $('#request-loading-spinner').spin('renewing')
           account.renewItems()
-        # Add catalog links to the titles in the table
+        # Add catalog links to the titles in the table and source badge if needed
         data.locals.checkouts.forEach (checkout) ->
-          account.addCatalogLink(checkout)
-
+          account.addCatalogLinkAndSource(checkout)
     })
 
   # Clear all the "status" values in the checkouts pane. This is used at the
@@ -195,19 +194,29 @@ account =
 
 
   # Given a checkout entry, call an ajax method to determine its instance bibid
-  # and create a link to the catalog record, then add the link to the displayed title
-  addCatalogLink: (entry) ->
+  # and create a link to the catalog record, then add the link to the displayed title.
+  # Also add a source badge (indicating a BD or ILL item) if appropriate.
+  addCatalogLinkAndSource: (entry) ->
     $.ajax({
-      url: "/myaccount/ajax_catalog_link"
+      url: "/myaccount/ajax_catalog_link_and_source"
       type: "POST"
       data: { instanceId: entry.item.instanceId }
       error: (jqXHR, textStatus, error) ->
         account.logError("couldn't add catalog link for #{entry.id} (#{error})")
       success: (data) ->
-        # Find the correct item title and add the link
-        title = $("##{entry.item.itemId} .title").html()
-        $("##{entry.item.itemId} .title").html("<a href='#{data.link}'>#{title}</>")
+        account.addSourceBadge(entry.item.itemId, data.source)
+        if data.link != null
+          # Find the correct item title and add the link
+          title = $("##{entry.item.itemId} .title").html()
+          $("##{entry.item.itemId} .title").html("<a href='#{data.link}'>#{title}</>")
     })
+
+  # If the checkout originates from Borrow Direct or ILLiad, indicate that with a source "badge"
+  # in the entry. (Tim Worrall designed these badges originally for the older My Account implementation.)
+  # The source indicator has to be set during the instance lookup in account_controller.rb.
+  addSourceBadge: (id, source) ->
+    if source == 'bd'
+      $("##{id} .source-badge").html('<div class="badge badge-primary">Borrow Direct</div>')
 
   # Populate fines/fees in the UI
   showFines: (accountData) ->
