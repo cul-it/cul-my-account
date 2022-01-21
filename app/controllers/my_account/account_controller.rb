@@ -142,11 +142,9 @@ module MyAccount
       # Rails.logger.debug "mjc12test: Start parsing"
 
       begin 
-        Rails.logger.debug "mjc12test6: starting illiad lookup, #{netid}"
         response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
         record = JSON.parse response.body
       rescue => error
-        Rails.logger.debug "mjc12test6:  illiad lookup error! #{error}"
         Rails.logger.error "MyAccount error: Could not find a patron entry for #{netid}"
         msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
         return [nil, nil, nil, nil, nil, msg]
