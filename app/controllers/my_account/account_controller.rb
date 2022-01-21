@@ -142,9 +142,11 @@ module MyAccount
       # Rails.logger.debug "mjc12test: Start parsing"
 
       begin 
+        Rails.logger.debug "mjc12test6: starting illiad lookup, #{netid}"
         response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
         record = JSON.parse response.body
       rescue => error
+        Rails.logger.debug "mjc12test6:  illiad lookup error! #{error}"
         Rails.logger.error "MyAccount error: Could not find a patron entry for #{netid}"
         msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
         return [nil, nil, nil, nil, nil, msg]
@@ -242,9 +244,10 @@ module MyAccount
       render json: sp
     end
 
-    # Use the FOLIO gem to retrieve an instance's HRID (i.e., bib id) given its UUID. Token is included
-    # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls
-    def ajax_catalog_link
+    # Use the FOLIO gem to retrieve an instance's HRID (i.e., bib id) and source, given its UUID. Token is included
+    # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls. The
+    # source is needed later to derermine whether this is a BD or ILL or FOLIO item.
+    def ajax_catalog_link_and_source
       instanceId = params['instanceId']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
@@ -252,14 +255,16 @@ module MyAccount
       # Get instance HRID (e.g., bibid) for the record
       response = CUL::FOLIO::Edge.instance_record(url, tenant, token, instanceId)
       link = nil
+      source = nil
       if response[:code] < 300
-        # Filter out Borrow Direct records -- they have an HRID that looks like a legit bibid, but
+        source = response[:instance]['source']
+        # Ignore Borrow Direct records for the link -- they have an HRID that looks like a legit bibid, but
         # it's something else BD-related. We can't link to those.
-        if response[:instance]['source'] != 'bd'
+        if source != 'bd'
           link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}"
         end
       end
-      render json: { link: link }
+      render json: { link: link, source: source }
     end
 
     # Render the _checkouts partial in response to an AJAX call

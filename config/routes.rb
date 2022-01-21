@@ -10,7 +10,7 @@ MyAccount::Engine.routes.draw do
   match '/ajax_fines' => 'account#ajax_fines', via: [:post]
   match '/ajax_renew' => 'account#ajax_renew', via: [:post]
   match '/ajax_cancel' => 'account#ajax_cancel', via: [:post]
-  match '/ajax_catalog_link' => 'account#ajax_catalog_link', via: [:post]
+  match '/ajax_catalog_link_and_source' => 'account#ajax_catalog_link_and_source', via: [:post]
   match '/get_bd_requests' => 'account#get_bd_requests', via: [:post]
   match '/ajax_service_point' => 'account#ajax_service_point', via: [:post]
 end
