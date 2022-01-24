@@ -1,52 +1,58 @@
-- Rails.logger.debug "mjc12test: RLH #{@renewable_lookup_hash}"
-
 - if @checkouts.length == 0 
   %p
     You have no items checked out.
 - else
-  = form_tag({controller: :account, action: :index}, :id => 'checkouts-form') do
-    %div.table-responsive
-      %table#checkouts-table.table.table-striped
-        %thead
-          %tr
-            %th{:scope => 'col', :class => 'myacct-col-5'}
-              = check_box_tag 'toggle-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-              %span.sr-only
-                Select all
-            %th{:scope => 'col', :class => 'myacct-col-10'} Due date
-            %th{:scope => 'col', :class => 'myacct-col-50'} Title
-            %th{:scope => 'col', :class => 'myacct-col-20'} Author
-            %th{:scope => 'col', :class => 'myacct-col-20'} Status
-        %tbody
-          - @checkouts.each do |c|
-            %tr.item{:id => "#{c['iid']}", :data => {:system => system_tag(c)}}
-              %td
-                = label_tag "select-#{c['iid']}", 'Select', { :class => 'sr-only' }
-                = check_box_tag "select-#{c['iid']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
-              %td
-                = c['od'] ? c['od'].to_date.strftime('%-m/%-d/%y') : ''
-              %td
-                %div
-                  = cased_title_link c
-                - if @renewable_lookup_hash && @renewable_lookup_hash[c['iid']] == 'N'
-                  %div.badge.badge-secondary
-                    This item cannot be renewed.
-                - if c['is_bd']
-                  %div.badge.badge-primary
-                    Borrow Direct
-                - if c['is_ill']
-                  %div.badge.badge-success
-                    Interlibrary Loan
-              %td
-                =c['au']
-              %td
-                = status_display c
-      = hidden_field_tag 'num_checkouts', @checkouts.length
-      - if ENV['MY_ACCOUNT_READONLY']
-        %span
-          Note: The system is running in read-only mode. Items cannot be renewed, and requests cannot be cancelled. Please ask a librarian for assistance if needed.
-        %br
-        %br
-      - else
-        = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
-      = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-checkouts', :value => 'export-checkouts', :class => 'btn btn-danger'
+  - Rails.logger.debug "mjc12test: starting checkouts display"
+  //= form_tag({controller: :account, action: :handle_actions}, :remote => true, :id => 'checkouts-form') do
+  %div.table-responsive
+    %table#checkouts-table.table.table-striped
+      %thead
+        %tr
+          %th{:scope => 'col', :class => 'myacct-col-5'}
+            = check_box_tag 'toggle-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+            %span.sr-only
+              Select all
+          %th{:scope => 'col', :class => 'myacct-col-10'} Due date
+          %th{:scope => 'col', :class => 'myacct-col-50'} Title
+          %th{:scope => 'col', :class => 'myacct-col-20'} Author
+          %th{:scope => 'col', :class => 'myacct-col-20'} Status
+      %tbody
+        - @checkouts.sort_by { |c| [c['dueDate'], c['item']['title']] }.each do |c|
+          %tr.item{:id => "#{c['item']['itemId']}", :data => {:system => system_tag(c)}}
+            %td
+              = label_tag "#{c['item']['itemId']}", 'Select', { :class => 'sr-only' }
+              = check_box_tag "#{c['item']['itemId']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
+            %td.date
+              - dueDate = ''
+              - if c['dueDate']
+                -# Dates are now from FOLIO and stored in UTC, e.g. "2022-07-30T03:59:59.000+0000"
+                - localDate = Date.parse(c['dueDate']) + Rational(-5, 24)
+                - dueDate = localDate.strftime('%-m/%-d/%y')
+              = dueDate
+            %td
+              %div.title
+                = cased_title_link c
+              -# - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
+              -#   %div.badge.badge-secondary
+              -#     This item cannot be renewed.
+              - if !c['is_bd']
+                %div.source-badge
+                -# %div.badge.badge-primary
+                  -# Borrow Direct
+              - if c['is_ill']
+                %div.badge.badge-success
+                  Interlibrary Loan
+            %td
+              =c['item']['author']
+            %td.status
+              = status_display c
+    = hidden_field_tag 'num_checkouts', @checkouts.length
+    - if ENV['MY_ACCOUNT_READONLY']
+      %span
+        Note: The system is running in read-only mode. Items cannot be renewed, and requests cannot be cancelled. Please ask a librarian for assistance if needed.
+      %br
+      %br
+    - else
+      = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
+      %span{:id => 'request-loading-spinner'}
+

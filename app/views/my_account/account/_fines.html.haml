@@ -1,7 +1,4 @@
-- if !@nofineinfo.nil?
-  %p
-    = @nofineinfo
-- elsif @fines.length == 0
+- if @fines.length == 0
   %p
     You have no fines or fees.
 - else
@@ -16,12 +13,12 @@
       - @fines.each do |f|
         %tr
           %td
-            = f['fineDate'][0].to_date.strftime('%-m/%-d/%y')
+            = f['accrualDate'].to_date.strftime('%-m/%-d/%y')
           %td
-            = f['itemTitle'][0]
+            = f.dig('item', 'title')
           %td
-            = f['fineType'][0]
+            = f['reason']
           %td
-            = f['amount'][0].gsub('USD ', '$')
+            = number_to_currency(f['chargeAmount']['amount'])
 %p
 = link_to "View fine rates", "https://www.library.cornell.edu/services/borrow/fines"

@@ -1,5 +1,56 @@
 # Release Notes - my-account
 
+## v2.1.2
+- Don't add links to checkout titles from Borrow Direct, but indicate BD titles with badges (DISCOVERYACCESS-7360)
+
+## v2.1.1
+- Guard against null results from ILLiad lookup
+
+## v2.1
+- Add the ability to show alert messages at the top of the page from an alerts.yaml file
+
+## v2.0.8
+- Fix bug causing pending requests to show as available
+
+## v2.0.7
+- Fix bug causing renewals to sometimes fail (or appear to fail) (DISCOVERYACCESS-7201 again)
+- Display pickup location names for available requests
+
+## v2.0.6
+- Properly display Borrow Direct requests
+
+## v2.0.5
+
+### Improvements
+- Better appearance of alert banners
+- Checkouts now sorted by both due date (primary) and title (secondary)
+
+### Bug fixes
+- Multiple cancel/renew attempts no longer generated for a single button click
+- Resolved invalid date error with pending requests (DISCOVERYACCES-7218)
+- Result of renewal attempts now reported correctly (DISCOVERYACCESS-7201)
+- Due dates are displayed correctly for local time zone
+
+## v2.0.4
+- Remove temporary service interruptions alert. (DISCOVERYACCESS-7182)
+
+## v2.0.3
+- Remove guest ID login button. (DISCOVERYACCESS-7175)
+
+## v2.0.2
+- Update text of temporary service interruptions alert. (DISCOVERYACCESS-7181)
+
+## v2.0.1
+- Use promises to renew and cancel
+- Add progress spinners to request buttons
+- Add flash messages
+
+## v2.0
+- Rewrote code to use FOLIO as a data source instead of Voyager (DISCOVERYACCESS-6993)
+- Rewrote code to load sections of the user record via AJAX
+- Implemented read-only mode using MY_ACCOUNT_READONLY ENV flag (DISCOVERYACCESS-7019)
+- Removed the RIS citation export buttons
+
 ## v1.2.3
 - Modify the text of temporary service interruptions alert. (DISCOVERYACCESS-7094)
 

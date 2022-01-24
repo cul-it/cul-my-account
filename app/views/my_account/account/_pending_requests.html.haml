@@ -1,48 +1,54 @@
 - request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Interlibrary Loan', 'bd' => 'Borrow Direct', 'C' => 'Call slip'}
 - has_bd_pending = false
 - has_ill_pending = false
+
 - if @pending_requests.length == 0 
   %p
     You have no pending requests.
   %a{:id => "bd-link", :href => "javascript:void(0)"}
 - else
-  = form_tag({controller: :account, action: :index}, :id => 'pending-requests-form') do
-    %table#pending-requests-table.table.table-striped.table-responsive
-      %thead
-        %tr
-          %th{:scope => 'col', :class => 'myacct-col-5'}
-            = check_box_tag 'toggle-all-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-            %span.sr-only
-              Select all
-          %th{:scope => 'col', :class => 'myacct-col-10'} Date requested
-          %th{:scope => 'col', :class => 'myacct-col-50'} Title
-          %th{:scope => 'col', :class => 'myacct-col-20'} Author
-          %th{:scope => 'col', :class => 'myacct-col-20'} Type
-      %tbody
-        - @pending_requests.each do |c|
-          - has_ill_pending = true if c['system'] == "illiad"
-          - has_bd_pending = true if c['system'] == "bd"
-          %tr.item{:id => "#{c['iid']}"}
-            %td
-              - if c['system'] != "illiad" && c['system'] != "bd"
-                = label_tag "select-#{c['iid']}", 'Select', { :class => 'sr-only' }
-                = check_box_tag "select-#{c['iid']}", c['ttype'], false, { 'aria-label' => 'Select', :title => 'Select' }  
-            %td
-              = c['requestDate']
-            %td
-              = c['ou_title'] || c['tl']
-            %td
-              = c['ou_aulast'] || c['au']
-            %td
-              = request_types[c['ttype'] || c['system']]
-    - if ENV['MY_ACCOUNT_READONLY']
-      %span
-        Note: The system is running in read-only mode. Items cannot be renewed, and requests cannot be cancelled. Please ask a librarian for assistance if needed.
-      %br
-      %br
-    - else
-      = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
-    = button_tag 'Export (RIS)', :type => 'submit', :id => 'export-pending-requests', :value => 'export-pending-requests', :class => 'btn btn-danger'
+  -# = form_tag({controller: :account, action: :index}, :id => 'pending-requests-form') do
+  %table#pending-requests-table.table.table-striped.table-responsive
+    %thead
+      %tr
+        %th{:scope => 'col', :class => 'myacct-col-5'}
+          = check_box_tag 'toggle-all-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
+          %span.sr-only
+            Select all
+        %th{:scope => 'col', :class => 'myacct-col-10'} Date requested
+        %th{:scope => 'col', :class => 'myacct-col-50'} Title
+        %th{:scope => 'col', :class => 'myacct-col-20'} Author
+        %th{:scope => 'col', :class => 'myacct-col-20'} Type
+    %tbody
+      - @pending_requests.each do |c|
+        - has_ill_pending = true if c['system'] == "illiad"
+        - has_bd_pending = true if c['system'] == "bd"
+        %tr.item{:id => "#{c['iid']}"}
+          %td
+            - if c['system'] != "illiad" && c['system'] != "bd"
+              = label_tag "#{c['iid']}", 'Select', { :class => 'sr-only' }
+              = check_box_tag "#{c['iid']}", c['ttype'], false, { 'aria-label' => 'Select', :title => 'Select' }  
+          %td
+            - if c['requestDate']
+              = c['requestDate'].to_date.strftime('%-m/%-d/%y') if c['requestDate'].length > 10
+              = c['requestDate'] if c['requestDate'].length < 11
+          %td
+            = c['ou_title'] || c['tl']
+          %td
+            = c['ou_aulast'] || c['au']
+          %td
+            = request_types[c['ttype'] || c['system']]
+
+  - if ENV['MY_ACCOUNT_READONLY']
+    %span
+      Note: The system is running in read-only mode. Items cannot be renewed, and requests cannot be cancelled. Please ask a librarian for assistance if needed.
+    %br
+    %br
+  - else
+    = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
+    %span{:id => 'request-loading-spinner'}
+
+
 - if has_ill_pending
   %p
   %p

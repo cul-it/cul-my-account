@@ -1,6 +1,6 @@
 # MyAccount Developer Documentation
 
-The MyAccount system reproduces the functionality from the Drupal-based MyAccount implementation that was previously in use. The current system was put into production during July/August 2019. This document is intended to help developers understand how it all works and to debug common issues.
+The MyAccount system reproduces the functionality of the Drupal-based MyAccount implementation that was previously in use. The current system was put into production during July/August 2019. This document is intended to help developers understand how it all works and to debug common issues.
 
 ## Installation
 
@@ -11,23 +11,31 @@ mount MyAccount::Engine => '/myaccount', :as => 'my_account'
 ```
 2. In the root-level `.env` file, add these key-value pairs:
 ```
-MY_ACCOUNT_PATRONINFO_URL=<netid/patron info lookup URL>
 MY_ACCOUNT_ILSAPI_URL=<ilsapi script URL>
-MY_ACCOUNT_VOYAGER_URL=<Voyager web services URL>
+OKAPI_URL=<URL of a FOLIO *Okapi* interface
+OKAPI_TENANT=<Okapi tenant ID>
+OKAPI_USER=<FOLIO username for requests API access>
+OKAPI_PW=<password for FOLIO user>
 BORROW_DIRECT_PROD_API_KEY=<API key for Borrow Direct web services>
 BORROW_DIRECT_TIMEOUT=<Borrow Direct timeout in seconds>
 ```
-Note that the Borrow Direct ENV keys are also used by the Requests engine.
+
+Note that the Borrow Direct and Okapi ENV keys are also used by the Requests engine.
+
+### Deprecated keys (to be removed in future)
+MY_ACCOUNT_PATRONINFO_URL=<netid/patron info lookup URL>
 
 After restarting the Blacklight server, MyAccount should be accessible at `/myaccount`.
 
 ### Disabling MA
 The entire MyAccount system can be disabled by adding another ENV key to the file: `DISABLE_MY_ACCOUNT=1`. If this key/value pair is present, then all visitors to MA will be rerouted to the catalog home page and shown a flash message informing them that the service is presently unavailable.
 
+The system can be put into read-only mode by adding the ENV key: `MY_ACCOUNT_READONLY=1`. If this key/value pair is present, users can still view their accounts, but the renew and cancel buttons are missing.
+
 ## Important files
 Most of the MA functionality is implemented within a handful of files. Important files include:
-- `/app/assets/javascripts/my_account/account.js.coffee`: manages the UI checkboxes and enabling/disabling of the action buttons
-- `/app/controllers/my_account/account_controller.rb`: this contains the bulk of the control code for the system
+- `/app/assets/javascripts/my_account/account.js.coffee`: controls the main flow of the app, somewhat replacing the usual role of a Rails controller
+- `/app/controllers/my_account/account_controller.rb`: this contains methods for querying FOLIO and other data sources via AJAX requests
 - `/app/helpers/my_account/my_account_helper.rb`: contains functions for properly displaying titles and item statuses
 - `/app/models`: There are three model files — `account.rb`, `charged_item.rb`, and `voyager.rb` — that are not currently used (but may be in future to better organize the code).
 - `/app/views/my_account/account/`: view files. There is essentially one main view (`index.html`) that is broken into individual table panes for charged items, pending requests, etc.
@@ -43,7 +51,35 @@ Patron info is derived from the `patron_info_service.cgi` service (part of `voya
 This information is essential for the rest of the system, because `barcode` and `patron_id` are needed to perform lookups in the other external services. 
 
 ### Charged items and ILL requests
-The central item lookup service is the `ilsapi` CGI service (currently `ilsapiE.cgi`, but there have been several versions). This is where things get a bit tricky. The `ilsapi` service takes a netid  and returns a JSON object primarily containing an array of all the items the user has checked out from Voyager (**which includes charged items from Borrow Direct and ILL**) and all his/her pending requests from ILLiad (but, confusingly, not from Borrow Direct!). The record for an individual item looks something like this if it’s an item from Voyager:
+The central item lookup services are FOLIO and the `ilsapi` CGI service (currently `ilsapiE.cgi`, but there have been several versions). FOLIO provides user account information with details about checked-out items, pending FOLIO requests, and any fines/fees the user has. The `ilsapi` service takes a netid  and returns a JSON object primarily containing an array of all the pending requests the user has from ILLiad (but, confusingly, not from Borrow Direct!). 
+
+A FOLIO account record lookup results in something like the following:
+```json
+{
+  "totalCharges" : {
+    "amount" : 0.0,
+    "isoCurrencyCode" : "USD"
+  },
+  "totalChargesCount" : 0,
+  "totalLoans" : 45,
+  "totalHolds" : 0,
+  "charges" : [ ],
+  "holds" : [ ],
+  "loans" : [ {
+    "id" : "8e515b26-2924-473e-ad25-31ba0a28519f",
+    "item" : {
+      "instanceId" : "4f58060a-c857-4a53-b954-0ad670a80106",
+      "itemId" : "9d5cfb8a-4286-4934-8091-2df8259ffa3a",
+      "title" : "\"The way to the dwelling of light\" : how physics illuminates creation / Guy Consolmagno.",
+      "author" : "Consolmagno, Guy, 1952-"
+    },
+    "loanDate" : "2007-05-03T21:43:44.000+0000",
+    "dueDate" : "2022-02-06T23:00:00.000+0000",
+    "overdue" : false
+  }
+```
+
+The record for an individual item from ILLiad looks something like this:
 ```json
     {
       "iid": "7403341",
@@ -72,25 +108,36 @@ The central item lookup service is the `ilsapi` CGI service (currently `ilsapiE.
       "tl": "Trellises & arbors : landscape & design ideas, plus projects / Bill Hylton. ",
       "au": "Hylton, William H. "
     }
-
 ```
 However, if it’s an ILL or BD item, it will include different keys and values. The difficulty is in determining (a) the origin of a particular item (Voyager, ILL, or BD) and (b) the status of a given request.  
 
 ### Borrow Direct requests
-Borrow Direct _requests_ are brought in separately via the BD API (within `my_account_controller`, using the `borrow_direct` gem). Once the user has claimed and checked out an available BD request, it will appear in the output from the `ilsapi` lookup.
+Borrow Direct _requests_ are brought in separately via the BD API (within `my_account_controller`, using the `borrow_direct` gem). Once the user has claimed and checked out an available BD request, it will appear in the output from the FOLIO lookup.
 
 ## Authentication and debugging without SAML
 By default, MA uses SAML authentication to authenticate a user and retrieve a netid (see the `authenticate_user` and `user` methods in `my_account_controller.rb`). Since SAML is a little tricky to get up and running on an individual development machine, there is a workaround. If Blacklight/Rails is running in `development` mode, a special key can be added to the Blacklight `.env` file: `DEBUG_USER=<netid>`. (This has no effect if Rails is running in `production` mode, to prevent bad things from happening. This value can also be used to debug the Requests engine.) In that case, SAML authentication is bypassed and MA loads with the account information for the specified netid.
 
 ## Main event loop
-The primary path/method in `my_account_controller` is `index`: this is the default content that is loaded when a user logs in. (The `/myaccount/login` path and `intro` method are used to display a “landing page” for the user, with general information about MA and a login button.)
+The primary path/method in `my_account_controller` is `index`: this is the default content that is loaded when a user logs in. (The `/myaccount/login` path and `intro` method are used to display a “landing page” for the user, with general information about MA and a login button.) However, most of the action takes place not here, but in the `account.js.coffee` file.
 
-When a user logs in and hits the `index` method, the following happens:
-1. Patron info (netid, barcode, etc) is loaded into `@patron`.
-2. The `params` object is checked to see if this page load is due to a `Renew` or `Cancel` button click. If so, the user is routed to the appropriate method for item renewal or request cancellation.
-3. The `get_patron_stuff` method is called. This queries the `ilsapi` web service to retrieve a list of the user’s items and then tries to make sense of them, separating them into Voyager or other charged items, available requests, and pending requests. Then the Borrow Direct service and an additional Voyager web service are called to retrieve information about any BD requests and fines or fees the user may have.
-4. If possible, the `@renewable_lookup_hash` object is built. This builds a lookup dictionary of item IDs and their renewability status in Voyager: `Y` or `N`, indicating whether the item can be renewed. This is used to indicate unrenewable items in the UI and to make the renewal process more efficient. Unfortunately, the Voyager web service that this process uses has a tendency to time out and return a nasty 500 error if the user has a large number of items checked out (on the order of a few hundred). For now, therefore, `@renewable_lookup_hash` is only populated if the number of charged items in question is \<= 100.
-5. Finally, if the citation export button has been clicked, the `export` method is called to handle that. Otherwise, the view template is loaded to display the user’s list of items.
+The CoffeeScript file sets a document.ready action that initiates the following sequence once the initial page load is complete:
+
+1. The user's netid is recovered from an embedded data tag on the page
+2. AJAX is used to call the `get_folio_data` method in the account controller, which retrieves the patron's FOLIO account information (not his/her user record, but details about checkouts, requests, and fines). If the call is completed successfully, the data returned is used to populate the Checkouts and Fines tabs of the page (see 'AJAX loop' below).
+3. At the same time as (2), a second AJAX call queries `get_illiad_data` to retrieve ILLiad account information.
+4. When both of the AJAX calls in (2) and (3) are complete, the request-related data from both sources is combined and used to populate the Available requests and Pending requests tabs.
+5. Links to catalog records are added to checked-out items.
+
+A similar AJAX strategy is used to handle the renew and cancel user actions.
+
+## AJAX loop
+There are several ways of handling AJAX in Rails, so a description of how things are implemented here may be useful.
+
+As stated above, all UI-related actions are initiated by AJAX calls from the CoffeeScript file -- either automatically when the page is loaded, or when the user clicks the renew or cancel button. Either way, when an action begins, the Javascript and Ruby/Rails controller work together as follows:
+
+1. An AJAX call is made to a route defined as a normal Rails route in `routes.rb`. The route maps to a method defined in `account_controller.rb`. Most (but not all) of the methods used for this purpose are prefixed in the controller with `ajax_`, e.g., `ajax_renew`, to make them easy to spot.
+2. The controller method uses the `CUL::FOLIO::Edge` gem to talk to FOLIO and retrieve or set the necessary data. It then returns a JSON response to the Javascript side.
+3. The Javascript calling function receives the response from the controller method and checks it for errors. If there are none, TODO: FINISH THIS
 
 ## Common problems
 ### Missing patron info
