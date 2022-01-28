@@ -2,6 +2,8 @@
 
 ## v2.1.2
 - Don't add links to checkout titles from Borrow Direct, but indicate BD titles with badges (DISCOVERYACCESS-7360)
+- Cache FOLIO auth token to reduce number of API calls (DISCOVERYACCESS-7318)
+- Require v1.2.1 or higher of cul-folio-edge (for new cancel function signature)
 
 ## v2.1.1
 - Guard against null results from ILLiad lookup
