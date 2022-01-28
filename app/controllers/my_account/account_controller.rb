@@ -69,15 +69,29 @@ module MyAccount
       end
     end
 
+    # Return a FOLIO authentication token for API calls -- either from the session if a token
+    # was prevoiusly created, or directly from FOLIO otherwise.
+    def folio_token
+      if session[:folio_token].nil?
+        Rails.logger.debug "mjc12test6: creating new token"
+        url = ENV['OKAPI_URL']
+        tenant = ENV['OKAPI_TENANT']
+        response = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
+        if response[:code] >= 300
+          Rails.logger.error "MyAccount error: Could not create a FOLIO token for #{netid}"
+        else
+          session[:folio_token] = response[:token]
+        end
+      end
+      session[:folio_token]
+    end
+
     # Use the CUL::FOLIO::Edge gem to renew an item. Operation is triggered via AJAX.
     def ajax_renew
       netid = params['netid']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
-      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-      # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
-      result = CUL::FOLIO::Edge.renew_item(url, tenant, token[:token], netid, params['itemId'])
-      # Rails.logger.debug("mjc12test: Got FOLIO result #{result.inspect}")
+      result = CUL::FOLIO::Edge.renew_item(url, tenant, folio_token, netid, params['itemId'])
       render json: result
     end
 
@@ -116,11 +130,16 @@ module MyAccount
     
     # Use the CUL::FOLIO::Edge gem to cancel a request. Operation is triggered via AJAX.
     def ajax_cancel
-      netid = params['netid']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
-      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-      result = CUL::FOLIO::Edge.cancel_request(url, tenant, token[:token], netid, params['requestId'])
+      # NOTE: The cancel_reason value set below is the UUID of the current 'Patron Cancelled'
+      # request cancellation reason in FOLIO. Hard-coding it here is risky if that value ever changes,
+      # but the alternative would be to do a secondary call to 
+      # /cancellation-request-storage/cancellation-reasons and then parse out the correct reason
+      # by text matching -- also a risky proposition.
+      cancel_reason = 'ba60fd97-adcf-406e-97aa-6bf5e2a6243d'
+
+      result = CUL::FOLIO::Edge.cancel_request(url, tenant, folio_token, params['requestId'], cancel_reason)
 
       render json: result
     end
@@ -205,10 +224,8 @@ module MyAccount
       netid = params['netid']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
-      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-     # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
-      user = CUL::FOLIO::Edge.patron_record(url, tenant, token[:token], netid)
-     # Rails.logger.debug("mjc12test: Got FOLIO user #{user.inspect}")
+      user = CUL::FOLIO::Edge.patron_record(url, tenant, folio_token, netid)
+      Rails.logger.debug("mjc12test6: Got FOLIO user #{user.inspect}")
       render json: user
     end
 
@@ -218,9 +235,7 @@ module MyAccount
       netid = params['netid']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
-      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-     # Rails.logger.debug("mjc12test: Got FOLIO token #{token}")
-      account = CUL::FOLIO::Edge.patron_account(url, tenant, token[:token], {:username => netid})
+      account = CUL::FOLIO::Edge.patron_account(url, tenant, folio_token, {:username => netid})
      # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
       render json: account
     end
@@ -237,8 +252,7 @@ module MyAccount
       sp_id = params['sp_id']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
-      token = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
-      sp = CUL::FOLIO::Edge.service_point(url, tenant, token[:token], sp_id)
+      sp = CUL::FOLIO::Edge.service_point(url, tenant, folio_token, sp_id)
       render json: sp
     end
 
@@ -249,9 +263,8 @@ module MyAccount
       instanceId = params['instanceId']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
-      token = params['token'] || CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])[:token]
       # Get instance HRID (e.g., bibid) for the record
-      response = CUL::FOLIO::Edge.instance_record(url, tenant, token, instanceId)
+      response = CUL::FOLIO::Edge.instance_record(url, tenant, folio_token, instanceId)
       link = nil
       source = nil
       if response[:code] < 300
