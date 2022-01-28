@@ -35,8 +35,8 @@
               -# - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
               -#   %div.badge.badge-secondary
               -#     This item cannot be renewed.
-              - if !c['is_bd']
-                %div.source-badge
+              -# - if c['is_bd']
+              %div.source-badge
                 -# %div.badge.badge-primary
                   -# Borrow Direct
               - if c['is_ill']

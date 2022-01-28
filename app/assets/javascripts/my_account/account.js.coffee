@@ -417,7 +417,7 @@ account =
       $.ajax({
         url: "/myaccount/ajax_cancel"
         type: "POST"
-        data: { netid: netid, requestId: id }
+        data: { requestId: id }
         error: (jqXHR, textStatus, error) ->
           account.logError("Unable to cancel request #{id} (#{error})")
           account.updateItemStatus(id, { code: 400 })
