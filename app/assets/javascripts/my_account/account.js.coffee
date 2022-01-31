@@ -315,7 +315,7 @@ account =
 
   getServicePoint: (id, requestId) ->
     $.ajax({
-      url: "myaccount/ajax_service_point"
+      url: "/myaccount/ajax_service_point"
       type: "POST"
       data: { sp_id: id }
       error: (jqXHR, textStatus, error) ->
