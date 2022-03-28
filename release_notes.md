@@ -1,7 +1,8 @@
 # Release Notes - my-account
 
-## v2.1.3 (IN PROGRESS)
+## v2.1.3
 - Fix bug preventing display of service point name for requests
+- Add repost gem dependency & use it to update auth calls for new Omniauth requirements
 
 ## v2.1.2
 - Don't add links to checkout titles from Borrow Direct, but indicate BD titles with badges (DISCOVERYACCESS-7360)
