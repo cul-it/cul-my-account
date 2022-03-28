@@ -31,7 +31,13 @@ module MyAccount
         if ENV['DEBUG_USER'] && Rails.env.development?
           index
         else
-          redirect_to "#{request.protocol}#{request.host_with_port}/users/auth/saml"
+          # Omniauth gem requirements
+          uri = URI(request.original_url)
+          scheme_host = "#{uri.scheme}://#{uri.host}"
+          if uri.port.present? && uri.port !=  uri.default_port()
+            scheme_host = scheme_host + ':' + uri.port.to_s
+          end
+          redirect_post("#{scheme_host}/users/auth/saml", options: {authenticity_token: :auto})
         end
       end
     end
