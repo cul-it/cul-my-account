@@ -40,10 +40,9 @@
             = request_types[c['ttype'] || c['system']]
 
   - if ENV['MY_ACCOUNT_READONLY']
-    %span
-      Note: The system is running in read-only mode. Items cannot be renewed, and requests cannot be cancelled. Please ask a librarian for assistance if needed.
-    %br
-    %br
+    %div.mt-4
+      %p
+        My Account is currently in read-only mode. Items cannot be renewed or cancelled. Please <a href="https://library.cornell.edu/ask">ask a librarian</a> for assistance if needed.
   - else
     = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
     %span{:id => 'request-loading-spinner'}
@@ -51,13 +50,12 @@
 
 - if has_ill_pending
   %p
-  %p
-    Note: cancel your Interlibrary loan requests by going to the
+    Need to cancel an Interlibrary loan request? Go to 
     %a{:href => "https://cornell.hosts.atlas-sys.com/illiad"} 
-      Illiad website.
+      ILLiad
 - if has_bd_pending
   %p
-    Note: cancel your Borrow Direct requests by going to 
+    Need to cancel a Borrow Direct request? Go to 
     %a{:href => "http://resolver.library.cornell.edu/NET/parsebd?redirect=yes"}
-      their website.
+      Borrow Direct
  

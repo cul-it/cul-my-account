@@ -48,10 +48,9 @@
               = status_display c
     = hidden_field_tag 'num_checkouts', @checkouts.length
     - if ENV['MY_ACCOUNT_READONLY']
-      %span
-        Note: The system is running in read-only mode. Items cannot be renewed, and requests cannot be cancelled. Please ask a librarian for assistance if needed.
-      %br
-      %br
+      %div.mt-4
+        %p
+          My Account is currently in read-only mode. Items cannot be renewed or cancelled. Please <a href="https://library.cornell.edu/ask">ask a librarian</a> for assistance if needed.
     - else
       = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
       %span{:id => 'request-loading-spinner'}
