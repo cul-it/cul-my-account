@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## v2.1.4
+- Update wording for read-only, ILLiad and Borrow Direct notes
+
 ## v2.1.3
 - Fix bug preventing display of service point name for requests
 - Add repost gem dependency & use it to update auth calls for new Omniauth requirements
