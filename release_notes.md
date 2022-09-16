@@ -1,5 +1,11 @@
 # Release Notes - my-account
 
+## v2.1.6
+- Specify Rails 6.1.
+
+## v2.1.5
+- Specify Rails 6 for Blacklight compatibility.
+
 ## v2.1.4
 - Update wording for read-only, ILLiad and Borrow Direct notes
 
