@@ -4,21 +4,14 @@
     %p Renew your books and check the status of your requests.
     =link_to('Log in with your NetID or GuestID', '/myaccount', {:class => 'btn btn-danger btn-lg'})
 
-%h3.mt-4 Interlibrary Loan
-=link_to('Renew Interlibrary Loan items','https://cornell.hosts.atlas-sys.com/nonetid/home.html')
-
-%h3.mt-4 Columbia University Borrowing Privileges
-%p As a current student, staff or faculty member of Cornell University, you have the option to get a library borrowing card from Columbia University. This allows you to check out books from their collections when you visit Columbia.
-%ul
-  %li
-    =link_to('More information about Columbia Library Borrowing Privileges', 'https://www.library.cornell.edu/services/borrow/2cul')
-  %li
-    =link_to('Apply for a Columbia Library card', 'https://www.library.cornell.edu/2cul-columbia-library-patron-borrowing-application')
-
-%h3 Need assistance?
+%h3.mt-5 Need assistance?
 %p 
-  Email the 
-  =link_to('Library Public Services office', 'mailto:libpublicservices@cornell.edu')
-  or 
-  =link_to('Mann Library Circulation', 'mailto:mann_circ@cornell.edu')
+  Email your 
+  =link_to('library', 'https://library.cornell.edu/libraries')
+  or 
+  =link_to('libpublicservices@cornell.edu', 'mailto:libpublicservices@cornell.edu')
   \.
+
+%h3 Library fines
+%p
+  The fine for recalled items is $3.00/day for every patron category. If unreturned, high cost and high demand items (such as laptops, equipment, reserves items) will be billed for replacement cost after two days. Regular items (such as books from the general circulating collection) will be billed for replacement cost after 27 days. When the billed amount reaches $300 for Cornell patrons (or $150 for others), the borrower’s access to the Library will be blocked until the item is returned.
