@@ -261,17 +261,10 @@ account =
         available.push requestObj
 
     # Do the same sorting with the Borrow Direct data
-    # BD entries look like this:
-    # {
-    #   au: <author>
-    #   iid: COR-<number>
-    #   status: <status>
-    #   system: "bd"
-    #   tl: <title>  
-    # }
+    # BD entries come from ReShare
     # 
     # TODO: Handle other statuses once they're known
-    pendingStatuses = ['ENTERED', 'IN_PROCESS', 'SHIPPED']
+    pendingStatuses = ['ENTERED', 'IN_PROCESS', 'SHIPPED', 'COMPLETED']
     availableStatuses = []
     bdData.forEach (entry) ->
       requestObj = {

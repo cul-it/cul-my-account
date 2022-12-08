@@ -8,6 +8,8 @@ require 'cul/folio/edge'
 module MyAccount
 
   class AccountController < ApplicationController
+    #include Reshare
+
     before_action :heading
     before_action :authenticate_user, except: [:intro]
 
@@ -327,43 +329,83 @@ module MyAccount
 
       # Using the BD API is an expensive operation, so use the Rails session to cache the
       # response the first time a user accesses her account
-      Rails.logger.debug "mjc12test: Checking session  #{session['mjc12_bd_items']}"
+      Rails.logger.debug "mjc12a: Checking session  #{session['mjc12_bd_items']}"
       #return session[netid + '_bd_items'] if session[netid + '_bd_items']
       Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup #{}"
 
-      barcode = patron_barcode(netid)
+      #barcode = patron_barcode(netid)
 
       # Set parameters for the Borrow Direct API
-      BorrowDirect::Defaults.library_symbol = 'CORNELL'
-      BorrowDirect::Defaults.find_item_patron_barcode = barcode
-      BorrowDirect::Defaults.timeout = ENV['BORROW_DIRECT_TIMEOUT'].to_i || 30 # (seconds)
-      BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
-      BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
+      # BorrowDirect::Defaults.library_symbol = 'CORNELL'
+      # BorrowDirect::Defaults.find_item_patron_barcode = barcode
+      # BorrowDirect::Defaults.timeout = ENV['BORROW_DIRECT_TIMEOUT'].to_i || 30 # (seconds)
+      # BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
+      # BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
 
-     begin
-        items = BorrowDirect::RequestQuery.new(barcode).requests('open')
-      rescue BorrowDirect::Error => e
-        # The Borrow Direct gem doesn't differentiate among all of the BD API error types.
-        # In this case, PUBQR004 is an exception raised when there are no results for the query
-        # (why should that cause an exception??). We don't want to crash and burn just because
-        # the user doesn't have any BD requests in the system. But if it's anything else,
-        # raise it again -- that indicates a real problem.
-        if e.message.include? 'PUBAN003'
-          Rails.logger.error "MyAccount error: user could not be authenticated in Borrow Direct"
+      begin
+        tenant = 'cornell'
+        token = nil
+        response = CUL::FOLIO::Edge.authenticate(ENV['RESHARE_STATUS_URL'], tenant, 'mjc12@cornell.edu', 'maiSyl4RS!')
+        if response[:code] >= 300
+          Rails.logger.error "MyAccount error: Could not create a ReShare token for #{netid}"
         else
-          # TODO: Add better error handling. For now, BD is causing too many problems with flaky connections;
-          # we have to do something other than raise the errors here.
-          # raise unless e.message.include? 'PUBQR004'
-        end  
+          token = response[:token]
+        end
+        # Note that the match/term query parameters are apparently undocumented in the APIs, but
+        # that's what ReShare is using internally to filter results in its apps.
+        url = "#{ENV['RESHARE_STATUS_URL']}/rs/patronrequests?match=patronIdentifier&term=#{netid}&perPage=1000"
+        headers = {
+          'X-Okapi-Tenant' => 'cornell',
+          'x-okapi-token' => token,
+          :accept => 'application/json',
+        }
+        response = RestClient.get(url, headers)
+        # TODO: check that response is in the proper form and there are no returned errors
+        items = JSON.parse(response)
+        #Rails.logger.debug "mjc12a: got BD results #{items}"
+     rescue RestClient::Exception => e
+       # items = BorrowDirect::RequestQuery.new(barcode).requests('open')
+      # rescue BorrowDirect::Error => e
+      #   # The Borrow Direct gem doesn't differentiate among all of the BD API error types.
+      #   # In this case, PUBQR004 is an exception raised when there are no results for the query
+      #   # (why should that cause an exception??). We don't want to crash and burn just because
+      #   # the user doesn't have any BD requests in the system. But if it's anything else,
+      #   # raise it again -- that indicates a real problem.
+      #   if e.message.include? 'PUBAN003'
+      #     Rails.logger.error "MyAccount error: user could not be authenticated in Borrow Direct"
+      #   else
+      #     # TODO: Add better error handling. For now, BD is causing too many problems with flaky connections;
+      #     # we have to do something other than raise the errors here.
+      #     # raise unless e.message.include? 'PUBQR004'
+      #   end  
         items = []
+        Rails.logger.debug "mjc12a: BIG ERROR: #{e}"
+        Rails.logger.error 'MyAccount error: Couldn\'t retrieve patron requests from Borrow Direct.'
       end
       # Returns an array of BorrowDirect::RequestQuery::Item
       cleaned_items = []
       items.each do |item|
+        Rails.logger.debug "mjc12a: item data: HRID: #{item['hrid']} for patronIdentifier #{item['patronIdentifier']}"
+        Rails.logger.debug "mjc12a: state: #{item['state']['code']}, stage: #{item['state']['stage']}"
+
+        # HACK: This is a terrible way to obtain the item title. Unfortunately, this information isn't surfaced
+        # in the API response, but only provided as part of a marcxml description of the entire item record.
+        marc = XmlSimple.xml_in(item['bibRecord'])
+        f245 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find {|t| t['tag'] == '245'}
+        f245a = f245['subfield'].find { |sf| sf['code'] == 'a' }
+        f245b = f245['subfield'].find { |sf| sf['code'] == 'b' }
+        title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
+
         # For the final item, we add a fake item ID number (iid) for compatibility with other items in the system
-        cleaned_items << { 'tl' => item.title, 'au' => '', 'system' => 'bd', 'status' => item.request_status, 'iid' => item.request_number }
+        # ReShare status *stages* are defined here: 
+        # https://github.com/openlibraryenvironment/mod-rs/blob/master/service/src/main/groovy/org/olf/rs/statemodel/StatusStage.groovy
+        # and *states* are here:
+        # https://github.com/openlibraryenvironment/mod-rs/blob/master/doc/states.md
+        # I think we only need to worry about stage to distinguish between pending and available.
+        cleaned_items << { 'tl' => title, 'au' => '', 'system' => 'bd', 'status' => item['state']['stage'], 'iid' => item['hrid'] }
       end
       session[netid + '_bd_items'] = cleaned_items
+      Rails.logger.debug "mjc12a: cleaned BD items: #{cleaned_items}"
       render json: cleaned_items
     end
 
