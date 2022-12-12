@@ -169,7 +169,10 @@ module MyAccount
       # Rails.logger.debug "mjc12test: Start parsing"
 
       begin 
-        response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}"
+        # NOTE: the key MY_ACCOUNT_ISLAPI_URL is a misomer now, because we've eliminated the ilsapi CGI
+        # script and are using the illiad6.cgi script, which ilsapi called, without the middleman. Probably
+        # the key should be renamed at some point.
+        response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}&fmt=json&wrapper=n"
         record = JSON.parse response.body
       rescue => error
         Rails.logger.error "MyAccount error: Could not find a patron entry for #{netid}"
