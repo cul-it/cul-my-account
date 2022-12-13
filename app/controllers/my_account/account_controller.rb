@@ -220,8 +220,6 @@ module MyAccount
         end
       end
 
-      Rails.logger.debug "mjc12test: Done with parsing"
-
       #bd_items = get_bd_requests netid
       bd_items = []
       #Rails.logger.debug "mjc12test: got bd_items #{bd_items}"
@@ -346,17 +344,16 @@ module MyAccount
       # BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
 
       begin
-        tenant = 'cornell'
         token = nil
-        response = CUL::FOLIO::Edge.authenticate(ENV['RESHARE_STATUS_URL'], tenant, 'mjc12@cornell.edu', 'maiSyl4RS!')
+        response = CUL::FOLIO::Edge.authenticate(ENV['RESHARE_STATUS_URL'], ENV['RESHARE_TENANT'], ENV['RESHARE_USER'], ENV['RESHARE_PW'])
         if response[:code] >= 300
-          Rails.logger.error "MyAccount error: Could not create a ReShare token for #{netid}"
+          Rails.logger.error "MyAccount error: Could not create a ReShare token for #{ENV['RESHARE_USER']}"
         else
           token = response[:token]
         end
         # Note that the match/term query parameters are apparently undocumented in the APIs, but
         # that's what ReShare is using internally to filter results in its apps.
-        url = "#{ENV['RESHARE_STATUS_URL']}/rs/patronrequests?match=patronIdentifier&term=#{netid}&perPage=1000"
+        url = "#{ENV['RESHARE_STATUS_URL']}/rs/patronrequests?match=patronIdentifier&term=#{netid}&perPage=1000&state.terminal==false"
         headers = {
           'X-Okapi-Tenant' => 'cornell',
           'x-okapi-token' => token,
@@ -365,7 +362,9 @@ module MyAccount
         response = RestClient.get(url, headers)
         # TODO: check that response is in the proper form and there are no returned errors
         items = JSON.parse(response)
-        #Rails.logger.debug "mjc12a: got BD results #{items}"
+        items.each do |i|
+          Rails.logger.debug "mjc12testa: got BD results #{i['title']} with state #{i['state']['code']}"
+        end
      rescue RestClient::Exception => e
        # items = BorrowDirect::RequestQuery.new(barcode).requests('open')
       # rescue BorrowDirect::Error => e
@@ -382,8 +381,7 @@ module MyAccount
       #     # raise unless e.message.include? 'PUBQR004'
       #   end  
         items = []
-        Rails.logger.debug "mjc12a: BIG ERROR: #{e}"
-        Rails.logger.error 'MyAccount error: Couldn\'t retrieve patron requests from Borrow Direct.'
+        Rails.logger.error "MyAccount error: Couldn\'t retrieve patron requests from ReShare (#{e})."
       end
       # Returns an array of BorrowDirect::RequestQuery::Item
       cleaned_items = []
@@ -405,7 +403,14 @@ module MyAccount
         # and *states* are here:
         # https://github.com/openlibraryenvironment/mod-rs/blob/master/doc/states.md
         # I think we only need to worry about stage to distinguish between pending and available.
-        cleaned_items << { 'tl' => title, 'au' => '', 'system' => 'bd', 'status' => item['state']['stage'], 'iid' => item['hrid'] }
+        cleaned_items << {
+          'tl' => title,
+          'au' => '',
+          'system' => 'bd',
+          'status' => item['state']['code'],
+          'iid' => item['hrid'],
+          'lo' => item['pickupLocation']
+        }
       end
       session[netid + '_bd_items'] = cleaned_items
       Rails.logger.debug "mjc12a: cleaned BD items: #{cleaned_items}"
