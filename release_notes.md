@@ -1,5 +1,10 @@
 # Release Notes - my-account
 
+## v2.2.0
+- Replace Borrow Direct with ReShare
+- Eliminate reference to ilsapi.cgi script
+- Update login page text (DISCOVERYACCESS-7838)
+
 ## v2.1.6
 - Specify Rails 6.1.
 
