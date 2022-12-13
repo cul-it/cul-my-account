@@ -261,17 +261,23 @@ account =
         available.push requestObj
 
     # Do the same sorting with the Borrow Direct data
-    # BD entries come from ReShare
-    # 
-    # TODO: Handle other statuses once they're known
-    pendingStatuses = ['ENTERED', 'IN_PROCESS', 'SHIPPED', 'COMPLETED']
-    availableStatuses = []
+    # BD entries come from ReShare and have one of 6 possible stages: PREPARING, LOCAL, ACTIVE,
+    # ACTIVE_PENDING_CONDITIONAL_ANSWER, ACTIVE_SHIPPED, COMPLETED. Anything other than COMPLETED
+    # means the request is still pending.
+
+    pendingStatuses = ['ENTERED', 'IN_PROCESS', 'REQ_SHIPPED', 'REQ_EXPECTS_TO_SUPPLY']
+    availableStatuses = ['REQ_CHECKED_IN']
+
     bdData.forEach (entry) ->
+      # Olin Library's pickup location is actually '*Olin Library', so strip off the *
+      location = entry.lo.replace '*', ''
       requestObj = {
         iid: entry.iid, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
         tl: entry.tl,
-        system: 'bd'
+        system: 'bd',
+        lo: location
       }
+
       # This is a bit of a hack. An ON_LOAN item is really an available request, but at that point in
       # the process it shows up as a FOLIO loan item; if we include this one in available_requests,
       # we'll get a duplicate entry. So we'll ignore items with status ON_LOAN here.
