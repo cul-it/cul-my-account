@@ -13,7 +13,8 @@ gemspec
 # To use a debugger
 # gem 'byebug', group: [:development, :test]
 
-gem 'rails', '~>6.1'
+#gem 'rails', '~>6.1'
+#gem 'rails', '5.2.8'
 gem 'unf_ext'
 
 #gem 'cul-folio-edge', :path => '/Users/matt/code/cul/d&a/cul-folio-edge'
