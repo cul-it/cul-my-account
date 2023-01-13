@@ -305,26 +305,6 @@ module MyAccount
       render json: { record: render_to_string('_pending_requests', :layout => false), locals: { pending_requests: @pending_requests }}
     end
 
-    # TODO: Replace with FOLIO
-    def patron_id(netid)
-      response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
-      record = JSON.parse(response.body)
-      record[netid]['patron_id']
-    rescue
-      Rails.logger.debug("tlw72 ****** could not retrieve patron id.")
-      return ""
-    end
-
-    # TODO: Replace with FOLIO
-    def patron_barcode(netid)
-      response = RestClient.get "#{ENV['MY_ACCOUNT_PATRONINFO_URL']}/#{netid}"
-      record = JSON.parse(response.body)
-      record[netid]['barcode']
-    rescue
-      Rails.logger.debug("tlw72 ****** could not retrieve patron barcode.")
-      return ""
-    end
-
     def get_bd_requests
       netid = params['netid']
 
@@ -366,7 +346,7 @@ module MyAccount
         # e.g., the results for 'mjc12' will also include any that are found for 'mjc124'.
         # So we need to ensure that the patronIdentifier of each result matches our netid.
         items.select! { |i| i['patronIdentifier'] == netid }
-     rescue RestClient::Exception => e
+      rescue RestClient::Exception => e
       # items = BorrowDirect::RequestQuery.new(barcode).requests('open')
       # rescue BorrowDirect::Error => e
       #   # The Borrow Direct gem doesn't differentiate among all of the BD API error types.
