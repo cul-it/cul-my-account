@@ -6,26 +6,22 @@ require 'xmlsimple'
 require 'cul/folio/edge'
 
 module MyAccount
-
   class AccountController < ApplicationController
-    #include Reshare
-
     before_action :heading
     before_action :authenticate_user, except: [:intro]
 
     def heading
-      @heading='My Account'
+      @heading = 'My Account'
     end
 
     def authenticate_user
       # Master disable -- this kicks the user out of My Account before anything gets going
       if ENV['DISABLE_MY_ACCOUNT']
         msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
-        redirect_to "/catalog#index", :notice => msg.html_safe
+        redirect_to '/catalog#index', notice: msg.html_safe
         return
       end
 
-      #Rails.logger.debug "mjc12test: authenticating"
       if user.present?
         index
       else
@@ -36,10 +32,10 @@ module MyAccount
           # Omniauth gem requirements
           uri = URI(request.original_url)
           scheme_host = "#{uri.scheme}://#{uri.host}"
-          if uri.port.present? && uri.port !=  uri.default_port()
+          if uri.port.present? && uri.port != uri.default_port
             scheme_host = scheme_host + ':' + uri.port.to_s
           end
-          redirect_post("#{scheme_host}/users/auth/saml", options: {authenticity_token: :auto})
+          redirect_post("#{scheme_host}/users/auth/saml", options: { authenticity_token: :auto })
         end
       end
     end
@@ -50,14 +46,14 @@ module MyAccount
     end
 
     def index
-      if request.headers["REQUEST_METHOD"] == "HEAD"
+      if request.headers['REQUEST_METHOD'] == 'HEAD'
         head :no_content
         return
       end
       # Master disable -- this kicks the user out of My Account before anything gets going
       if ENV['DISABLE_MY_ACCOUNT']
         msg = 'My Account is currently unavailable. We apologize for the inconvenience. For more information, check the <a href="https://library.cornell.edu">CUL home page</a> for updates or <a href="https://library.cornell.edu/ask">ask a librarian</a>.'
-        redirect_to "/catalog#index", :notice => msg.html_safe
+        redirect_to '/catalog#index', notice: msg.html_safe
       end
 
       @netid = user
@@ -81,7 +77,6 @@ module MyAccount
     # was prevoiusly created, or directly from FOLIO otherwise.
     def folio_token
       if session[:folio_token].nil?
-        Rails.logger.debug "mjc12test6: creating new token"
         url = ENV['OKAPI_URL']
         tenant = ENV['OKAPI_TENANT']
         response = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
@@ -134,15 +129,15 @@ module MyAccount
     #     flash[:notice] = 'Your requests have been cancelled.'
     #   end
 
-    # end 
-    
+    # end
+
     # Use the CUL::FOLIO::Edge gem to cancel a request. Operation is triggered via AJAX.
     def ajax_cancel
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
       # NOTE: The cancel_reason value set below is the UUID of the current 'Patron Cancelled'
       # request cancellation reason in FOLIO. Hard-coding it here is risky if that value ever changes,
-      # but the alternative would be to do a secondary call to 
+      # but the alternative would be to do a secondary call to
       # /cancellation-request-storage/cancellation-reasons and then parse out the correct reason
       # by text matching -- also a risky proposition.
       cancel_reason = 'ba60fd97-adcf-406e-97aa-6bf5e2a6243d'
@@ -162,13 +157,12 @@ module MyAccount
     # parsing below greatly. No need to try to figure out whether something is a charged item or a request
     def get_illiad_data
       record = nil
-      msg = ""
 
       netid = params['netid']
       # folio_account_data = get_folio_accountinfo netid
       # Rails.logger.debug "mjc12test: Start parsing"
 
-      begin 
+      begin
         # NOTE: the key MY_ACCOUNT_ISLAPI_URL is a misomer now, because we've eliminated the ilsapi CGI
         # script and are using the illiad6.cgi script, which ilsapi called, without the middleman. Probably
         # the key should be renamed at some point.
@@ -200,18 +194,17 @@ module MyAccount
         i['iid'] = i['tid'] # not sure why 'tid' is used in the ILSAPI return - "transaction ID"?
         # add a special "item id" for ILLiad items
         if i['system'] == 'illiad'
-          i['iid'] = "illiad-#{i['TransactionNumber']}" 
-          i['requestDate'] = DateTime.parse(i['TransactionDate']).strftime("%-m/%-d/%y")
+          i['iid'] = "illiad-#{i['TransactionNumber']}"
+          i['requestDate'] = DateTime.parse(i['TransactionDate']).strftime('%-m/%-d/%y')
         end
-          
-        if i['status'] == 'waiting'
+
+        case i['status']
+        when 'waiting'
           # If the due date is an empty string, this line in the haml file throws an exception:
           # c['DueDate']).to_date.strftime('%m/%d/%y'). (DISCOVERYACCESS-5822)
-          if i['DueDate'] == ''
-            i['DueDate'] = nil
-          end
+          i['DueDate'] = nil if i['DueDate'] == ''
           available_requests << i
-        elsif i['status'] == 'chrged'
+        when 'chrged'
           # TODO: Is this still relevant with FOLIO? Can an ILL item have this status?
           i['status'] = 'Charged'
           # checkouts << i
@@ -220,15 +213,11 @@ module MyAccount
         end
       end
 
-      #bd_items = get_bd_requests netid
-      bd_items = []
-      #Rails.logger.debug "mjc12test: got bd_items #{bd_items}"
-
       render json: { pending: pending_requests, available: available_requests }
     end
 
     # Use the FOLIO EdgePatron API to retrieve a user's user record from FOLIO (*not* the user's account,
-    # which here refers to his/her checkouts and fines/fees). 
+    # which here refers to his/her checkouts and fines/fees).
     def get_user_record
       netid = params['netid']
       url = ENV['OKAPI_URL']
@@ -244,16 +233,16 @@ module MyAccount
       netid = params['netid']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
-      account = CUL::FOLIO::Edge.patron_account(url, tenant, folio_token, {:username => netid})
-     # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
+      account = CUL::FOLIO::Edge.patron_account(url, tenant, folio_token, { username: netid })
+      # Rails.logger.debug("mjc12test: Got FOLIO account #{account.inspect}")
       render json: account
     end
 
     # Render the _checkouts partial in response to an AJAX call
     def ajax_checkouts
       @checkouts = params['checkouts']&.values.to_a
-      #@checkouts.sort_by! { |c| Date.parse(c['dueDate']) }
-      render json: { record: render_to_string('_checkouts', :layout => false), locals: { checkouts: @checkouts }}
+      # @checkouts.sort_by! { |c| Date.parse(c['dueDate']) }
+      render json: { record: render_to_string('_checkouts', layout: false), locals: { checkouts: @checkouts } }
     end
 
     # Retrieve a service point record from FOLIO
@@ -269,20 +258,18 @@ module MyAccount
     # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls. The
     # source is needed later to derermine whether this is a BD or ILL or FOLIO item.
     def ajax_catalog_link_and_source
-      instanceId = params['instanceId']
+      instance_id = params['instanceId']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
       # Get instance HRID (e.g., bibid) for the record
-      response = CUL::FOLIO::Edge.instance_record(url, tenant, folio_token, instanceId)
+      response = CUL::FOLIO::Edge.instance_record(url, tenant, folio_token, instance_id)
       link = nil
       source = nil
       if response[:code] < 300
         source = response[:instance]['source']
         # Ignore Borrow Direct records for the link -- they have an HRID that looks like a legit bibid, but
         # it's something else BD-related. We can't link to those.
-        if source != 'bd'
-          link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}"
-        end
+        link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}" if source != 'bd'
       end
       render json: { link: link, source: source }
     end
@@ -290,19 +277,19 @@ module MyAccount
     # Render the _checkouts partial in response to an AJAX call
     def ajax_fines
       @fines = params['fines']&.values.to_a
-      render json: { record: render_to_string('_fines', :layout => false), locals: { fines: @fines }}
+      render json: { record: render_to_string('_fines', layout: false), locals: { fines: @fines } }
     end
 
     # Render the _available_requests partial in response to an AJAX call
     def ajax_illiad_available
       @available_requests = params['requests']&.values.to_a
-      render json: { record: render_to_string('_available_requests', :layout => false), locals: { available_requests: @available_requests }}
+      render json: { record: render_to_string('_available_requests', layout: false), locals: { available_requests: @available_requests } }
     end
 
     # Render the _pending_requests partial in response to an AJAX call
     def ajax_illiad_pending
       @pending_requests = params['requests']&.values.to_a
-      render json: { record: render_to_string('_pending_requests', :layout => false), locals: { pending_requests: @pending_requests }}
+      render json: { record: render_to_string('_pending_requests', layout: false), locals: { pending_requests: @pending_requests } }
     end
 
     def get_bd_requests
@@ -311,10 +298,10 @@ module MyAccount
       # Using the BD API is an expensive operation, so use the Rails session to cache the
       # response the first time a user accesses her account
       Rails.logger.debug "mjc12a: Checking session  #{session['mjc12_bd_items']}"
-      #return session[netid + '_bd_items'] if session[netid + '_bd_items']
-      Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup #{}"
+      # return session[netid + '_bd_items'] if session[netid + '_bd_items']
+      Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup"
 
-      #barcode = patron_barcode(netid)
+      # barcode = patron_barcode(netid)
 
       # Set parameters for the Borrow Direct API
       # BorrowDirect::Defaults.library_symbol = 'CORNELL'
@@ -360,7 +347,7 @@ module MyAccount
       #     # TODO: Add better error handling. For now, BD is causing too many problems with flaky connections;
       #     # we have to do something other than raise the errors here.
       #     # raise unless e.message.include? 'PUBQR004'
-      #   end  
+      #   end
         items = []
         Rails.logger.error "MyAccount error: Couldn\'t retrieve patron requests from ReShare (#{e})."
       end
@@ -373,7 +360,7 @@ module MyAccount
         # HACK: This is a terrible way to obtain the item title. Unfortunately, this information isn't surfaced
         # in the API response, but only provided as part of a marcxml description of the entire item record.
         marc = XmlSimple.xml_in(item['bibRecord'])
-        f245 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find {|t| t['tag'] == '245'}
+        f245 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '245' }
         f245a = f245['subfield'].find { |sf| sf['code'] == 'a' }
         f245b = f245['subfield'].find { |sf| sf['code'] == 'b' }
         title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
@@ -403,7 +390,7 @@ module MyAccount
       if ENV['DEBUG_USER'] && Rails.env.development?
         netid = ENV['DEBUG_USER']
       else
-        netid = request.env['REMOTE_USER'] ? request.env['REMOTE_USER']  : session[:cu_authenticated_user]
+        netid = request.env['REMOTE_USER'] || session[:cu_authenticated_user]
       end
 
       netid = netid.sub('@CORNELL.EDU', '') unless netid.nil?
@@ -411,7 +398,5 @@ module MyAccount
 
       netid
     end
-
   end
-
 end
