@@ -86,7 +86,7 @@ module MyAccount
         tenant = ENV['OKAPI_TENANT']
         response = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
         if response[:code] >= 300
-          Rails.logger.error "MyAccount error: Could not create a FOLIO token for #{netid}"
+          Rails.logger.error "MyAccount error: Could not create a FOLIO token for #{user}"
         else
           session[:folio_token] = response[:token]
         end
@@ -362,11 +362,12 @@ module MyAccount
         response = RestClient.get(url, headers)
         # TODO: check that response is in the proper form and there are no returned errors
         items = JSON.parse(response)
-        items.each do |i|
-          Rails.logger.debug "mjc12testa: got BD results #{i['title']} with state #{i['state']['code']}"
-        end
+        # The ReShare match query is too broad and will match any portion of the netid --
+        # e.g., the results for 'mjc12' will also include any that are found for 'mjc124'.
+        # So we need to ensure that the patronIdentifier of each result matches our netid.
+        items.select! { |i| i['patronIdentifier'] == netid }
      rescue RestClient::Exception => e
-       # items = BorrowDirect::RequestQuery.new(barcode).requests('open')
+      # items = BorrowDirect::RequestQuery.new(barcode).requests('open')
       # rescue BorrowDirect::Error => e
       #   # The Borrow Direct gem doesn't differentiate among all of the BD API error types.
       #   # In this case, PUBQR004 is an exception raised when there are no results for the query
