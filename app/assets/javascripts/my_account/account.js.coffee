@@ -245,7 +245,10 @@ account =
     pending = pending.filter (r) -> r.TransactionStatus != 'Checked out in FOLIO'
 
     # Sort out the FOLIO request data into the format and category expected by the views
+    folioTitles = []
     folioData.forEach (entry) ->
+      console.log entry
+      folioTitles.push entry.item.title
       # Look up the service point based on its ID. getServicePoint() will try to dynamically update the status
       # in the table when the result is ready
       account.getServicePoint(entry.pickupLocationId, entry.requestId)
@@ -269,21 +272,26 @@ account =
     availableStatuses = ['REQ_CHECKED_IN']
 
     bdData.forEach (entry) ->
-      # Olin Library's pickup location is actually '*Olin Library', so strip off the *
-      location = entry.lo.replace '*', ''
-      requestObj = {
-        iid: entry.iid, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
-        tl: entry.tl,
-        system: 'bd',
-        lo: location
-      }
+      # Check to see if the entry title matches one of the FOLIO entry titles. This indicates a BD
+      # item that has already been checked in at CUL and is being shown as a FOLIO request there,
+      # so we don't want to duplicate the entry. Title matching is iffy, but maybe it's OK if the
+      # FOLIO record is generated automatically?
+      if !folioTitles.includes entry.tl
+        # Olin Library's pickup location is actually '*Olin Library', so strip off the *
+        location = entry.lo.replace '*', ''
+        requestObj = {
+          iid: entry.iid, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
+          tl: entry.tl,
+          system: 'bd',
+          lo: location
+        }
 
-      # This is a bit of a hack. An ON_LOAN item is really an available request, but at that point in
-      # the process it shows up as a FOLIO loan item; if we include this one in available_requests,
-      # we'll get a duplicate entry. So we'll ignore items with status ON_LOAN here.
-      if entry.status != 'ON_LOAN'
-        pending.push requestObj if pendingStatuses.includes(entry.status)
-        available.push requestObj if availableStatuses.includes(entry.status)
+        # This is a bit of a hack. An ON_LOAN item is really an available request, but at that point in
+        # the process it shows up as a FOLIO loan item; if we include this one in available_requests,
+        # we'll get a duplicate entry. So we'll ignore items with status ON_LOAN here.
+        if entry.status != 'ON_LOAN'
+          pending.push requestObj if pendingStatuses.includes(entry.status)
+          available.push requestObj if availableStatuses.includes(entry.status)
 
     # Available requests tab
     $.ajax({
