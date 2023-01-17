@@ -186,6 +186,10 @@ module MyAccount
         # need to do anything with this
         # TODO 2: Is this still relevant with FOLIO? Can ILL items have this status?
         next if i['status'] == 'finef'
+        Rails.logger.debug "mjc12a: item: #{i}"
+        # Skip if this is a ReShare submission that has been rerouted to BD -- otherwise it will
+        # show up twice in the user's requests (BD/ReShare and ILL)
+        next if i['TransactionStatus'] == 'Request Sent to BD'
 
         # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
         # id for potential cancellations.
