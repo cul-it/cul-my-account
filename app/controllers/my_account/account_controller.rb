@@ -7,6 +7,8 @@ require 'cul/folio/edge'
 
 module MyAccount
   class AccountController < ApplicationController
+    #include Reshare
+
     before_action :heading
     before_action :authenticate_user, except: [:intro]
 
