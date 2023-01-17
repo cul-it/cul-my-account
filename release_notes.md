@@ -1,5 +1,10 @@
 # Release Notes - my-account
 
+## v2.2.1
+- Filter out ReShare items that don't match user's NetID.
+- Skip ILL requests with status 'Request Sent to BD' (avoid duplicates).
+- Skip BD/ReShare requests that are also listed in FOLIO (avoid duplicates).
+
 ## v2.2.0
 - Replace Borrow Direct with ReShare
 - Eliminate reference to ilsapi.cgi script
