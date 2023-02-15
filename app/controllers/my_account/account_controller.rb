@@ -188,10 +188,15 @@ module MyAccount
         # need to do anything with this
         # TODO 2: Is this still relevant with FOLIO? Can ILL items have this status?
         next if i['status'] == 'finef'
-        Rails.logger.debug "mjc12a: item: #{i}"
+
         # Skip if this is a ReShare submission that has been rerouted to BD -- otherwise it will
         # show up twice in the user's requests (BD/ReShare and ILL)
         next if i['TransactionStatus'] == 'Request Sent to BD'
+        # Slight hack: items with the status Checked out in FOLIO are actually waiting to be
+        # picked up. This is confusing, because 'checked out' implies that the user
+        # has it, but that isn't the case! These should be covered by the patron account 'holds'
+        # section from FOLIO, so if we skip them here they should show up in the right place.
+        next if i['TransactionStatus'] == 'Checked out in FOLIO'
 
         # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
         # id for potential cancellations.
