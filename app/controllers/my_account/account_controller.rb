@@ -315,15 +315,6 @@ module MyAccount
       # return session[netid + '_bd_items'] if session[netid + '_bd_items']
       Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup"
 
-      # barcode = patron_barcode(netid)
-
-      # Set parameters for the Borrow Direct API
-      # BorrowDirect::Defaults.library_symbol = 'CORNELL'
-      # BorrowDirect::Defaults.find_item_patron_barcode = barcode
-      # BorrowDirect::Defaults.timeout = ENV['BORROW_DIRECT_TIMEOUT'].to_i || 30 # (seconds)
-      # BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
-      # BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
-
       begin
         token = nil
         response = CUL::FOLIO::Edge.authenticate(ENV['RESHARE_STATUS_URL'], ENV['RESHARE_TENANT'], ENV['RESHARE_USER'], ENV['RESHARE_PW'])
@@ -348,20 +339,6 @@ module MyAccount
         # So we need to ensure that the patronIdentifier of each result matches our netid.
         items.select! { |i| i['patronIdentifier'] == netid }
       rescue RestClient::Exception => e
-      # items = BorrowDirect::RequestQuery.new(barcode).requests('open')
-      # rescue BorrowDirect::Error => e
-      #   # The Borrow Direct gem doesn't differentiate among all of the BD API error types.
-      #   # In this case, PUBQR004 is an exception raised when there are no results for the query
-      #   # (why should that cause an exception??). We don't want to crash and burn just because
-      #   # the user doesn't have any BD requests in the system. But if it's anything else,
-      #   # raise it again -- that indicates a real problem.
-      #   if e.message.include? 'PUBAN003'
-      #     Rails.logger.error "MyAccount error: user could not be authenticated in Borrow Direct"
-      #   else
-      #     # TODO: Add better error handling. For now, BD is causing too many problems with flaky connections;
-      #     # we have to do something other than raise the errors here.
-      #     # raise unless e.message.include? 'PUBQR004'
-      #   end
         items = []
         Rails.logger.error "MyAccount error: Couldn\'t retrieve patron requests from ReShare (#{e})."
       end
