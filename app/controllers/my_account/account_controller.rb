@@ -342,11 +342,14 @@ module MyAccount
         items = []
         Rails.logger.error "MyAccount error: Couldn\'t retrieve patron requests from ReShare (#{e})."
       end
-      # Returns an array of BorrowDirect::RequestQuery::Item
+
       cleaned_items = []
       items.each do |item|
-        Rails.logger.debug "mjc12a: item data: HRID: #{item['hrid']} for patronIdentifier #{item['patronIdentifier']}"
-        Rails.logger.debug "mjc12a: state: #{item['state']['code']}, stage: #{item['state']['stage']}"
+        # ReShare items that are in the state REQ_CHECKED_IN have been checked in *by staff at CUL*,
+        # meaning that the book has had a temporary record created in FOLIO and is awaiting pickup
+        # by the patron. Assume that such items will be handled by the FOLIO API data once they have this
+        # status (either in requests/holds before patron pickup, or in loans after pickup.)
+        next if item['state']['code'] == 'REQ_CHECKED_IN'
 
         # HACK: This is a terrible way to obtain the item title. Unfortunately, this information isn't surfaced
         # in the API response, but only provided as part of a marcxml description of the entire item record.
