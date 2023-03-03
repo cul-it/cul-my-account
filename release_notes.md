@@ -1,6 +1,11 @@
 # Release Notes - my-account
 
 ## IN PROGRESS
+
+### Improvements
+- Show date shipped for ReShare items in pending requests.
+
+### Bug fixes
 - Don't show catalog links for ReShare items.
 - Don't show ReShare items with status REQ_CHECKED_IN (let FOLIO handle them) (avoid duplicates).
 

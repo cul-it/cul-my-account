@@ -206,7 +206,7 @@ module MyAccount
         # add a special "item id" for ILLiad items
         if i['system'] == 'illiad'
           i['iid'] = "illiad-#{i['TransactionNumber']}"
-          i['requestDate'] = DateTime.parse(i['TransactionDate']).strftime('%-m/%-d/%y')
+          i['requestDate'] = formatted_date(i['TransactionDate'])
         end
 
         case i['status']
@@ -220,6 +220,7 @@ module MyAccount
           i['status'] = 'Charged'
           # checkouts << i
         else
+          i['shipped'] = ship_date(i)
           pending_requests << i
         end
       end
@@ -334,6 +335,7 @@ module MyAccount
         response = RestClient.get(url, headers)
         # TODO: check that response is in the proper form and there are no returned errors
         items = JSON.parse(response)
+
         # The ReShare match query is too broad and will match any portion of the netid --
         # e.g., the results for 'mjc12' will also include any that are found for 'mjc124'.
         # So we need to ensure that the patronIdentifier of each result matches our netid.
@@ -351,13 +353,17 @@ module MyAccount
         # status (either in requests/holds before patron pickup, or in loans after pickup.)
         next if item['state']['code'] == 'REQ_CHECKED_IN'
 
-        # HACK: This is a terrible way to obtain the item title. Unfortunately, this information isn't surfaced
+        # HACK: This is a terrible way to obtain the item title and author. Unfortunately, this information isn't surfaced
         # in the API response, but only provided as part of a marcxml description of the entire item record.
         marc = XmlSimple.xml_in(item['bibRecord'])
         f245 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '245' }
         f245a = f245['subfield'].find { |sf| sf['code'] == 'a' }
         f245b = f245['subfield'].find { |sf| sf['code'] == 'b' }
         title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
+
+        f100 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '100' }
+        f100a = f100['subfield'].find { |sf| sf['code'] == 'a' }
+        author = f100a ? "#{f100a['content']}" : ''
 
         # For the final item, we add a fake item ID number (iid) for compatibility with other items in the system
         # ReShare status *stages* are defined here: 
@@ -367,16 +373,36 @@ module MyAccount
         # I think we only need to worry about stage to distinguish between pending and available.
         cleaned_items << {
           'tl' => title,
-          'au' => '',
+          'au' => author,
           'system' => 'bd',
           'status' => item['state']['code'],
           'iid' => item['hrid'],
-          'lo' => item['pickupLocation']
+          'lo' => item['pickupLocation'],
+          'shipped' => reshare_shipped_status(item)
         }
       end
       session[netid + '_bd_items'] = cleaned_items
-      Rails.logger.debug "mjc12a: cleaned BD items: #{cleaned_items}"
       render json: cleaned_items
+    end
+
+    # Use the 'audit' section of a ReShare item's metadata to determine whether the item has
+    # been shipped or not. If it has, return a string to that effect that can be displayed in the UI.
+    def reshare_shipped_status(item)
+      if item && item['audit']
+        steps = item['audit'].sort_by! { |i| i['auditNo'] }
+        steps.each do |step|
+          step_date = formatted_date(step['dateCreated'])
+          return "Shipped #{step_date}" if step['toStatus']['code'] == 'REQ_SHIPPED'
+        end
+      end
+      return ''
+    end
+
+    # Given a date of the form 2023-01-29T23:14:24Z, return a string formatted to 1/29/23
+    def formatted_date(date)
+      DateTime.parse(date).strftime('%-m/%-d/%y')
+    rescue
+      ''
     end
 
     def user

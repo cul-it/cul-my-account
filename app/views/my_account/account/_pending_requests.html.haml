@@ -19,6 +19,7 @@
         %th{:scope => 'col', :class => 'myacct-col-50'} Title
         %th{:scope => 'col', :class => 'myacct-col-20'} Author
         %th{:scope => 'col', :class => 'myacct-col-20'} Type
+        %th{:scope => 'col', :class => 'myacct-col-20'} Status
     %tbody
       - @pending_requests.each do |c|
         - has_ill_pending = true if c['system'] == "illiad"
@@ -38,6 +39,8 @@
             = c['ou_aulast'] || c['au']
           %td
             = request_types[c['ttype'] || c['system']]
+          %td
+            = c['shipped']
 
   - if ENV['MY_ACCOUNT_READONLY']
     %div.mt-4

@@ -283,8 +283,10 @@ account =
         requestObj = {
           iid: entry.iid, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
           tl: entry.tl,
+          au: entry.au,
           system: 'bd',
-          lo: location
+          lo: location,
+          shipped: entry.shipped
         }
 
         # This is a bit of a hack. An ON_LOAN item is really an available request, but at that point in
