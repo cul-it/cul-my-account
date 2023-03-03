@@ -4,6 +4,8 @@
 
 ### Improvements
 - Show date shipped for ReShare items in pending requests.
+- Show author for ReShare items in requests.
+- Remove nonfunctional checkbox selection from available requests.
 
 ### Bug fixes
 - Don't show catalog links for ReShare items.
