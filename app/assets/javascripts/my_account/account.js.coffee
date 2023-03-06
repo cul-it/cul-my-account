@@ -248,9 +248,7 @@ account =
 
     # Sort out the FOLIO request data into the format and category expected by the views
     folioTitles = []
-    console.log folioData
     folioData.forEach (entry) ->
-      console.log entry
       folioTitles.push entry.item.title
       # Look up the service point based on its ID. getServicePoint() will try to dynamically update the status
       # in the table when the result is ready
