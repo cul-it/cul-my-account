@@ -1,6 +1,6 @@
 # Release Notes - my-account
 
-## IN PROGRESS
+## v2.2.2
 
 ### Improvements
 - Show date shipped for ReShare items in pending requests.
@@ -10,6 +10,7 @@
 ### Bug fixes
 - Don't show catalog links for ReShare items.
 - Don't show ReShare items with status REQ_CHECKED_IN (let FOLIO handle them) (avoid duplicates).
+- Restore source badges for ILL items in checkout list.
 
 ## v2.2.1
 - Filter out ReShare items that don't match user's NetID.
