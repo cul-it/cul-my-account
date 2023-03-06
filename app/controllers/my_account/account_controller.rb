@@ -279,6 +279,9 @@ module MyAccount
       source = nil
       if response[:code] < 300
         source = response[:instance]['source']
+        # Try to identify ILL items and set source manually -- it's 'FOLIO' in the actual record.
+        source = 'ill' if ill_item?(response[:instance])
+
         # Ignore Borrow Direct records for the link -- they have an HRID that looks like a legit bibid, but
         # it's something else BD-related. We can't link to those. But now, most sources are either MARC or
         # FOLIO. A FOLIO source indicates that this was a locally-created record -- e.g., for a temporary record
@@ -403,6 +406,17 @@ module MyAccount
       DateTime.parse(date).strftime('%-m/%-d/%y')
     rescue
       ''
+    end
+
+    # Given a FOLIO instance record, determine whether it's an ILL item or not. Unfortunately,
+    # we have to rely on implicit metadata and assumption. I.e., an instance is *probably*
+    # sourced from ILL if it (a) has a source of 'FOLIO' (locally created record, probably temporary),
+    # (b) is suppressed from discovery (shouldn't be searchable or requestable), but (c) is *not*
+    # suppressed from staff view.
+    def ill_item?(instance)
+      instance['source'] == 'FOLIO' &&
+      instance['discoverySuppress'] == true &&
+      instance['staffSuppress'] == false
     end
 
     def user

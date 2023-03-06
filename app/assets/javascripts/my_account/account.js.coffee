@@ -217,6 +217,8 @@ account =
   addSourceBadge: (id, source) ->
     if source == 'bd'
       $("##{id} .source-badge").html('<div class="badge badge-primary">Borrow Direct</div>')
+    if source == 'ill'
+      $("##{id} .source-badge").html('<div class="badge badge-primary">Interlibrary Loan</div>')
 
   # Populate fines/fees in the UI
   showFines: (accountData) ->
