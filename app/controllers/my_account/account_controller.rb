@@ -188,10 +188,15 @@ module MyAccount
         # need to do anything with this
         # TODO 2: Is this still relevant with FOLIO? Can ILL items have this status?
         next if i['status'] == 'finef'
-        Rails.logger.debug "mjc12a: item: #{i}"
+
         # Skip if this is a ReShare submission that has been rerouted to BD -- otherwise it will
         # show up twice in the user's requests (BD/ReShare and ILL)
         next if i['TransactionStatus'] == 'Request Sent to BD'
+        # Slight hack: items with the status Checked out in FOLIO are actually waiting to be
+        # picked up. This is confusing, because 'checked out' implies that the user
+        # has it, but that isn't the case! These should be covered by the patron account 'holds'
+        # section from FOLIO, so if we skip them here they should show up in the right place.
+        next if i['TransactionStatus'] == 'Checked out in FOLIO'
 
         # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
         # id for potential cancellations.
@@ -201,7 +206,7 @@ module MyAccount
         # add a special "item id" for ILLiad items
         if i['system'] == 'illiad'
           i['iid'] = "illiad-#{i['TransactionNumber']}"
-          i['requestDate'] = DateTime.parse(i['TransactionDate']).strftime('%-m/%-d/%y')
+          i['requestDate'] = formatted_date(i['TransactionDate'])
         end
 
         case i['status']
@@ -215,6 +220,7 @@ module MyAccount
           i['status'] = 'Charged'
           # checkouts << i
         else
+          i['shipped'] = ship_date(i)
           pending_requests << i
         end
       end
@@ -273,9 +279,15 @@ module MyAccount
       source = nil
       if response[:code] < 300
         source = response[:instance]['source']
+        # Try to identify ILL items and set source manually -- it's 'FOLIO' in the actual record.
+        source = 'ill' if ill_item?(response[:instance])
+
         # Ignore Borrow Direct records for the link -- they have an HRID that looks like a legit bibid, but
-        # it's something else BD-related. We can't link to those.
-        link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}" if source != 'bd'
+        # it's something else BD-related. We can't link to those. But now, most sources are either MARC or
+        # FOLIO. A FOLIO source indicates that this was a locally-created record -- e.g., for a temporary record
+        # for a BD/ReShare item. Most of the others appear to be MARC-source. This is probably not entirely accurate,
+        # but we can filter out the FOLIO records and probably get things right most of the time.
+        link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}" if source == 'MARC'
       end
       render json: { link: link, source: source }
     end
@@ -307,15 +319,6 @@ module MyAccount
       # return session[netid + '_bd_items'] if session[netid + '_bd_items']
       Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup"
 
-      # barcode = patron_barcode(netid)
-
-      # Set parameters for the Borrow Direct API
-      # BorrowDirect::Defaults.library_symbol = 'CORNELL'
-      # BorrowDirect::Defaults.find_item_patron_barcode = barcode
-      # BorrowDirect::Defaults.timeout = ENV['BORROW_DIRECT_TIMEOUT'].to_i || 30 # (seconds)
-      # BorrowDirect::Defaults.api_base = BorrowDirect::Defaults::PRODUCTION_API_BASE
-      # BorrowDirect::Defaults.api_key = ENV['BORROW_DIRECT_PROD_API_KEY']
-
       begin
         token = nil
         response = CUL::FOLIO::Edge.authenticate(ENV['RESHARE_STATUS_URL'], ENV['RESHARE_TENANT'], ENV['RESHARE_USER'], ENV['RESHARE_PW'])
@@ -335,41 +338,35 @@ module MyAccount
         response = RestClient.get(url, headers)
         # TODO: check that response is in the proper form and there are no returned errors
         items = JSON.parse(response)
+
         # The ReShare match query is too broad and will match any portion of the netid --
         # e.g., the results for 'mjc12' will also include any that are found for 'mjc124'.
         # So we need to ensure that the patronIdentifier of each result matches our netid.
         items.select! { |i| i['patronIdentifier'] == netid }
       rescue RestClient::Exception => e
-      # items = BorrowDirect::RequestQuery.new(barcode).requests('open')
-      # rescue BorrowDirect::Error => e
-      #   # The Borrow Direct gem doesn't differentiate among all of the BD API error types.
-      #   # In this case, PUBQR004 is an exception raised when there are no results for the query
-      #   # (why should that cause an exception??). We don't want to crash and burn just because
-      #   # the user doesn't have any BD requests in the system. But if it's anything else,
-      #   # raise it again -- that indicates a real problem.
-      #   if e.message.include? 'PUBAN003'
-      #     Rails.logger.error "MyAccount error: user could not be authenticated in Borrow Direct"
-      #   else
-      #     # TODO: Add better error handling. For now, BD is causing too many problems with flaky connections;
-      #     # we have to do something other than raise the errors here.
-      #     # raise unless e.message.include? 'PUBQR004'
-      #   end
         items = []
         Rails.logger.error "MyAccount error: Couldn\'t retrieve patron requests from ReShare (#{e})."
       end
-      # Returns an array of BorrowDirect::RequestQuery::Item
+
       cleaned_items = []
       items.each do |item|
-        Rails.logger.debug "mjc12a: item data: HRID: #{item['hrid']} for patronIdentifier #{item['patronIdentifier']}"
-        Rails.logger.debug "mjc12a: state: #{item['state']['code']}, stage: #{item['state']['stage']}"
+        # ReShare items that are in the state REQ_CHECKED_IN have been checked in *by staff at CUL*,
+        # meaning that the book has had a temporary record created in FOLIO and is awaiting pickup
+        # by the patron. Assume that such items will be handled by the FOLIO API data once they have this
+        # status (either in requests/holds before patron pickup, or in loans after pickup.)
+        next if item['state']['code'] == 'REQ_CHECKED_IN'
 
-        # HACK: This is a terrible way to obtain the item title. Unfortunately, this information isn't surfaced
+        # HACK: This is a terrible way to obtain the item title and author. Unfortunately, this information isn't surfaced
         # in the API response, but only provided as part of a marcxml description of the entire item record.
         marc = XmlSimple.xml_in(item['bibRecord'])
         f245 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '245' }
         f245a = f245['subfield'].find { |sf| sf['code'] == 'a' }
         f245b = f245['subfield'].find { |sf| sf['code'] == 'b' }
         title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
+
+        f100 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '100' }
+        f100a = f100['subfield'].find { |sf| sf['code'] == 'a' }
+        author = f100a ? "#{f100a['content']}" : ''
 
         # For the final item, we add a fake item ID number (iid) for compatibility with other items in the system
         # ReShare status *stages* are defined here: 
@@ -379,16 +376,47 @@ module MyAccount
         # I think we only need to worry about stage to distinguish between pending and available.
         cleaned_items << {
           'tl' => title,
-          'au' => '',
+          'au' => author,
           'system' => 'bd',
           'status' => item['state']['code'],
           'iid' => item['hrid'],
-          'lo' => item['pickupLocation']
+          'lo' => item['pickupLocation'],
+          'shipped' => reshare_shipped_status(item)
         }
       end
       session[netid + '_bd_items'] = cleaned_items
-      Rails.logger.debug "mjc12a: cleaned BD items: #{cleaned_items}"
       render json: cleaned_items
+    end
+
+    # Use the 'audit' section of a ReShare item's metadata to determine whether the item has
+    # been shipped or not. If it has, return a string to that effect that can be displayed in the UI.
+    def reshare_shipped_status(item)
+      if item && item['audit']
+        steps = item['audit'].sort_by! { |i| i['auditNo'] }
+        steps.each do |step|
+          step_date = formatted_date(step['dateCreated'])
+          return "Shipped #{step_date}" if step['toStatus']['code'] == 'REQ_SHIPPED'
+        end
+      end
+      return ''
+    end
+
+    # Given a date of the form 2023-01-29T23:14:24Z, return a string formatted to 1/29/23
+    def formatted_date(date)
+      DateTime.parse(date).strftime('%-m/%-d/%y')
+    rescue
+      ''
+    end
+
+    # Given a FOLIO instance record, determine whether it's an ILL item or not. Unfortunately,
+    # we have to rely on implicit metadata and assumption. I.e., an instance is *probably*
+    # sourced from ILL if it (a) has a source of 'FOLIO' (locally created record, probably temporary),
+    # (b) is suppressed from discovery (shouldn't be searchable or requestable), but (c) is *not*
+    # suppressed from staff view.
+    def ill_item?(instance)
+      instance['source'] == 'FOLIO' &&
+      instance['discoverySuppress'] == true &&
+      instance['staffSuppress'] == false
     end
 
     def user
