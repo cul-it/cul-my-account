@@ -37,11 +37,6 @@
               -#     This item cannot be renewed.
               -# - if c['is_bd']
               %div.source-badge
-                -# %div.badge.badge-primary
-                  -# Borrow Direct
-              - if c['is_ill']
-                %div.badge.badge-success
-                  Interlibrary Loan
             %td
               =c['item']['author']
             %td.status
@@ -50,7 +45,7 @@
     - if ENV['MY_ACCOUNT_READONLY']
       %div.mt-4
         %p
-          My Account is currently in read-only mode. Items cannot be renewed or cancelled. Please <a href="https://library.cornell.edu/ask">ask a librarian</a> for assistance if needed.
+          My Account is currently in read-only mode. Items cannot be renewed or cancelled. Please <a href="https://library.cornell.edu/get-help/ask">ask a librarian</a> for assistance if needed.
     - else
       = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
       %span{:id => 'request-loading-spinner'}
