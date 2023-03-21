@@ -224,7 +224,7 @@ module MyAccount
           i['status'] = 'Charged'
           # checkouts << i
         else
-          i['shipped'] = ship_date(i)
+          i['shipped'] = reshare_shipped_status(i)
           pending_requests << i
         end
       end
@@ -364,12 +364,12 @@ module MyAccount
         # in the API response, but only provided as part of a marcxml description of the entire item record.
         marc = XmlSimple.xml_in(item['bibRecord'])
         f245 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '245' }
-        f245a = f245['subfield'].find { |sf| sf['code'] == 'a' }
-        f245b = f245['subfield'].find { |sf| sf['code'] == 'b' }
+        f245a = f245 && f245['subfield'].find { |sf| sf['code'] == 'a' }
+        f245b = f245 && f245['subfield'].find { |sf| sf['code'] == 'b' }
         title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
 
         f100 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '100' }
-        f100a = f100['subfield'].find { |sf| sf['code'] == 'a' }
+        f100a = f100 && f100['subfield'].find { |sf| sf['code'] == 'a' }
         author = f100a ? "#{f100a['content']}" : ''
 
         # For the final item, we add a fake item ID number (iid) for compatibility with other items in the system

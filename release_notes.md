@@ -1,7 +1,9 @@
 # Release Notes - my-account
 
-## v2.2.2
+## v2.2.3
+- Fix bug in shipped date calculation that prevented requests from loading.
 
+## v2.2.2
 ### Improvements
 - Show date shipped for ReShare items in pending requests.
 - Show author for ReShare items in requests.
