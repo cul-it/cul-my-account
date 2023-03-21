@@ -217,6 +217,8 @@ account =
   addSourceBadge: (id, source) ->
     if source == 'bd'
       $("##{id} .source-badge").html('<div class="badge badge-primary">Borrow Direct</div>')
+    if source == 'ill'
+      $("##{id} .source-badge").html('<div class="badge badge-primary">Interlibrary Loan</div>')
 
   # Populate fines/fees in the UI
   showFines: (accountData) ->
@@ -247,7 +249,6 @@ account =
     # Sort out the FOLIO request data into the format and category expected by the views
     folioTitles = []
     folioData.forEach (entry) ->
-      console.log entry
       folioTitles.push entry.item.title
       # Look up the service point based on its ID. getServicePoint() will try to dynamically update the status
       # in the table when the result is ready
@@ -282,8 +283,10 @@ account =
         requestObj = {
           iid: entry.iid, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
           tl: entry.tl,
+          au: entry.au,
           system: 'bd',
-          lo: location
+          lo: location,
+          shipped: entry.shipped
         }
 
         # This is a bit of a hack. An ON_LOAN item is really an available request, but at that point in
