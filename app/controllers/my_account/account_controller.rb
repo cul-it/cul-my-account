@@ -59,20 +59,6 @@ module MyAccount
       end
 
       @netid = user
-
-      # Check for alert messages in alerts.yaml
-      begin
-        alert_messages = YAML.load_file("#{Rails.root}/alerts.yaml")
-        # Each message in the YAML file should have a pages array that lists which pages (e.g., MyAccount, Requests)
-        # should show the alert, and a message property that contains the actual message text/HTML. Only show
-        # the messages for the proper page.
-        @alerts = alert_messages.select{|m| m['pages']&.include?('MyAccount')}.map{|m| m['message']}
-      rescue Errno::ENOENT, Psych::SyntaxError
-        # Nothing to do here; the alerts file is optional, and its absence (Errno::ENOENT) just means that there
-        # are no alert messages to show today. Psych::SyntaxError means there was an error in the syntax
-        # (most likely the indentation) of the YAML file. That's not good, but crashing with an ugly
-        # error message is worse than not showing the alerts.
-      end
     end
 
     # Return a FOLIO authentication token for API calls -- either from the session if a token
