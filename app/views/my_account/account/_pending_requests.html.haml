@@ -1,6 +1,6 @@
 - request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Interlibrary Loan', 'bd' => 'Borrow Direct', 'C' => 'Call slip'}
 - has_bd_pending = false
-- has_ill_pending = false
+- has_ill_pending = true
 
 - if @pending_requests.length == 0 
   %p
@@ -51,14 +51,9 @@
     %span{:id => 'request-loading-spinner'}
 
 
-- if has_ill_pending
+- if has_ill_pending || has_bd_pending
   %p
-    Need to cancel an Interlibrary loan request? Go to 
+    Need to cancel a Borrow Direct or Interlibrary Loan request? Go to 
     %a{:href => "https://cornell.hosts.atlas-sys.com/illiad"} 
       ILLiad
-- if has_bd_pending
-  %p
-    Need to cancel a Borrow Direct request? Go to 
-    %a{:href => "http://resolver.library.cornell.edu/NET/parsebd?redirect=yes"}
-      Borrow Direct
  
