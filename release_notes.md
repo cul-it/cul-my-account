@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## IN PROGRESS
+- Remove link to Borrow Direct resolver script (DISCOVERYACCESS-8043)
+
 ## v2.2.3
 - Strip out YAML alert code (use the code in the main Blacklight template instead).
 - Fix bug in shipped date calculation that prevented requests from loading (DISCOVERYACCESS-7999).
