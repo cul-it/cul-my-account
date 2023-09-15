@@ -2,6 +2,7 @@
 
 ## IN PROGRESS
 - Remove link to Borrow Direct resolver script (DISCOVERYACCESS-8043)
+- Guard against empty(ish) ReShare records (DISCOVERYACCESS-8164)
 
 ## v2.2.3
 - Strip out YAML alert code (use the code in the main Blacklight template instead).
