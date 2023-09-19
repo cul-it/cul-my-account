@@ -352,6 +352,7 @@ module MyAccount
         author = ''
         marc = XmlSimple.xml_in(item['bibRecord'])
         record = marc['GetRecord'][0]['record'][0]
+        # It can happen that, in rare cases, the metadata section is completely missing from the record.
         fields = record.dig('metadata', 0, 'record', 0, 'datafield')
         if fields
           f245 = fields.find { |f| f['tag'] == '245' }
