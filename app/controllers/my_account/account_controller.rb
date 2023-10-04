@@ -348,15 +348,22 @@ module MyAccount
 
         # HACK: This is a terrible way to obtain the item title and author. Unfortunately, this information isn't surfaced
         # in the API response, but only provided as part of a marcxml description of the entire item record.
+        title = ''
+        author = ''
         marc = XmlSimple.xml_in(item['bibRecord'])
-        f245 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '245' }
-        f245a = f245 && f245['subfield'].find { |sf| sf['code'] == 'a' }
-        f245b = f245 && f245['subfield'].find { |sf| sf['code'] == 'b' }
-        title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
+        record = marc['GetRecord'][0]['record'][0]
+        # It can happen that, in rare cases, the metadata section is completely missing from the record.
+        fields = record.dig('metadata', 0, 'record', 0, 'datafield')
+        if fields
+          f245 = fields.find { |f| f['tag'] == '245' }
+          f245a = f245 && f245['subfield'].find { |sf| sf['code'] == 'a' }
+          f245b = f245 && f245['subfield'].find { |sf| sf['code'] == 'b' }
+          title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
 
-        f100 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '100' }
-        f100a = f100 && f100['subfield'].find { |sf| sf['code'] == 'a' }
-        author = f100a ? "#{f100a['content']}" : ''
+          f100 = fields.find { |t| t['tag'] == '100' }
+          f100a = f100 && f100['subfield'].find { |sf| sf['code'] == 'a' }
+          author = f100a ? "#{f100a['content']}" : ''
+        end
 
         # For the final item, we add a fake item ID number (iid) for compatibility with other items in the system
         # ReShare status *stages* are defined here: 
@@ -374,6 +381,7 @@ module MyAccount
           'shipped' => reshare_shipped_status(item)
         }
       end
+
       session[netid + '_bd_items'] = cleaned_items
       render json: cleaned_items
     end
