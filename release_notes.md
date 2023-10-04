@@ -1,6 +1,6 @@
 # Release Notes - my-account
 
-## IN PROGRESS
+## v2.2.4
 - Remove link to Borrow Direct resolver script (DISCOVERYACCESS-8043)
 
 ## v2.2.3
