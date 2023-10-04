@@ -7,6 +7,12 @@ module MyAccount
     config.assets.paths << config.root.join('/engines/my_account/app/assets/javascripts')
     config.assets.precompile << "my_account/application.js"
     config.assets.precompile << "my_account/account.js.coffee"
+
+    config.to_prepare do
+      # Make the main Blacklight app's helpers available to the engine.
+      # This is required for the overriding of engine views and helpers to work correctly.
+      Engine::ApplicationController.helper Rails.application.helpers
+    end
   end
 
   def self.config(&block)
