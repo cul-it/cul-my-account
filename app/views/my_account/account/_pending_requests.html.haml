@@ -1,4 +1,4 @@
-- request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Interlibrary Loan', 'bd' => 'Borrow Direct', 'C' => 'Call slip'}
+- request_types = {'H' => 'Hold', 'R' => 'Recall', 'illiad' => 'Interlibrary Loan', 'bd' => 'BorrowDirect', 'C' => 'Call slip'}
 - has_bd_pending = false
 - has_ill_pending = false
 
@@ -53,7 +53,7 @@
 
 - if has_ill_pending || has_bd_pending
   %p
-    Need to cancel a Borrow Direct or Interlibrary Loan request? Go to 
+    Need to cancel a BorrowDirect or Interlibrary Loan request? Go to 
     %a{:href => "https://cornell.hosts.atlas-sys.com/illiad"} 
       ILLiad
  

@@ -16,11 +16,11 @@ OKAPI_URL=<URL of a FOLIO *Okapi* interface
 OKAPI_TENANT=<Okapi tenant ID>
 OKAPI_USER=<FOLIO username for requests API access>
 OKAPI_PW=<password for FOLIO user>
-BORROW_DIRECT_PROD_API_KEY=<API key for Borrow Direct web services>
-BORROW_DIRECT_TIMEOUT=<Borrow Direct timeout in seconds>
+BORROW_DIRECT_PROD_API_KEY=<API key for BorrowDirect web services>
+BORROW_DIRECT_TIMEOUT=<BorrowDirect timeout in seconds>
 ```
 
-Note that the Borrow Direct and Okapi ENV keys are also used by the Requests engine.
+Note that the BorrowDirect and Okapi ENV keys are also used by the Requests engine.
 
 ### Deprecated keys (to be removed in future)
 MY_ACCOUNT_PATRONINFO_URL=<netid/patron info lookup URL>
@@ -41,7 +41,7 @@ Most of the MA functionality is implemented within a handful of files. Important
 - `/app/views/my_account/account/`: view files. There is essentially one main view (`index.html`) that is broken into individual table panes for charged items, pending requests, etc.
 
 ## Important external systems
-MyAccount requires connections to a patroninfo/netid lookup service, Voyager’s web services, the ILLiad system, and Borrow Direct.
+MyAccount requires connections to a patroninfo/netid lookup service, Voyager’s web services, the ILLiad system, and BorrowDirect.
 
 ### Patron/netid info
 Patron info is derived from the `patron_info_service.cgi` service (part of `voyager-tools`. Sample output looks like this:
@@ -51,7 +51,7 @@ Patron info is derived from the `patron_info_service.cgi` service (part of `voya
 This information is essential for the rest of the system, because `barcode` and `patron_id` are needed to perform lookups in the other external services. 
 
 ### Charged items and ILL requests
-The central item lookup services are FOLIO and the `ilsapi` CGI service (currently `ilsapiE.cgi`, but there have been several versions). FOLIO provides user account information with details about checked-out items, pending FOLIO requests, and any fines/fees the user has. The `ilsapi` service takes a netid  and returns a JSON object primarily containing an array of all the pending requests the user has from ILLiad (but, confusingly, not from Borrow Direct!). 
+The central item lookup services are FOLIO and the `ilsapi` CGI service (currently `ilsapiE.cgi`, but there have been several versions). FOLIO provides user account information with details about checked-out items, pending FOLIO requests, and any fines/fees the user has. The `ilsapi` service takes a netid  and returns a JSON object primarily containing an array of all the pending requests the user has from ILLiad (but, confusingly, not from BorrowDirect!). 
 
 A FOLIO account record lookup results in something like the following:
 ```json
@@ -111,8 +111,8 @@ The record for an individual item from ILLiad looks something like this:
 ```
 However, if it’s an ILL or BD item, it will include different keys and values. The difficulty is in determining (a) the origin of a particular item (Voyager, ILL, or BD) and (b) the status of a given request.  
 
-### Borrow Direct requests
-Borrow Direct _requests_ are brought in separately via the BD API (within `my_account_controller`, using the `borrow_direct` gem). Once the user has claimed and checked out an available BD request, it will appear in the output from the FOLIO lookup.
+### BorrowDirect requests
+BorrowDirect _requests_ are brought in separately via the BD API (within `my_account_controller`, using the `borrow_direct` gem). Once the user has claimed and checked out an available BD request, it will appear in the output from the FOLIO lookup.
 
 ## Authentication and debugging without SAML
 By default, MA uses SAML authentication to authenticate a user and retrieve a netid (see the `authenticate_user` and `user` methods in `my_account_controller.rb`). Since SAML is a little tricky to get up and running on an individual development machine, there is a workaround. If Blacklight/Rails is running in `development` mode, a special key can be added to the Blacklight `.env` file: `DEBUG_USER=<netid>`. (This has no effect if Rails is running in `production` mode, to prevent bad things from happening. This value can also be used to debug the Requests engine.) In that case, SAML authentication is bypassed and MA loads with the account information for the specified netid.
@@ -149,6 +149,6 @@ It turns out that some patrons have _a lot_ of items checked out! When the numbe
 And, as mentioned above, there is a separate Voyager web service that is needed to provide an item’s renewability status. That service is much more prone to timeouts, so I’m trying not to use it now except for smaller accounts with a reasonable number of charged items.
 
 ### Determining the origin and status of a request
-Voyager and ILLiad requests are retrieved through the `ilsapi` service; Borrow Direct through its own APIs. It’s easy to distinguish BD requests from the others, then (while they’re pending, at least; once an item is charged, it appears in the `ilsapi` list as well). But separating Voyager and ILLiad requests is more of a challenge.
+Voyager and ILLiad requests are retrieved through the `ilsapi` service; BorrowDirect through its own APIs. It’s easy to distinguish BD requests from the others, then (while they’re pending, at least; once an item is charged, it appears in the `ilsapi` list as well). But separating Voyager and ILLiad requests is more of a challenge.
 
 Relevant fields in an `ilsapi` item record include `system`, `status` (but also `vstatus`), and `ttype`. `system` can be `illiad` or `voyager`. `ttype` can be `H` or `R` for hold or recall (or possibly something else for L2L?). `status` is the most ambiguous value; depending on where a request is in its process, status might appear as `waiting`, `chrged`, `finef` (for duplicate records showing fines), `ON_LOAN`,  or the mysterious `pahr`, which seems to have an ambiguous meaning. The `get_patron_stuff` method in `account_controller.rb` attempts to sort items into their proper categories based on these values.

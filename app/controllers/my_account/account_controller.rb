@@ -87,7 +87,7 @@ module MyAccount
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
-    # Requested items could be Voyager items, ILLiad, or Borrow Direct -- so use whichever API is appropriate
+    # Requested items could be Voyager items, ILLiad, or BorrowDirect -- so use whichever API is appropriate
     # def cancel items
     #   # For cancellation the param value contains the ttpe, so build a hash to reference in the loop below.
     #   id_hash = items.transform_keys{ |k| k.gsub("select-","") }
@@ -96,7 +96,7 @@ module MyAccount
     #   request_ids.each do |id|
     #     if id.match(/^COR/)
     #       # TODO: implement this
-    #       # do a Borrow Direct cancel
+    #       # do a BorrowDirect cancel
     #     elsif id.match(/^illiad/)
     #       # TODO: implement this
     #       # do an ILLiad cancel
@@ -140,7 +140,7 @@ module MyAccount
     #
     # Account information (Voyager, BD, ILL) was provided by the ilsapiE.cgi script. Besides a
     # 'patron' JSON object, it provided an 'items' array. Each item is an object representing an
-    # item from Voyager, ILL, or Borrow Direct.
+    # item from Voyager, ILL, or BorrowDirect.
     # If we assume that ilsapiE.cgi is rewritten to *only* return ILL results, then that simplifies the
     # parsing below greatly. No need to try to figure out whether something is a charged item or a request
     def get_illiad_data
@@ -272,7 +272,7 @@ module MyAccount
         # Try to identify ILL items and set source manually -- it's 'FOLIO' in the actual record.
         source = 'ill' if ill_item?(response[:instance])
 
-        # Ignore Borrow Direct records for the link -- they have an HRID that looks like a legit bibid, but
+        # Ignore BorrowDirect records for the link -- they have an HRID that looks like a legit bibid, but
         # it's something else BD-related. We can't link to those. But now, most sources are either MARC or
         # FOLIO. A FOLIO source indicates that this was a locally-created record -- e.g., for a temporary record
         # for a BD/ReShare item. Most of the others appear to be MARC-source. This is probably not entirely accurate,

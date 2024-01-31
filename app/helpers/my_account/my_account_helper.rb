@@ -7,7 +7,7 @@ module MyAccount
     def cased_title_link item
       item['item']['title'].titleize
       # HACK: There is nothing in the retrieved record that explicitly states whether
-      # a catalog record exists for it or not. (Once Borrow Direct -- and maybe ILL 
+      # a catalog record exists for it or not. (Once BorrowDirect -- and maybe ILL 
       # items are charged to a patron, they become temporary Voyager records almost
       # indistinguishable from regular records.) The one property that seems to offer
       # guidance is the 'lo' (location) field, which is unpopulated for BD/ILL records
