@@ -1,5 +1,9 @@
 # Release Notes - my-account
 
+
+## v2.2.5
+- Change spelling of "Borrow Direct" to "BorrowDirect"
+
 ## v2.2.4
 - Remove link to Borrow Direct resolver script (DISCOVERYACCESS-8043)
 - Guard against empty(ish) ReShare records (DISCOVERYACCESS-8164)
