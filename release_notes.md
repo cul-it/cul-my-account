@@ -1,5 +1,7 @@
 # Release Notes - my-account
 
+## In progress
+- Folio Token changes
 
 ## v2.2.5
 - Change spelling of "Borrow Direct" to "BorrowDirect"
