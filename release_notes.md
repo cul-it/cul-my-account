@@ -1,5 +1,10 @@
 # Release Notes - my-account
 
+## [2.3] - 2024-08-12
+
+### Changed
+- Require v3.1 of `cul-folio-edge` to use new authentication tokens (DACCESS-261)
+- Remove obsolete dependency on `borrow_direct`
 
 ## v2.2.5
 - Change spelling of "Borrow Direct" to "BorrowDirect"
