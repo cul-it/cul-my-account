@@ -59,20 +59,6 @@ module MyAccount
       end
 
       @netid = user
-
-      # Check for alert messages in alerts.yaml
-      begin
-        alert_messages = YAML.load_file("#{Rails.root}/alerts.yaml")
-        # Each message in the YAML file should have a pages array that lists which pages (e.g., MyAccount, Requests)
-        # should show the alert, and a message property that contains the actual message text/HTML. Only show
-        # the messages for the proper page.
-        @alerts = alert_messages.select{|m| m['pages']&.include?('MyAccount')}.map{|m| m['message']}
-      rescue Errno::ENOENT, Psych::SyntaxError
-        # Nothing to do here; the alerts file is optional, and its absence (Errno::ENOENT) just means that there
-        # are no alert messages to show today. Psych::SyntaxError means there was an error in the syntax
-        # (most likely the indentation) of the YAML file. That's not good, but crashing with an ugly
-        # error message is worse than not showing the alerts.
-      end
     end
 
     # Return a FOLIO authentication token for API calls -- either from the session if a token
@@ -101,7 +87,7 @@ module MyAccount
     end
 
     # Given a list of item "ids" (of the form 'select-<id>'), cancel them (if possible)
-    # Requested items could be Voyager items, ILLiad, or Borrow Direct -- so use whichever API is appropriate
+    # Requested items could be Voyager items, ILLiad, or BorrowDirect -- so use whichever API is appropriate
     # def cancel items
     #   # For cancellation the param value contains the ttpe, so build a hash to reference in the loop below.
     #   id_hash = items.transform_keys{ |k| k.gsub("select-","") }
@@ -110,7 +96,7 @@ module MyAccount
     #   request_ids.each do |id|
     #     if id.match(/^COR/)
     #       # TODO: implement this
-    #       # do a Borrow Direct cancel
+    #       # do a BorrowDirect cancel
     #     elsif id.match(/^illiad/)
     #       # TODO: implement this
     #       # do an ILLiad cancel
@@ -154,7 +140,7 @@ module MyAccount
     #
     # Account information (Voyager, BD, ILL) was provided by the ilsapiE.cgi script. Besides a
     # 'patron' JSON object, it provided an 'items' array. Each item is an object representing an
-    # item from Voyager, ILL, or Borrow Direct.
+    # item from Voyager, ILL, or BorrowDirect.
     # If we assume that ilsapiE.cgi is rewritten to *only* return ILL results, then that simplifies the
     # parsing below greatly. No need to try to figure out whether something is a charged item or a request
     def get_illiad_data
@@ -286,7 +272,7 @@ module MyAccount
         # Try to identify ILL items and set source manually -- it's 'FOLIO' in the actual record.
         source = 'ill' if ill_item?(response[:instance])
 
-        # Ignore Borrow Direct records for the link -- they have an HRID that looks like a legit bibid, but
+        # Ignore BorrowDirect records for the link -- they have an HRID that looks like a legit bibid, but
         # it's something else BD-related. We can't link to those. But now, most sources are either MARC or
         # FOLIO. A FOLIO source indicates that this was a locally-created record -- e.g., for a temporary record
         # for a BD/ReShare item. Most of the others appear to be MARC-source. This is probably not entirely accurate,
@@ -362,15 +348,22 @@ module MyAccount
 
         # HACK: This is a terrible way to obtain the item title and author. Unfortunately, this information isn't surfaced
         # in the API response, but only provided as part of a marcxml description of the entire item record.
+        title = ''
+        author = ''
         marc = XmlSimple.xml_in(item['bibRecord'])
-        f245 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '245' }
-        f245a = f245 && f245['subfield'].find { |sf| sf['code'] == 'a' }
-        f245b = f245 && f245['subfield'].find { |sf| sf['code'] == 'b' }
-        title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
+        record = marc['GetRecord'][0]['record'][0]
+        # It can happen that, in rare cases, the metadata section is completely missing from the record.
+        fields = record.dig('metadata', 0, 'record', 0, 'datafield')
+        if fields
+          f245 = fields.find { |f| f['tag'] == '245' }
+          f245a = f245 && f245['subfield'].find { |sf| sf['code'] == 'a' }
+          f245b = f245 && f245['subfield'].find { |sf| sf['code'] == 'b' }
+          title = f245b ? "#{f245a['content']} #{f245b['content']}" : f245a['content']
 
-        f100 = marc['GetRecord'][0]['record'][0]['metadata'][0]['record'][0]['datafield'].find { |t| t['tag'] == '100' }
-        f100a = f100 && f100['subfield'].find { |sf| sf['code'] == 'a' }
-        author = f100a ? "#{f100a['content']}" : ''
+          f100 = fields.find { |t| t['tag'] == '100' }
+          f100a = f100 && f100['subfield'].find { |sf| sf['code'] == 'a' }
+          author = f100a ? "#{f100a['content']}" : ''
+        end
 
         # For the final item, we add a fake item ID number (iid) for compatibility with other items in the system
         # ReShare status *stages* are defined here: 
@@ -388,6 +381,7 @@ module MyAccount
           'shipped' => reshare_shipped_status(item)
         }
       end
+
       session[netid + '_bd_items'] = cleaned_items
       render json: cleaned_items
     end

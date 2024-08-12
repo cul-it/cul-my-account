@@ -57,7 +57,7 @@ account =
     # have to be combined with requests from ILLiad and BD, though, which takes a bit of manipulation.
     # So we use .when() here to do both lookups before proceeding
     # 
-    # HACK: I don't really want to include Borrow Direct in this -- part of the motivation for using so 
+    # HACK: I don't really want to include BorrowDirect in this -- part of the motivation for using so 
     # much AJAX in this app was to keep the user from having to wait until the BD lookup is done, as that
     # can be excruciatingly slow at times. But if we don't wait for it here, then we run into concurrency
     # problems when populating the requests tabs and can get duplicate entries (for requests that are available
@@ -211,12 +211,12 @@ account =
           $("##{entry.item.itemId} .title").html("<a href='#{data.link}'>#{title}</>")
     })
 
-  # If the checkout originates from Borrow Direct or ILLiad, indicate that with a source "badge"
+  # If the checkout originates from BorrowDirect or ILLiad, indicate that with a source "badge"
   # in the entry. (Tim Worrall designed these badges originally for the older My Account implementation.)
   # The source indicator has to be set during the instance lookup in account_controller.rb.
   addSourceBadge: (id, source) ->
     if source == 'bd'
-      $("##{id} .source-badge").html('<div class="badge badge-primary">Borrow Direct</div>')
+      $("##{id} .source-badge").html('<div class="badge badge-primary">BorrowDirect</div>')
     if source == 'ill'
       $("##{id} .source-badge").html('<div class="badge badge-primary">Interlibrary Loan</div>')
 
@@ -264,7 +264,7 @@ account =
       else
         available.push requestObj
 
-    # Do the same sorting with the Borrow Direct data
+    # Do the same sorting with the BorrowDirect data
     # BD entries come from ReShare and have one of 6 possible stages: PREPARING, LOCAL, ACTIVE,
     # ACTIVE_PENDING_CONDITIONAL_ANSWER, ACTIVE_SHIPPED, COMPLETED. Anything other than COMPLETED
     # means the request is still pending.

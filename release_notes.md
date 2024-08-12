@@ -1,7 +1,16 @@
 # Release Notes - my-account
 
+
+## v2.2.5
+- Change spelling of "Borrow Direct" to "BorrowDirect"
+
+## v2.2.4
+- Remove link to Borrow Direct resolver script (DISCOVERYACCESS-8043)
+- Guard against empty(ish) ReShare records (DISCOVERYACCESS-8164)
+
 ## v2.2.3
-- Fix bug in shipped date calculation that prevented requests from loading.
+- Strip out YAML alert code (use the code in the main Blacklight template instead).
+- Fix bug in shipped date calculation that prevented requests from loading (DISCOVERYACCESS-7999).
 
 ## v2.2.2
 ### Improvements

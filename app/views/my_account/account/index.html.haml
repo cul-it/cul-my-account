@@ -10,14 +10,6 @@
 - if @netid.nil?
   %p ERROR: Your account information could not be retrieved. Please ask a librarian for help or report this using the feedback link below.
 - else
-  - if @alerts.present?
-    %div.service-alert
-      %div.alert.alert-warning
-        - @alerts.each do |alert|
-          %p
-          = alert.try(:html_safe)
-        %p
-    %br
   %h2#userName 
 
   %ul.nav.nav-tabs{:role => "tablist"}
