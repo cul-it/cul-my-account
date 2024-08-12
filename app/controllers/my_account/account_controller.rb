@@ -62,9 +62,9 @@ module MyAccount
     end
 
     # Return a FOLIO authentication token for API calls -- either from the session if a token
-    # was prevoiusly created, or directly from FOLIO otherwise.
+    # was previously created, or has expired, or directly from FOLIO otherwise.
     def folio_token
-      if session[:folio_token].nil?
+      if session[:folio_token].nil? || (session[:folio_token_exp].present? && Time.now > Time.parse(session[:folio_token_exp]))
         url = ENV['OKAPI_URL']
         tenant = ENV['OKAPI_TENANT']
         response = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
@@ -72,6 +72,7 @@ module MyAccount
           Rails.logger.error "MyAccount error: Could not create a FOLIO token for #{user}"
         else
           session[:folio_token] = response[:token]
+          session[:folio_token_exp] = response[:token_exp]
         end
       end
       session[:folio_token]
