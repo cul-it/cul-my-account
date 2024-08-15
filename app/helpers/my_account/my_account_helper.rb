@@ -14,7 +14,7 @@ module MyAccount
       # but indicates an actual library location for Voyager records.
       # item['lo'] == '' || item['TransactionNumber'] ?
       #   display_title :
-      #   link_to(display_title, "https://newcatalog.library.cornell.edu/catalog/#{item['bid']}") 
+      #   link_to(display_title, "https://catalog.library.cornell.edu/catalog/#{item['bid']}") 
     end
 
     # Return a user-readable item status message. This will filter out the 'pahr' statuses that turn
