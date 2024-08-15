@@ -9,9 +9,9 @@ Gem::Specification.new do |s|
   s.version     = MyAccount::VERSION
   s.authors     = ["Matt Connolly"]
   s.email       = ["mjc12@cornell.edu"]
-  s.homepage    = "http://newcatalog.library.cornell.edu/myaccount"
-  s.summary     = "Summary of MyAccount."
-  s.description = "Description of MyAccount."
+  s.homepage    = "http://catalog.library.cornell.edu/myaccount"
+  s.summary     = "User account page for Cornell University Library online catalog"
+  s.description = "Provides a user account page for the Cornell University Library online catalog, including user account information, loans, requests, and fines." 
   s.license     = "MIT"
 
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.rdoc"]
