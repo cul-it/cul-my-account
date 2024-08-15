@@ -62,9 +62,9 @@ module MyAccount
     end
 
     # Return a FOLIO authentication token for API calls -- either from the session if a token
-    # was prevoiusly created, or directly from FOLIO otherwise.
+    # was previously created, or has expired, or directly from FOLIO otherwise.
     def folio_token
-      if session[:folio_token].nil?
+      if session[:folio_token].nil? || (session[:folio_token_exp].present? && Time.now > Time.parse(session[:folio_token_exp]))
         url = ENV['OKAPI_URL']
         tenant = ENV['OKAPI_TENANT']
         response = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
@@ -72,6 +72,7 @@ module MyAccount
           Rails.logger.error "MyAccount error: Could not create a FOLIO token for #{user}"
         else
           session[:folio_token] = response[:token]
+          session[:folio_token_exp] = response[:token_exp]
         end
       end
       session[:folio_token]
@@ -277,7 +278,7 @@ module MyAccount
         # FOLIO. A FOLIO source indicates that this was a locally-created record -- e.g., for a temporary record
         # for a BD/ReShare item. Most of the others appear to be MARC-source. This is probably not entirely accurate,
         # but we can filter out the FOLIO records and probably get things right most of the time.
-        link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}" if source == 'MARC'
+        link = "https://catalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}" if source == 'MARC'
       end
       render json: { link: link, source: source }
     end
