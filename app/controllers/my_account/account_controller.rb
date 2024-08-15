@@ -278,7 +278,7 @@ module MyAccount
         # FOLIO. A FOLIO source indicates that this was a locally-created record -- e.g., for a temporary record
         # for a BD/ReShare item. Most of the others appear to be MARC-source. This is probably not entirely accurate,
         # but we can filter out the FOLIO records and probably get things right most of the time.
-        link = "https://newcatalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}" if source == 'MARC'
+        link = "https://catalog.library.cornell.edu/catalog/#{response[:instance]['hrid']}" if source == 'MARC'
       end
       render json: { link: link, source: source }
     end
