@@ -1,5 +1,10 @@
 # Release Notes - my-account
 
+## [2.3.1] - 2024-08-20
+
+### Fixed
+- Bad gemspec requirement for `cul-folio-edge` causing bundler to fail
+
 ## [2.3] - 2024-08-12
 
 ### Changed
