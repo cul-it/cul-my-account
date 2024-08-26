@@ -63,8 +63,11 @@ module MyAccount
 
     # Return a FOLIO authentication token for API calls -- either from the session if a token
     # was previously created, or has expired, or directly from FOLIO otherwise.
+    #
+    # TODO: Caching is being disabled for now, since it's causing problems with the new expiring
+    # token mechanism in FOLIO. We need to figure out how to cache the token properly. (mjc12)
     def folio_token
-      if session[:folio_token].nil? || (session[:folio_token_exp].present? && Time.now > Time.parse(session[:folio_token_exp]))
+      # if session[:folio_token].nil? || (session[:folio_token_exp].present? && Time.now > Time.parse(session[:folio_token_exp]))
         url = ENV['OKAPI_URL']
         tenant = ENV['OKAPI_TENANT']
         response = CUL::FOLIO::Edge.authenticate(url, tenant, ENV['OKAPI_USER'], ENV['OKAPI_PW'])
@@ -74,7 +77,7 @@ module MyAccount
           session[:folio_token] = response[:token]
           session[:folio_token_exp] = response[:token_exp]
         end
-      end
+      # end
       session[:folio_token]
     end
 
