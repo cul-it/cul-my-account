@@ -1,5 +1,10 @@
 # Release Notes - my-account
 
+## [2.3.2] - 2024-08-26
+
+### Fixed
+- New FOLIO token auth scheme causing problems because of token caching; caching disabled for now
+
 ## [2.3.1] - 2024-08-20
 
 ### Fixed
