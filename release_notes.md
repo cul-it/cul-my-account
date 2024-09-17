@@ -1,5 +1,8 @@
 # Release Notes - my-account
 
+## [2.3.3] - 2024-09-17
+- Update links to fine information
+
 ## [2.3.2] - 2024-08-26
 
 ### Fixed
