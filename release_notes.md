@@ -1,5 +1,10 @@
 # Release Notes - my-account
 
+## In Progress
+
+### Fixed
+- Fix punctuation on login page
+
 ## [2.3.3] - 2024-09-17
 - Update links to fine information
 
