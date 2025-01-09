@@ -315,7 +315,7 @@ module MyAccount
 
       begin
         token = nil
-        response = CUL::FOLIO::Edge.authenticate(ENV['RESHARE_STATUS_URL'], ENV['RESHARE_TENANT'], ENV['RESHARE_USER'], ENV['RESHARE_PW'])
+        response = CUL::FOLIO::Edge.authenticate(ENV['RESHARE_STATUS_URL'], ENV['RESHARE_TENANT'], ENV['RESHARE_USER'], ENV['RESHARE_PW'], method: :old)
         if response[:code] >= 300
           Rails.logger.error "MyAccount error: Could not create a ReShare token for #{ENV['RESHARE_USER']}"
         else
