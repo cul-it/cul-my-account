@@ -1,5 +1,9 @@
 # Release Notes - my-account
 
+## IN PROGRESS
+### Fixed
+- Specify old authentication method to fix broken ReShare account lookup (DACCESS-459)
+
 ## [2.3.3] - 2024-09-17
 - Update links to fine information
 
