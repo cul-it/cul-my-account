@@ -3,7 +3,7 @@ module ILL
   
   def ill_transactions(user_id)
     transactions = fetch_ill_transactions(user_id)
-    transactions = filter_by_status(transactions)
+    #transactions = filter_by_status(transactions)
     transform_fields(transactions)
   end
 
@@ -68,8 +68,8 @@ module ILL
       location = transaction['NVTGC']
       due_date = transaction['DueDate']
       original_due_date = transaction['DueDate']
-      renewals_allowed = transaction['RenewalsAllowed']
-      date = due_date
+      # renewals_allowed = transaction['RenewalsAllowed']
+      # date = due_date
 
       status = transaction['TransactionStatus']
       case status
@@ -89,9 +89,7 @@ module ILL
         url = "https://cornell.hosts.atlas-sys.com/illiad/illiad.dll?Action=10&Form=63&Value=#{transaction['TransactionNumber']}"
       end
 
-      transaction_number = transaction['TransactionNumber']
-      document_type = transaction['DocumentType']
-
+      # TODO: Review these fields ... some of them are probably unnecessary.
       {
         system: "illiad",
         status: status,
@@ -104,13 +102,16 @@ module ILL
         ou_genre: genre,
         ou_title: title,
         ou_aulast: author_last_name,
-        ou_pages: pages,
-        ou_year: year,
-        ou_issue: issue,
-        ou_volume: volume,
-        ou_issn: issn,
+        # The following fields don't seem to be used anywhere.
+        # ou_pages: pages,
+        # ou_year: year,
+        # ou_issue: issue,
+        # ou_volume: volume,
+        # ou_issn: issn,
         url: url,
-        requestDate: transaction['CreationDate']
+        requestDate: transaction['CreationDate'],
+        TransactionDate: transaction['TransactionDate'],
+        TransactionNumber: transaction['TransactionNumber']
       }
     end
 
