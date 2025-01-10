@@ -3,8 +3,8 @@ module ILL
   
   def ill_transactions(user_id)
     transactions = fetch_ill_transactions(user_id)
-    #transactions = filter_by_status(transactions)
-    add_fields(transactions)
+    transactions = filter_by_status(transactions)
+    transform_fields(transactions)
   end
 
   private
@@ -34,17 +34,13 @@ module ILL
     end
   end
 
-  # Add custom fields to each transaction. These are primarily used for display in the My Account requests views.
+  # Transform the transaction object. The replacement fields are primarily used for display in the My Account requests views.
   # This method is a near-direct port of the illiad6.cgi Perl script that was previously used as a data source for ILLiad.
   # illiad6.cgi directly queried the ILLiad database, then added these fields to the results before passing
   # the whole thing back as a response. Why do we have ii, ou_genre, etc. as fields? Do we still need them
   # to be this obscure? Can we make them more readable? These are questions to ponder in the future.
-  def add_fields(transactions)
-    response = "{\"items\": [\n"
-    items_array = []
-    transactions.each do |transaction|
-      tags_array = []
-
+  def transform_fields(transactions)
+    items_array = transactions.map do |transaction|
       genre = transaction['LoanTitle'] ? 'book' : 'article'
       title = transaction['LoanTitle'] || transaction['PhotoArticleTitle']
       title.gsub!(/"/, ' ')
@@ -96,30 +92,29 @@ module ILL
       transaction_number = transaction['TransactionNumber']
       document_type = transaction['DocumentType']
 
-      tags_array << "\"system\":\"illiad\""
-      tags_array << "\"status\":\"#{status}\""
-      tags_array << "\"ii\":\"#{transaction_number}\""
-      tags_array << "\"it\":\"#{document_type}\""
-      tags_array << "\"tl\":\"#{full_title}\""
-      tags_array << "\"od\":\"#{original_due_date}\""
-      tags_array << "\"rd\":\"#{due_date}\""
-      tags_array << "\"lo\":\"#{location}\""
-      tags_array << "\"ou_genre\":\"#{genre}\""
-      tags_array << "\"ou_title\":\"#{title}\""
-      tags_array << "\"ou_aulast\":\"#{author_last_name}\""
-      tags_array << "\"ou_pages\":\"#{pages}\""
-      tags_array << "\"ou_year\":\"#{year}\""
-      tags_array << "\"ou_issue\":\"#{issue}\""
-      tags_array << "\"ou_volume\":\"#{volume}\""
-      tags_array << "\"ou_issn\":\"#{issn}\""
-      tags_array << "\"url\":\"#{url}\""
-    
-      items_array << "{#{tags_array.join(",\n")}}"
+      {
+        system: "illiad",
+        status: status,
+        ii: transaction['TransactionNumber'],
+        it: transaction['DocumentType'],
+        tl: full_title,
+        od: original_due_date,
+        rd: due_date,
+        lo: location,
+        ou_genre: genre,
+        ou_title: title,
+        ou_aulast: author_last_name,
+        ou_pages: pages,
+        ou_year: year,
+        ou_issue: issue,
+        ou_volume: volume,
+        ou_issn: issn,
+        url: url,
+        requestDate: transaction['CreationDate']
+      }
     end
 
-    response += items_array.join(",\n")
-    response += "\n]\n}"
-    response
+    { items: items_array }.to_json
   end
 
 end
