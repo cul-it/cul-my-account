@@ -6,7 +6,6 @@ require 'xmlsimple'
 require 'cul/folio/edge'
 
 module MyAccount
-
   class AccountController < ApplicationController
     #include Reshare
     include ILL

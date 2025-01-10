@@ -1,9 +1,12 @@
+# This module is an interface for ILLiad. Its primary function is to retrieve an array
+# of ILL transactions for a given user, making use of the ILLiad API. The results are
+# filtered and transformed into a JSON object that can be used by the My Account system.
 module ILL
   require 'rest-client'
   
   def ill_transactions(user_id)
     transactions = fetch_ill_transactions(user_id)
-    #transactions = filter_by_status(transactions)
+    transactions = filter_by_status(transactions)
     transform_fields(transactions)
   end
 
