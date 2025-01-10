@@ -6,8 +6,10 @@ require 'xmlsimple'
 require 'cul/folio/edge'
 
 module MyAccount
+
   class AccountController < ApplicationController
     #include Reshare
+    include ILL
 
     before_action :heading
     before_action :authenticate_user, except: [:intro]
@@ -149,17 +151,12 @@ module MyAccount
     # parsing below greatly. No need to try to figure out whether something is a charged item or a request
     def get_illiad_data
       record = nil
-
       netid = params['netid']
-      # folio_account_data = get_folio_accountinfo netid
-      # Rails.logger.debug "mjc12test: Start parsing"
 
       begin
-        # NOTE: the key MY_ACCOUNT_ISLAPI_URL is a misomer now, because we've eliminated the ilsapi CGI
-        # script and are using the illiad6.cgi script, which ilsapi called, without the middleman. Probably
-        # the key should be renamed at some point.
-        response = RestClient.get "#{ENV['MY_ACCOUNT_ILSAPI_URL']}?netid=#{netid}&fmt=json&wrapper=n"
-        record = JSON.parse response.body
+        # Now using the ILLiad API to retrieve ILL transactions
+        transactions = ill_transactions(netid)
+        items = JSON.parse(transactions)['items']
       rescue => error
         Rails.logger.error "MyAccount error: Could not find a patron entry for #{netid}"
         msg = "We're sorry, but we could not access your account. For help, please email <a href='mailto:cul-dafeedback-l@cornell.edu'>cul-dafeedback-l@cornell.edu</a>"
@@ -171,7 +168,8 @@ module MyAccount
       available_requests = []
 
       # Parse the results of the ilsapiE/ILLiad lookup. Loans (from FOLIO) are handled separately
-      record['items'].each do |i|
+      #record['items'].each do |i|
+      items.each do |i|
         # TODO: items returned with a status of 'finef' appear to be duplicates, only
         # indicating that a fine or fee is applied to that item. So we don't need them
         # in this list? But maybe check the fine-related functions below to see if we
@@ -183,9 +181,6 @@ module MyAccount
         # show up twice in the user's requests (BD/ReShare and ILL)
         next if i['TransactionStatus'] == 'Request Sent to BD'
 
-        # Skip if this is a ReShare submission that has been rerouted to BD -- otherwise it will
-        # show up twice in the user's requests (BD/ReShare and ILL)
-        next if i['TransactionStatus'] == 'Request Sent to BD'
         # Slight hack: items with the status Checked out in FOLIO are actually waiting to be
         # picked up. This is confusing, because 'checked out' implies that the user
         # has it, but that isn't the case! These should be covered by the patron account 'holds'
