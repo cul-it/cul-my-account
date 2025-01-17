@@ -5,7 +5,11 @@
 - Remove dependency on external CGI script for ILLiad lookups by adding new ILL module using ILL API (DACCESS-257)
 
 ### Fixed
+<<<<<<< HEAD
 - Fix punctuation on login page (DACCESS-381)
+=======
+- Fix punctuation on login page
+>>>>>>> origin/dev
 - Specify old authentication method to fix broken ReShare account lookup (DACCESS-459)
 - Fix bug preventing ILLiad requests from appearing (DACCESS-460)
 
