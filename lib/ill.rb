@@ -6,6 +6,7 @@ module ILL
   
   def ill_transactions(user_id)
     transactions = fetch_ill_transactions(user_id)
+    # NOTE: The following line should be redundant, but it's here for now, just in case. (See notes in fetch_ill_transactions)
     transactions = filter_by_status(transactions)
     transform_fields(transactions)
   end
@@ -20,12 +21,17 @@ module ILL
   #
   # The method sends a GET request to the ILLiad API to retrieve the user's ILL transactions.
   # It expects the API key and URL to be set in the environment variables 'MY_ACCOUNT_ILLIAD_API_KEY' and 'MY_ACCOUNT_ILLIAD_API_URL'.
+  # A filter is used in the query to try to only retrieve active transactions.
   def fetch_ill_transactions(user_id)
     headers = {
       'Accept' => 'application/json',
       'APIKey' => ENV['MY_ACCOUNT_ILLIAD_API_KEY']
     }
-    response = RestClient.get "#{ENV['MY_ACCOUNT_ILLIAD_API_URL']}/Transaction/UserRequests/#{user_id}", headers
+    # The filter is used here because I'm concerned about some users having massive numbers of old, completed transactions. I don't know if this
+    # will speed up or slow down the query. In case this doesn't work properly, the filter_by_status method is called again after the query. The three
+    # values used to catch completed transactions are the ones used in the old illid6.cgi script.
+    filter = "not (TransactionStatus eq 'Request Finished' or TransactionStatus eq 'Cancelled by ILL Staff' or TransactionStatus eq 'Cancelled by Customer')"
+    response = RestClient.get "#{ENV['MY_ACCOUNT_ILLIAD_API_URL']}/Transaction/UserRequests/#{user_id}?$filter=#{filter}", headers
     transactions = JSON.parse(response.body)
     transactions
   end
