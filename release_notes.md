@@ -1,8 +1,13 @@
 # Release Notes - my-account
 
-## IN PROGRESS
+## [2.3.4] - 2025-01-17
+### Changed
+- Remove dependency on external CGI script for ILLiad lookups by adding new ILL module using ILL API (DACCESS-257)
+
 ### Fixed
+- Fix punctuation on login page (DACCESS-381)
 - Specify old authentication method to fix broken ReShare account lookup (DACCESS-459)
+- Fix bug preventing ILLiad requests from appearing (DACCESS-460)
 
 ## [2.3.3] - 2024-09-17
 - Update links to fine information
