@@ -120,7 +120,8 @@ module ILL
         url: url,
         requestDate: transaction['CreationDate'],
         TransactionDate: transaction['TransactionDate'],
-        TransactionNumber: transaction['TransactionNumber']
+        TransactionNumber: transaction['TransactionNumber'],
+        TransactionStatus: transaction['TransactionStatus']
       }
     end
 

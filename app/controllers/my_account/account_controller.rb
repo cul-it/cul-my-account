@@ -166,6 +166,8 @@ module MyAccount
       pending_requests = []
       available_requests = []
 
+      Rails.logger.debug "mjc12a: illiad items: #{items}"
+
       # Parse the results of the ilsapiE/ILLiad lookup. Loans (from FOLIO) are handled separately
       #record['items'].each do |i|
       items.each do |i|
@@ -185,6 +187,9 @@ module MyAccount
         # has it, but that isn't the case! These should be covered by the patron account 'holds'
         # section from FOLIO, so if we skip them here they should show up in the right place.
         next if i['TransactionStatus'] == 'Checked out in FOLIO'
+        # Items 'in Folio processing' have already had FOLIO records created, so they will appear in the FOLIO
+        # account data. We don't need to show them here.
+        next if i['TransactionStatus'] == 'In Folio Processing'
 
         # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
         # id for potential cancellations.
