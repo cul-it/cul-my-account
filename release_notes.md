@@ -1,5 +1,9 @@
 # Release Notes - my-account
 
+## [IN PROGRESS]
+### Fixed
+- Don't show "renewal succeeded" flash message if individual renewals fail (DACCESS-538)
+
 ## [2.3.4] - 2025-01-17
 ### Changed
 - Remove dependency on external CGI script for ILLiad lookups by adding new ILL module using ILL API (DACCESS-257)
