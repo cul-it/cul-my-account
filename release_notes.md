@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - Fix bug causing duplicate request entries for ILL items already checked in to FOLIO (DACCESS-543)
+- Don't show "renewal succeeded" flash message if individual renewals fail (DACCESS-538)
 
 ## [2.3.4] - 2025-01-17
 ### Changed

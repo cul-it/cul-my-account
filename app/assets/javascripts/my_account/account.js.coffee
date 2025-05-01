@@ -352,10 +352,9 @@ account =
         errors = result.filter (r) -> r.error
         if errors.length > 0
           reason = ''
-          if errors.length == 1
-            # If there's only one item being renewed, go ahead and show the error message
-            # (this could be extended in future to show errors for multiple items, maybe,
-            # but that might get confusing).
+          if errors.length >= 1
+            # Only show the first error message for now. This could be extended, but
+            # that might get confusing.
             reason = " (#{errors[0].error.errors[0].message})"
           if errors.length >= ids.length
             account.setFlash('alert-warning', "Renewal failed#{reason}")
@@ -379,7 +378,7 @@ account =
         error: (jqXHR, textStatus, error) ->
           account.logError("unable to renew item #{id} (#{error})")
           account.updateItemStatus(id, { code: 400 })
-          reject new Error("Sending an error 2")
+          reject { error: { errors: [{ message: error, code: 400 }] } }
         success: (result) ->
           # N.B. This operation succeeds if the CUL::FOLIO::Edge gem returns a response correctly.
           # That does not mean that *renewal* has succeeded; for that, check the response code
@@ -476,9 +475,11 @@ account =
   ajaxComplete: (event, request) ->
     if request
       msg = request.getResponseHeader("X-Message")
+      msgType = request.getResponseHeader("X-Message-Type")
       alert_type = 'alert-success'
-      alert_type = 'alert-error' unless request.getResponseHeader("X-Message-Type").indexOf("error") is -1
-      unless request.getResponseHeader("X-Message-Type").indexOf("keep") is 0
+      if msgType
+        alert_type = 'alert-error' unless msgType.indexOf("error") is -1
+      unless msgType? and msgType.indexOf("keep") is 0
         account.setFlash(alert_type, msg)
   
   setFlash: (type, message) ->
