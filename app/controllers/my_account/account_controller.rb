@@ -175,7 +175,7 @@ module MyAccount
         # need to do anything with this
         # TODO 2: Is this still relevant with FOLIO? Can ILL items have this status?
         next if i['status'] == 'finef'
-        Rails.logger.debug "mjc12a: item: #{i}"
+
         # Skip if this is a ReShare submission that has been rerouted to BD -- otherwise it will
         # show up twice in the user's requests (BD/ReShare and ILL)
         next if i['TransactionStatus'] == 'Request Sent to BD'
@@ -185,6 +185,9 @@ module MyAccount
         # has it, but that isn't the case! These should be covered by the patron account 'holds'
         # section from FOLIO, so if we skip them here they should show up in the right place.
         next if i['TransactionStatus'] == 'Checked out in FOLIO'
+        # Items 'in Folio processing' have already had FOLIO records created, so they will appear in the FOLIO
+        # account data. We don't need to show them here.
+        next if i['TransactionStatus'] == 'In Folio Processing'
 
         # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
         # id for potential cancellations.
@@ -223,7 +226,6 @@ module MyAccount
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
       user = CUL::FOLIO::Edge.patron_record(url, tenant, folio_token, netid)
-      Rails.logger.debug("mjc12test6: Got FOLIO user #{user.inspect}")
       render json: user
     end
 
@@ -303,9 +305,7 @@ module MyAccount
 
       # Using the BD API is an expensive operation, so use the Rails session to cache the
       # response the first time a user accesses her account
-      Rails.logger.debug "mjc12a: Checking session  #{session['mjc12_bd_items']}"
       # return session[netid + '_bd_items'] if session[netid + '_bd_items']
-      Rails.logger.debug "mjc12test: Can't use session value for BD items - doing full lookup"
 
       begin
         token = nil
