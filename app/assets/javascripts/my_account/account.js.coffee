@@ -93,7 +93,7 @@ account =
       success: (data) ->
         account.userRecord = data.user
         nameSection = data.user.personal
-        $('#userName').html("Account information for #{nameSection['firstName']} #{nameSection['lastName']}")
+        $('#userName').html("Test Account information for #{nameSection['firstName']} #{nameSection['lastName']}")
     })
 
   ######### END OF ONLOAD FUNCTION ###########
