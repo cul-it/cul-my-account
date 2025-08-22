@@ -131,7 +131,9 @@ account =
     $.ajax({
       url: "/myaccount/ajax_checkouts"
       type: "POST"
-      data: { checkouts: accountData.account.loans }
+      contentType: "application/json"
+      dataType: "json"
+      data: JSON.stringify({ checkouts: accountData.account.loans })
       error: (jqXHR, textStatus, error) ->
         account.logError("couldn't render checkouts template (#{error})")
       success: (data) ->

@@ -244,7 +244,7 @@ module MyAccount
 
     # Render the _checkouts partial in response to an AJAX call
     def ajax_checkouts
-      @checkouts = params['checkouts']&.values.to_a
+      @checkouts = params['checkouts'] || []
       # @checkouts.sort_by! { |c| Date.parse(c['dueDate']) }
       render json: { record: render_to_string('_checkouts', layout: false), locals: { checkouts: @checkouts } }
     end
