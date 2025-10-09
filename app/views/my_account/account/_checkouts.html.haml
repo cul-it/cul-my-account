@@ -9,9 +9,7 @@
       %thead
         %tr
           %th{:scope => 'col', :class => 'myacct-col-5'}
-            = check_box_tag 'toggle-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-            %span.sr-only
-              Select all
+            = check_box_tag 'toggle-all-checkouts', 1, nil, {:id => '', :class => 'select-all', :style => 'display: none;', 'aria-label' => 'Select all (still loading...)'}
           %th{:scope => 'col', :class => 'myacct-col-10'} Due date
           %th{:scope => 'col', :class => 'myacct-col-50'} Title
           %th{:scope => 'col', :class => 'myacct-col-20'} Author
