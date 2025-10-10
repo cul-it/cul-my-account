@@ -115,6 +115,9 @@ account =
       $('tr.item input:checkbox').prop('checked', checked)
       account.setActionButtonState()
 
+    # show the select all checkbox and remove aria-label loading msg
+    $("input:checkbox.select-all").show().attr('aria-label', 'Select all')
+
     # Enable/disable action buttons if any checkbox is selected
     $("input:checkbox").click ->
       account.setActionButtonState()
