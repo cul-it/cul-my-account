@@ -1,41 +1,7 @@
-/* #myaccount-table a {
-  color: black;
-  text-decoration: underline;
-}
-#myaccount-table tr:nth-child(odd) {
-  background: #CCC;
-}
-
-body {
-  background-color: green;
-} */
-
 /*
   Place all the styles related to the matching controller here.
   They will automatically be included in application.css.
 */
-#request-loading-spinner, #renew-loading-spinner {
-	position: relative;
-	display: inline-block;
-	vertical-align: middle;
-	width: 2em;
-	height: 2em;
-}
-/* select all checkbox */
-.select_all.btn {
-  padding: 5px 12px 4px 12px;
-  font-size: .9rem;
-  margin-left: .5em;
-  margin-top: 0;
-}
-.select_all.checkbox {
-    display: inline-block;
-}
-.select_all {
-  label {
-    margin-bottom: 0.15rem;
-  }
-}
 
 /* Style for sortable table headers */
 table.tablesort thead th.sortable {
