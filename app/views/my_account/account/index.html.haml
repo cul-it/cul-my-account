@@ -1,5 +1,8 @@
-= javascript_include_tag 'application'
-= javascript_include_tag 'my_account/account'
+%head
+  = javascript_include_tag 'application'
+  = javascript_include_tag 'my_account/account'
+  = javascript_include_tag 'my_account/tablesort'
+  = stylesheet_link_tag 'my_account/application', media: 'all'
 
 -# Initial values (prior to ajax account loading)
 - @checkouts = []

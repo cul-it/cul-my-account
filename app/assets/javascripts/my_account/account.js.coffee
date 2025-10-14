@@ -102,11 +102,15 @@ account =
   # based on whether any items are selected in that tab
   setActionButtonState: () ->
     activeTab = $('.tab-pane.active').attr('id')
-    buttonsDisabled = $('#' + activeTab + ' input:checkbox:checked').length < 1
+    selectedCount = $('#' + activeTab + ' input:checkbox:checked').not('.select-all').length
+    buttonsDisabled = selectedCount < 1
+
     if (activeTab == 'checkouts')
       $('#renew').prop('disabled', buttonsDisabled)
+      $('#renew').text(if buttonsDisabled then "Renew" else "Renew #{selectedCount} item#{if selectedCount > 1 then 's' else ''}")
     else if (activeTab == 'pending-requests')
       $('#cancel').prop('disabled', buttonsDisabled)
+      $('#cancel').text(if buttonsDisabled then "Cancel" else "Cancel #{selectedCount} request#{if selectedCount > 1 then 's' else ''}")
 
   setEventHandlers: () ->
     # Select/deselect all checkboxes when clicked

@@ -1,0 +1,94 @@
+/* #myaccount-table a {
+  color: black;
+  text-decoration: underline;
+}
+#myaccount-table tr:nth-child(odd) {
+  background: #CCC;
+}
+
+body {
+  background-color: green;
+} */
+
+/*
+  Place all the styles related to the matching controller here.
+  They will automatically be included in application.css.
+*/
+#request-loading-spinner, #renew-loading-spinner {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	width: 2em;
+	height: 2em;
+}
+/* select all checkbox */
+.select_all.btn {
+  padding: 5px 12px 4px 12px;
+  font-size: .9rem;
+  margin-left: .5em;
+  margin-top: 0;
+}
+.select_all.checkbox {
+    display: inline-block;
+}
+.select_all {
+  label {
+    margin-bottom: 0.15rem;
+  }
+}
+
+/* Style for sortable table headers */
+table.tablesort thead th.sortable {
+  cursor: pointer;
+  position: relative;
+  padding-right: 2rem; // space between icons and <th> text
+
+  /* Inactive gray icons for all sortable columns */
+  &::after {
+    content: '\f0dc'; // sort icon
+    font-family: 'FontAwesome';
+    color: #ccc;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Active column styles */
+  &.ascending {
+    &::after {
+      content: '\f0de'; // chevron-up
+      color: #333;
+    }
+  }
+
+  &.descending {
+    &::after {
+      content: '\f0dd'; // chevron-down
+      color: #333;
+    }
+  }
+}
+
+.sticky-btn-container {
+  // background for the button when in sticky mode
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  padding: 1rem 0 0.25rem 0;
+  z-index: 10;
+  border-top: 1px solid #ddd;
+}
+
+.sticky-btn-container p {
+  margin-top: .5rem;
+}
+
+.no-wrap {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.no-results {
+  padding: 2rem 0;
+}
