@@ -13,5 +13,4 @@
 //= require jquery
 //= require jquery_ujs
 //
-//= require_tree ./my_account/account
-
+//= require_tree ./my_account
