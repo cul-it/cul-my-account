@@ -2,6 +2,7 @@
   = javascript_include_tag 'application'
   = javascript_include_tag 'my_account/account'
   = javascript_include_tag 'my_account/tablesort'
+  = javascript_include_tag 'my_account/privacy'
   = stylesheet_link_tag 'my_account/application', media: 'all'
 
 -# Initial values (prior to ajax account loading)
@@ -13,7 +14,15 @@
 - if @netid.nil?
   %p ERROR: Your account information could not be retrieved. Please ask a librarian for help or report this using the feedback link below.
 - else
-  %h2#userName 
+  %h2
+    Account information for 
+    %span#userName{ data: (Rails.env.development? ? { blur_target: true } : {}), class: (Rails.env.development? ? 'blurred' : nil) }
+
+  - if Rails.env.development?
+    %div.dev-tools{:class => "alert alert-info"}
+      %label
+        %input#privacy-toggle{ type: 'checkbox', checked: true, data: { action: 'toggle-privacy' }, onchange: "toggleBlurredElements()" }
+        Privacy mode
 
   %ul.nav.nav-tabs{:role => "tablist"}
     %li.nav-item{:role => "presentation"}
@@ -27,7 +36,7 @@
 
   %div{:class => 'tab-content', :id => 'accountData', :data => { netid: @netid }}
     %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
-      %p Loading account data ....
+      %p.no-results Loading account data ....
     %div#available-requests.tab-pane.fade{:role => "tabpanel"}
       //= render :partial => 'available_requests'
     %div#pending-requests.tab-pane.fade{:role => "tabpanel"}
