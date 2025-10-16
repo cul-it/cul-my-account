@@ -16,12 +16,14 @@
 - else
   %h2
     Account information for 
-    %span#userName{ data: (Rails.env.development? ? { blur_target: true } : {}), class: (Rails.env.development? ? 'blurred' : nil) }
-
+    %span#userName{
+      data: (Rails.env.development? ? { blur_target: true } : {}),
+      class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+    }
   - if Rails.env.development?
     %div.dev-tools{:class => "alert alert-info"}
       %label
-        %input#privacy-toggle{ type: 'checkbox', checked: true, data: { action: 'toggle-privacy' }, onchange: "toggleBlurredElements()" }
+        %input#privacy-toggle{ type: 'checkbox', checked: ENV['DEBUG_PRIVACY'] == 'true', data: { action: 'toggle-privacy' }, onchange: "toggleBlurredElements()" }
         Privacy mode
 
   %ul.nav.nav-tabs{:role => "tablist"}

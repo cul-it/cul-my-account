@@ -29,14 +29,20 @@
                 - dueDate = localDate.strftime('%-m/%-d/%y')
               = dueDate
             %td
-              %div.title{ data: (Rails.env.development? ? { blur_target: true } : {}), class: (Rails.env.development? ? 'blurred' : nil) }
+              %div.title{
+                data: (Rails.env.development? ? { blur_target: true } : {}),
+                class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+              }
                 = cased_title_link c
               -# - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
               -#   %div.badge.badge-secondary
               -#     This item cannot be renewed.
               -# - if c['is_bd']
               %div.source-badge
-            %td{ data: (Rails.env.development? ? { blur_target: true } : {}), class: (Rails.env.development? ? 'blurred' : nil) }
+            %td{
+              data: (Rails.env.development? ? { blur_target: true } : {}),
+              class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+            }
               =c['item']['author']
             %td.status
               = status_display c
