@@ -1,3 +1,4 @@
+require 'logger'
 require 'active_support'
 require 'active_support/core_ext/string'
 require_relative '../../app/helpers/my_account/my_account_helper'
