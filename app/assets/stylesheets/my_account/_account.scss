@@ -58,3 +58,15 @@ table.tablesort thead th.sortable {
 .no-results {
   padding: 2rem 0;
 }
+
+// for the privacy toggle container
+.dev-tools {
+  position: absolute;
+  top: 0px;
+  right: 20px;
+  white-space: nowrap;
+}
+
+.blurred {
+  filter: blur(5px);
+}
