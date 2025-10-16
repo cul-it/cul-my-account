@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [2.3.8] In progress
 ### Fixed
-- (DACCESS-96) Select all checkbox was not working until page finished processing
+- (DACCESS-96) Select all checkbox was incorrectly selecting checkboxes on the inactive tabs and was not working until page finished processing
 - (DACCESS-586) Pending Requests tab not loading when location is null
 
 ### Changed
