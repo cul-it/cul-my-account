@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - (DACCESS-96) Select all checkbox was not working until page finished processing
 ### Changed
 - (DACCESS-566) implement sticky buttons, table sorting, and now include the stylesheet
+- (DACCESS-698) add new privacy toggle option for dev environments
 
 ## [2.3.7] - 2025-08-22
 ### Fixed

@@ -12,9 +12,15 @@
       %tbody
         - @available_requests.each do |c|
           %tr.item{:id => "#{c['iid']}"} 
-            %td
+            %td{
+              data: (Rails.env.development? ? { blur_target: true } : {}),
+              class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+            }
               = c['ou_title'] || c['tl']
-            %td
+            %td{
+              data: (Rails.env.development? ? { blur_target: true } : {}),
+              class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+            }
               = c['ou_aulast'] || c['au']
             %td.location
               = c['lo']

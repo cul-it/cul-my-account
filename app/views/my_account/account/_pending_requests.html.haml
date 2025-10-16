@@ -32,9 +32,15 @@
             - if c['requestDate']
               = c['requestDate'].to_date.strftime('%-m/%-d/%y') if c['requestDate'].length > 10
               = c['requestDate'] if c['requestDate'].length < 11
-          %td
+          %td{
+            data: (Rails.env.development? ? { blur_target: true } : {}),
+            class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+          }
             = c['ou_title'] || c['tl']
-          %td
+          %td{
+            data: (Rails.env.development? ? { blur_target: true } : {}),
+            class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+          }
             = c['ou_aulast'] || c['au']
           %td
             = request_types[c['ttype'] || c['system']]
