@@ -15,7 +15,14 @@
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 # 
 require 'simplecov'
-SimpleCov.start
+SimpleCov.start do
+  add_group 'Models', 'app/models'
+  add_group 'Controllers', 'app/controllers'
+  add_group 'Helpers', 'app/helpers'
+  add_group 'Libraries', 'app/lib'
+  add_group 'Views', 'app/views/my_account/account'
+  track_files '{app,lib}/**/*.rb'
+end
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
