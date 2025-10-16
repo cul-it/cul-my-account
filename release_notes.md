@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [2.3.8] In progress
 ### Fixed
 - (DACCESS-96) Select all checkbox was not working until page finished processing
+- (DACCESS-586) Pending Requests tab not loading when location is null
+
 ### Changed
 - (DACCESS-566) implement sticky buttons, table sorting, and now include the stylesheet
 - (DACCESS-698) add new privacy toggle option for dev environments
