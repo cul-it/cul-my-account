@@ -14,7 +14,7 @@ module MyAccount
     config.to_prepare do
       # Make the main Blacklight app's helpers available to the engine.
       # This is required for the overriding of engine views and helpers to work correctly.
-      Engine::ApplicationController.helper Rails.application.helpers
+      MyAccount::ApplicationController.helper Rails.application.helpers
     end
   end
 
