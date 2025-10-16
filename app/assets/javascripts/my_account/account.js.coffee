@@ -304,10 +304,8 @@ account =
         # This is a bit of a hack. An ON_LOAN item is really an available request, but at that point in
         # the process it shows up as a FOLIO loan item; if we include this one in available_requests,
         # we'll get a duplicate entry. So we'll ignore items with status ON_LOAN here.
-        # Handle special case for REQ_END_OF_ROTA
-        if entry.status == 'REQ_END_OF_ROTA'
-          pending.push requestObj
-        else if entry.status != 'ON_LOAN'
+        # Handle special case for REQ_END_OF_ROTA - no library can fulfill the request
+        if entry.status != 'ON_LOAN' && entry.status != 'REQ_END_OF_ROTA'
           pending.push requestObj if pendingStatuses.includes(entry.status)
           available.push requestObj if availableStatuses.includes(entry.status)
 
