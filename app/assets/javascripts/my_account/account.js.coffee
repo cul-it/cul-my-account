@@ -11,7 +11,7 @@ account =
   # helper function - select-all checkbox for the active tab
   toggleAllCheckboxes: (event) ->
     checked = event.target.checked
-    activeTabId = $(".nav-link.active").attr("aria-controls")
+    activeTabId = $(".nav-link.active").attr("href").substring(1)
     $("[id='#{activeTabId}'] tr.item input:checkbox").prop('checked', checked)
     account.setActionButtonState()
  
