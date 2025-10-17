@@ -1,28 +1,27 @@
 - if @checkouts.length == 0 
-  %p
+  %p.no-results
     You have no items checked out.
 - else
   - Rails.logger.debug "mjc12test: starting checkouts display"
   //= form_tag({controller: :account, action: :handle_actions}, :remote => true, :id => 'checkouts-form') do
+  %div#sort-announcement{ aria: { live: 'assertive' }, class: 'sr-only' }
   %div.table-responsive
-    %table#checkouts-table.table.table-striped
+    %table#checkouts-table.table.table-striped.tablesort
       %thead
         %tr
-          %th{:scope => 'col', :class => 'myacct-col-5'}
-            = check_box_tag 'toggle-all-checkouts', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-            %span.sr-only
-              Select all
-          %th{:scope => 'col', :class => 'myacct-col-10'} Due date
-          %th{:scope => 'col', :class => 'myacct-col-50'} Title
-          %th{:scope => 'col', :class => 'myacct-col-20'} Author
-          %th{:scope => 'col', :class => 'myacct-col-20'} Status
+          %th{:scope => 'col', :class => 'myacct-col-5', 'data-nonsort' => true }
+            = check_box_tag 'toggle-all-checkouts', 1, nil, {:id => '', :class => 'select-all', 'aria-label' => 'Select all', :onclick => 'toggleAllCheckboxes(event)'}
+          %th{:scope => 'col', :class => 'myacct-col-10 sortable', 'aria-sort' => 'none', :tabindex => '0'} Due date
+          %th{:scope => 'col', :class => 'myacct-col-50 sortable', 'aria-sort' => 'none', :tabindex => '0'} Title
+          %th{:scope => 'col', :class => 'myacct-col-20 sortable', 'aria-sort' => 'none', :tabindex => '0'} Author
+          %th{:scope => 'col', :class => 'myacct-col-20 sortable', 'aria-sort' => 'none', :tabindex => '0'} Status
       %tbody
         - @checkouts.sort_by { |c| [c['dueDate'], c['item']['title']] }.each do |c|
           %tr.item{:id => "#{c['item']['itemId']}", :data => {:system => system_tag(c)}}
-            %td
+            %td{:class => 'no-wrap text-center'}
               = label_tag "#{c['item']['itemId']}", 'Select', { :class => 'sr-only' }
               = check_box_tag "#{c['item']['itemId']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
-            %td.date
+            %td.date{ 'data-timestamp' => c['dueDate'] }
               - dueDate = ''
               - if c['dueDate']
                 -# Dates are now from FOLIO and stored in UTC, e.g. "2022-07-30T03:59:59.000+0000"
@@ -30,18 +29,26 @@
                 - dueDate = localDate.strftime('%-m/%-d/%y')
               = dueDate
             %td
-              %div.title
+              %div.title{
+                data: (Rails.env.development? ? { blur_target: true } : {}),
+                class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+              }
                 = cased_title_link c
               -# - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
               -#   %div.badge.badge-secondary
               -#     This item cannot be renewed.
               -# - if c['is_bd']
               %div.source-badge
-            %td
+            %td{
+              data: (Rails.env.development? ? { blur_target: true } : {}),
+              class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+            }
               =c['item']['author']
             %td.status
               = status_display c
     = hidden_field_tag 'num_checkouts', @checkouts.length
+
+  %div.sticky-btn-container 
     - if ENV['MY_ACCOUNT_READONLY']
       %div.mt-4
         %p
@@ -49,4 +56,3 @@
     - else
       = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
       %span{:id => 'request-loading-spinner'}
-

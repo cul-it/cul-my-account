@@ -2,58 +2,62 @@
 - has_bd_pending = false
 - has_ill_pending = false
 
-- if @pending_requests.length == 0 
-  %p
+- if @pending_requests.length == 0
+  %p.no-results
     You have no pending requests.
   %a{:id => "bd-link", :href => "javascript:void(0)"}
 - else
   -# = form_tag({controller: :account, action: :index}, :id => 'pending-requests-form') do
-  %table#pending-requests-table.table.table-striped.table-responsive
+  %div#sort-announcement{ aria: { live: 'assertive' }, class: 'sr-only' }
+  %table#pending-requests-table.table.table-striped.table-responsive.tablesort
     %thead
       %tr
-        %th{:scope => 'col', :class => 'myacct-col-5'}
-          = check_box_tag 'toggle-all-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all' }
-          %span.sr-only
-            Select all
-        %th{:scope => 'col', :class => 'myacct-col-10'} Date requested
-        %th{:scope => 'col', :class => 'myacct-col-50'} Title
-        %th{:scope => 'col', :class => 'myacct-col-20'} Author
-        %th{:scope => 'col', :class => 'myacct-col-20'} Type
-        %th{:scope => 'col', :class => 'myacct-col-20'} Status
+        %th{:scope => 'col', :class => 'myacct-col-5', 'data-nonsort' => true }
+          = check_box_tag 'toggle-all-all-requests', 1, nil, { :id => '', :class => 'select-all', 'aria-label' => 'Select all', :onclick => 'toggleAllCheckboxes(event)'}
+        %th{:scope => 'col', :class => 'myacct-col-5 sortable no-wrap', 'aria-sort' => 'none', :tabindex => '0'} Date requested
+        %th{:scope => 'col', :class => 'myacct-col-40 sortable', 'aria-sort' => 'none', :tabindex => '0'} Title
+        %th{:scope => 'col', :class => 'myacct-col-25 sortable', 'aria-sort' => 'none', :tabindex => '0'} Author
+        %th{:scope => 'col', :class => 'myacct-col-10 sortable', 'aria-sort' => 'none', :tabindex => '0'} Type
+        %th{:scope => 'col', :class => 'myacct-col-10 sortable', 'aria-sort' => 'none', :tabindex => '0'} Status
     %tbody
       - @pending_requests.each do |c|
         - has_ill_pending = true if c['system'] == "illiad"
         - has_bd_pending = true if c['system'] == "bd"
         %tr.item{:id => "#{c['iid']}"}
-          %td
+          %td{:class => 'no-wrap text-center'}
             - if c['system'] != "illiad" && c['system'] != "bd"
               = label_tag "#{c['iid']}", 'Select', { :class => 'sr-only' }
               = check_box_tag "#{c['iid']}", c['ttype'], false, { 'aria-label' => 'Select', :title => 'Select' }  
-          %td
+          %td.date{ 'data-timestamp' => c['TransactionDate'] }
             - if c['requestDate']
               = c['requestDate'].to_date.strftime('%-m/%-d/%y') if c['requestDate'].length > 10
               = c['requestDate'] if c['requestDate'].length < 11
-          %td
+          %td{
+            data: (Rails.env.development? ? { blur_target: true } : {}),
+            class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+          }
             = c['ou_title'] || c['tl']
-          %td
+          %td{
+            data: (Rails.env.development? ? { blur_target: true } : {}),
+            class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+          }
             = c['ou_aulast'] || c['au']
           %td
             = request_types[c['ttype'] || c['system']]
           %td
             = c['shipped']
 
-  - if ENV['MY_ACCOUNT_READONLY']
-    %div.mt-4
-      %p
-        My Account is currently in read-only mode. Items cannot be renewed or cancelled. Please <a href="https://library.cornell.edu/ask">ask a librarian</a> for assistance if needed.
-  - else
-    = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger'
-    %span{:id => 'request-loading-spinner'}
-
-
-- if has_ill_pending || has_bd_pending
-  %p
-    Need to cancel a BorrowDirect or Interlibrary Loan request? Go to 
-    %a{:href => "https://cornell.hosts.atlas-sys.com/illiad"} 
-      ILLiad
+  %div.sticky-btn-container
+    - if ENV['MY_ACCOUNT_READONLY']
+      %div.mt-4
+        %p
+          My Account is currently in read-only mode. Items cannot be renewed or cancelled. Please <a href="https://library.cornell.edu/get-help/ask">ask a librarian</a> for assistance if needed.
+    - else
+      = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger', 'disabled' => true
+      %span{:id => 'request-loading-spinner'}
+      - if has_ill_pending || has_bd_pending
+        %p
+          Need to cancel a BorrowDirect or Interlibrary Loan request? Go to 
+          %a{:href => "https://cornell.hosts.atlas-sys.com/illiad"} 
+            ILLiad
  

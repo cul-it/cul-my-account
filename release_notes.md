@@ -2,7 +2,16 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## In progress
 
+## [2.3.8] 2025-10-17
+### Fixed
+- (DACCESS-96) Select all checkbox was incorrectly selecting checkboxes on the inactive tabs and was not working until page finished processing
+- (DACCESS-586) Pending Requests tab not loading when location is null
+
+### Changed
+- (DACCESS-566) implement sticky buttons, table sorting, and now include the stylesheet
+- (DACCESS-698) add new privacy toggle option for dev environments
 
 ## [2.3.7] - 2025-08-22
 ### Fixed

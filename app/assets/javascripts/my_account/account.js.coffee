@@ -7,8 +7,16 @@ account =
     illiad: [],
     bd: [],
   }
-  onLoad: () -> 
-    
+
+  # helper function - select-all checkbox for the active tab
+  toggleAllCheckboxes: (event) ->
+    checked = event.target.checked
+    activeTabId = $(".nav-link.active").attr("href").substring(1)
+    $("[id='#{activeTabId}'] tr.item input:checkbox").prop('checked', checked)
+    account.setActionButtonState()
+ 
+  onLoad: () ->
+
     # Handle display of flash messages
     $(document).ajaxComplete (event, request) ->
       account.ajaxComplete(event, request)
@@ -93,7 +101,7 @@ account =
       success: (data) ->
         account.userRecord = data.user
         nameSection = data.user.personal
-        $('#userName').html("Account information for #{nameSection['firstName']} #{nameSection['lastName']}")
+        $('#userName').html("#{nameSection['firstName']} #{nameSection['lastName']}")
     })
 
   ######### END OF ONLOAD FUNCTION ###########
@@ -102,19 +110,17 @@ account =
   # based on whether any items are selected in that tab
   setActionButtonState: () ->
     activeTab = $('.tab-pane.active').attr('id')
-    buttonsDisabled = $('#' + activeTab + ' input:checkbox:checked').length < 1
+    selectedCount = $('#' + activeTab + ' input:checkbox:checked').not('.select-all').length
+    buttonsDisabled = selectedCount < 1
+
     if (activeTab == 'checkouts')
       $('#renew').prop('disabled', buttonsDisabled)
+      $('#renew').text(if buttonsDisabled then "Renew" else "Renew #{selectedCount} item#{if selectedCount > 1 then 's' else ''}")
     else if (activeTab == 'pending-requests')
       $('#cancel').prop('disabled', buttonsDisabled)
+      $('#cancel').text(if buttonsDisabled then "Cancel" else "Cancel #{selectedCount} request#{if selectedCount > 1 then 's' else ''}")
 
   setEventHandlers: () ->
-    # Select/deselect all checkboxes when clicked
-    $("input:checkbox.select-all").click ->
-      checked = $(this).prop('checked')
-      $('tr.item input:checkbox').prop('checked', checked)
-      account.setActionButtonState()
-
     # Enable/disable action buttons if any checkbox is selected
     $("input:checkbox").click ->
       account.setActionButtonState()
@@ -281,7 +287,10 @@ account =
       # FOLIO record is generated automatically?
       if !folioTitles.includes entry.tl
         # Olin Library's pickup location is actually '*Olin Library', so strip off the *
-        location = entry.lo.replace '*', ''
+        if entry.lo?
+          location = entry.lo.replace '*', ''
+        else
+          location = 'Unknown'
         requestObj = {
           iid: entry.iid, # N.B. The ID used here for FOLIO requests is the REQUEST ID, not the item ID!
           tl: entry.tl,
@@ -294,7 +303,8 @@ account =
         # This is a bit of a hack. An ON_LOAN item is really an available request, but at that point in
         # the process it shows up as a FOLIO loan item; if we include this one in available_requests,
         # we'll get a duplicate entry. So we'll ignore items with status ON_LOAN here.
-        if entry.status != 'ON_LOAN'
+        # Handle special case for REQ_END_OF_ROTA - no library can fulfill the request
+        if entry.status != 'ON_LOAN' && entry.status != 'REQ_END_OF_ROTA'
           pending.push requestObj if pendingStatuses.includes(entry.status)
           available.push requestObj if availableStatuses.includes(entry.status)
 
@@ -497,3 +507,6 @@ account =
 
   logError: (message) ->
     console.log("MyAccount error: #{message}")
+
+# Expose the function to the global scope
+window.toggleAllCheckboxes = account.toggleAllCheckboxes

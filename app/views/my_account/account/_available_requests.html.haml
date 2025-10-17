@@ -1,5 +1,5 @@
 -if @available_requests.length == 0
-  %p
+  %p.no-results
     You have no requests ready for pickup.
 -else
   = form_tag({controller: :account, action: :index}, :id => 'available-requests-form') do
@@ -12,9 +12,15 @@
       %tbody
         - @available_requests.each do |c|
           %tr.item{:id => "#{c['iid']}"} 
-            %td
+            %td{
+              data: (Rails.env.development? ? { blur_target: true } : {}),
+              class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+            }
               = c['ou_title'] || c['tl']
-            %td
+            %td{
+              data: (Rails.env.development? ? { blur_target: true } : {}),
+              class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+            }
               = c['ou_aulast'] || c['au']
             %td.location
               = c['lo']
