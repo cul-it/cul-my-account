@@ -1,4 +1,5 @@
 require_dependency "my_account/application_controller"
+require_relative '../../../lib/ill'
 
 require 'rest-client'
 require 'json'
