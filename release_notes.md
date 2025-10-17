@@ -17,6 +17,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - Accounts with very large sets of checked-out items would crash My Account on initial load (DACCESS-641)
 
+
+## [2.3.7] - 2025-08-22
+### Fixed
+- Accounts with very large sets of checked-out items would crash My Account on initial load (DACCESS-641)
+
 ## [2.3.6] - 2025-06-26
 ### Fixed
 - Prevent ILLiad items of type "article" from showing under My Account (DACCESS-596)
