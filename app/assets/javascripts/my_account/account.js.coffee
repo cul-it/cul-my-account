@@ -7,8 +7,16 @@ account =
     illiad: [],
     bd: [],
   }
-  onLoad: () -> 
-    
+
+  # helper function - select-all checkbox for the active tab
+  toggleAllCheckboxes: (event) ->
+    checked = event.target.checked
+    activeTabId = $(".nav-link.active").attr("aria-controls")
+    $("[id='#{activeTabId}'] tr.item input:checkbox").prop('checked', checked)
+    account.setActionButtonState()
+ 
+  onLoad: () ->
+
     # Handle display of flash messages
     $(document).ajaxComplete (event, request) ->
       account.ajaxComplete(event, request)
@@ -113,15 +121,6 @@ account =
       $('#cancel').text(if buttonsDisabled then "Cancel" else "Cancel #{selectedCount} request#{if selectedCount > 1 then 's' else ''}")
 
   setEventHandlers: () ->
-    # Select/deselect all checkboxes when clicked
-    $("input:checkbox.select-all").click ->
-      checked = $(this).prop('checked')
-      $('tr.item input:checkbox').prop('checked', checked)
-      account.setActionButtonState()
-
-    # show the select all checkbox and remove aria-label loading msg
-    $("input:checkbox.select-all").show().attr('aria-label', 'Select all')
-
     # Enable/disable action buttons if any checkbox is selected
     $("input:checkbox").click ->
       account.setActionButtonState()
@@ -508,3 +507,6 @@ account =
 
   logError: (message) ->
     console.log("MyAccount error: #{message}")
+
+# Expose the function to the global scope
+window.toggleAllCheckboxes = account.toggleAllCheckboxes
