@@ -10,7 +10,7 @@
       %thead
         %tr
           %th{:scope => 'col', :class => 'myacct-col-5', 'data-nonsort' => true }
-            = check_box_tag 'toggle-all-checkouts', 1, nil, {:id => '', :class => 'select-all', :style => 'display: none;', 'aria-label' => 'Select all (still loading...)' }
+            = check_box_tag 'toggle-all-checkouts', 1, nil, {:id => '', :class => 'select-all', 'aria-label' => 'Select all', :onclick => 'toggleAllCheckboxes(event)'}
           %th{:scope => 'col', :class => 'myacct-col-10 sortable', 'aria-sort' => 'none', :tabindex => '0'} Due date
           %th{:scope => 'col', :class => 'myacct-col-50 sortable', 'aria-sort' => 'none', :tabindex => '0'} Title
           %th{:scope => 'col', :class => 'myacct-col-20 sortable', 'aria-sort' => 'none', :tabindex => '0'} Author

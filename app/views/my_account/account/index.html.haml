@@ -1,9 +1,7 @@
-%head
-  = javascript_include_tag 'application'
-  = javascript_include_tag 'my_account/account'
-  = javascript_include_tag 'my_account/tablesort'
-  = javascript_include_tag 'my_account/privacy'
-  = stylesheet_link_tag 'my_account/application', media: 'all'
+= javascript_include_tag 'my_account/account'
+= javascript_include_tag 'my_account/tablesort'
+= javascript_include_tag 'my_account/privacy'
+= stylesheet_link_tag 'my_account/application', media: 'all'
 
 -# Initial values (prior to ajax account loading)
 - @checkouts = []
