@@ -20,6 +20,7 @@ gem 'jquery-rails'
 gem 'coffee-script'
 gem 'sassc'
 gem 'rails-controller-testing'
+gem 'repost'
 
 # gem 'cul-folio-edge', :path => '/Users/matt/code/cul/d&a/cul-folio-edge'
 gem 'cul-folio-edge', git: 'https://github.com/cul-it/cul-folio-edge'

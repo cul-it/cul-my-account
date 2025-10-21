@@ -205,6 +205,7 @@ GEM
       rake (>= 12.2)
       thor (~> 1.0)
     rake (13.3.0)
+    repost (0.4.2)
     rest-client (2.1.0)
       http-accept (>= 1.7.0, < 2.0)
       http-cookie (>= 1.0.2, < 2.0)
@@ -275,6 +276,7 @@ DEPENDENCIES
   my_account!
   rails (~> 6.1)
   rails-controller-testing
+  repost
   rspec-rails
   sassc
   simplecov
