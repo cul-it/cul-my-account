@@ -6,7 +6,7 @@ class String
   def titleize(options = {:exclude => ["and", "or", "the", "to", "a", "but", "at", "of", "on", "in"]})
     exclusions = options[:exclude]
 
-    return ActiveSupport::Inflector.titleize(self) unless exclusions.present?
+    return ActiveSupport::Inflector.titleize(self) unless exclusions.any?
     self.underscore.humanize.gsub(/\b(?<!['’`])(?!(#{exclusions.join('|')})\b)[a-z]/) { $&.capitalize }
   end
 end
