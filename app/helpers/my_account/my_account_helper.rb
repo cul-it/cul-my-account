@@ -34,7 +34,7 @@ module MyAccount
     # this is *not* the same as the 'system' field in the item metadata. Instead, this goes on the assumption that
     # a TransactionNumber indicates an Illiad loan.
     def system_tag item
-      item['TransactionNumber'].present? ? 'illiad' : 'folio'
+        item['TransactionNumber'] && !item['TransactionNumber'].to_s.empty? ? 'illiad' : 'folio'
     end
   end
 end

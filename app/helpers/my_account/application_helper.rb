@@ -1,6 +1,7 @@
 module MyAccount
   module ApplicationHelper
 
+    # TODO: I'm not sure if we need any of the methods below!
     def method_missing method, *args, &block
       if method.to_s.end_with?('_path') || method.to_s.end_with?('_url')
         if main_app.respond_to?(method)

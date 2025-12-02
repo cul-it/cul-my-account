@@ -10,7 +10,7 @@
       %thead
         %tr
           %th{:scope => 'col', :class => 'myacct-col-5', 'data-nonsort' => true }
-            = check_box_tag 'toggle-all-checkouts', 1, nil, {:id => '', :class => 'select-all', :style => 'display: none;', 'aria-label' => 'Select all (still loading...)' }
+            = check_box_tag 'toggle-all-checkouts', 1, nil, {:id => '', :class => 'select-all', 'aria-label' => 'Select all', :onclick => 'toggleAllCheckboxes(event)'}
           %th{:scope => 'col', :class => 'myacct-col-10 sortable', 'aria-sort' => 'none', :tabindex => '0'} Due date
           %th{:scope => 'col', :class => 'myacct-col-50 sortable', 'aria-sort' => 'none', :tabindex => '0'} Title
           %th{:scope => 'col', :class => 'myacct-col-20 sortable', 'aria-sort' => 'none', :tabindex => '0'} Author
@@ -29,14 +29,20 @@
                 - dueDate = localDate.strftime('%-m/%-d/%y')
               = dueDate
             %td
-              %div.title
+              %div.title{
+                data: (Rails.env.development? ? { blur_target: true } : {}),
+                class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+              }
                 = cased_title_link c
               -# - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
               -#   %div.badge.badge-secondary
               -#     This item cannot be renewed.
               -# - if c['is_bd']
               %div.source-badge
-            %td
+            %td{
+              data: (Rails.env.development? ? { blur_target: true } : {}),
+              class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
+            }
               =c['item']['author']
             %td.status
               = status_display c
