@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'rest-client'
   s.add_dependency 'cul-folio-edge', '~> 3.2'
   s.add_dependency 'haml'
+  s.add_dependency 'sprockets-rails'
 
   s.add_development_dependency "rspec-rails"
   s.add_development_dependency "simplecov"
