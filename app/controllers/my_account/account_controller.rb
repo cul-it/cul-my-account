@@ -17,6 +17,11 @@ module MyAccount
       @heading = 'My Account'
     end
 
+    def mock_mode?
+      # use fake data (generate from faker gem) and bypass real API calls
+      ENV['DEBUG_USER'] == 'FAKEUSER' && ENV['RAILS_ENV'] == 'development'
+    end
+
     def authenticate_user
       # Master disable -- this kicks the user out of My Account before anything gets going
       if ENV['DISABLE_MY_ACCOUNT']
@@ -84,6 +89,10 @@ module MyAccount
 
     # Use the CUL::FOLIO::Edge gem to renew an item. Operation is triggered via AJAX.
     def ajax_renew
+      if mock_mode?
+        render json: MyAccount::MockData.ajax_renew
+        return
+      end
       netid = params['netid']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
@@ -126,6 +135,10 @@ module MyAccount
 
     # Use the CUL::FOLIO::Edge gem to cancel a request. Operation is triggered via AJAX.
     def ajax_cancel
+      if mock_mode?
+        render json: MyAccount::MockData.ajax_cancel
+        return
+      end
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
       # NOTE: The cancel_reason value set below is the UUID of the current 'Patron Cancelled'
@@ -149,6 +162,11 @@ module MyAccount
     # If we assume that ilsapiE.cgi is rewritten to *only* return ILL results, then that simplifies the
     # parsing below greatly. No need to try to figure out whether something is a charged item or a request
     def get_illiad_data
+      if mock_mode?
+        render json: MyAccount::MockData.get_illiad_data
+        return
+      end
+
       record = nil
       netid = params['netid']
 
@@ -224,6 +242,10 @@ module MyAccount
     # Use the FOLIO EdgePatron API to retrieve a user's user record from FOLIO (*not* the user's account,
     # which here refers to his/her checkouts and fines/fees).
     def get_user_record
+      if mock_mode?
+        render json: { user: { personal: { firstName: "FAKE", lastName: "USER" } } }
+        return
+      end
       netid = params['netid']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
@@ -234,6 +256,11 @@ module MyAccount
     # Use the FOLIO EdgePatron API to retrieve a user's account information. This provides lists of checkouts/
     # charged items and fines/fees. This is called by AJAX, so the result is handled there as well.
     def get_folio_data
+      if mock_mode?
+        mock_data = MyAccount::MockData.get_folio_data
+        render json: mock_data
+        return
+      end
       netid = params['netid']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
@@ -251,6 +278,10 @@ module MyAccount
 
     # Retrieve a service point record from FOLIO
     def ajax_service_point
+      if mock_mode?
+        render json: MyAccount::MockData.get_service_point
+        return
+      end
       sp_id = params['sp_id']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
@@ -262,6 +293,10 @@ module MyAccount
     # as a parameter so that calling this repeatedly in a loop doesn't incur multiple authentication calls. The
     # source is needed later to derermine whether this is a BD or ILL or FOLIO item.
     def ajax_catalog_link_and_source
+      if mock_mode?
+        render json: MyAccount::MockData.ajax_catalog_link_and_source
+        return
+      end
       instance_id = params['instanceId']
       url = ENV['OKAPI_URL']
       tenant = ENV['OKAPI_TENANT']
@@ -303,6 +338,11 @@ module MyAccount
     end
 
     def get_bd_requests
+      if mock_mode?
+        render json: MyAccount::MockData.get_bd_requests
+        return
+      end
+
       netid = params['netid']
 
       # Using the BD API is an expensive operation, so use the Rails session to cache the

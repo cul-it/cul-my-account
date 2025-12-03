@@ -24,4 +24,5 @@ Gem::Specification.new do |s|
   s.add_dependency 'cul-folio-edge', '~> 3.2'
 
   s.add_development_dependency "sqlite3"
+  s.add_dependency "faker"  
 end
