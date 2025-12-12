@@ -74,6 +74,7 @@ module ILL
       end
 
       #full_title.gsub!(/[\012\015]/, ' ').gsub!(/"/, ' ').gsub!(/"/, "'")
+      # TODO: Seems that location should be taken from 'CitedPages' now? How was this working before?
       location = transaction['NVTGC']
       due_date = transaction['DueDate']
       original_due_date = transaction['DueDate']
