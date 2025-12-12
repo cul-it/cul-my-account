@@ -33,6 +33,7 @@ module ILL
     filter = "not (TransactionStatus eq 'Request Finished' or TransactionStatus eq 'Cancelled by ILL Staff' or TransactionStatus eq 'Cancelled by Customer')"
     response = RestClient.get "#{ENV['MY_ACCOUNT_ILLIAD_API_URL']}/Transaction/UserRequests/#{user_id}?$filter=#{filter}", headers
     transactions = JSON.parse(response.body)
+    print("ILLiad transactions: #{transactions}")
     transactions
   end
 
@@ -74,6 +75,7 @@ module ILL
       end
 
       #full_title.gsub!(/[\012\015]/, ' ').gsub!(/"/, ' ').gsub!(/"/, "'")
+      # TODO: Seems that location should be taken from 'CitedPages' now? How was this working before?
       location = transaction['NVTGC']
       due_date = transaction['DueDate']
       original_due_date = transaction['DueDate']
