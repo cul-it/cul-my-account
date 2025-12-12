@@ -33,7 +33,6 @@ module ILL
     filter = "not (TransactionStatus eq 'Request Finished' or TransactionStatus eq 'Cancelled by ILL Staff' or TransactionStatus eq 'Cancelled by Customer')"
     response = RestClient.get "#{ENV['MY_ACCOUNT_ILLIAD_API_URL']}/Transaction/UserRequests/#{user_id}?$filter=#{filter}", headers
     transactions = JSON.parse(response.body)
-    print("ILLiad transactions: #{transactions}")
     transactions
   end
 
