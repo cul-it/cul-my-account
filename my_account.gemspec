@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'blacklight', '~> 7.0'
   s.add_dependency 'xml-simple'
   s.add_dependency 'rest-client'
-  s.add_dependency 'cul-folio-edge', '~> 3.2'
+  s.add_dependency 'cul-folio-edge', '~> 3.3'
   s.add_dependency 'haml'
   s.add_dependency 'sprockets-rails'
 
