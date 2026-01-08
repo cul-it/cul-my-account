@@ -1,16 +1,16 @@
 GIT
   remote: https://github.com/cul-it/cul-folio-edge
-  revision: bfdc3a28749ce826caf7dd1c415dd044a72a8b4f
+  revision: eb697fe0f13f3604ab630cce95a71cefeca91cb0
   specs:
-    cul-folio-edge (3.2)
+    cul-folio-edge (3.3)
       rest-client
 
 PATH
   remote: .
   specs:
-    my_account (2.3.9)
+    my_account (2.4.1)
       blacklight (~> 7.0)
-      cul-folio-edge (~> 3.2)
+      cul-folio-edge (~> 3.3)
       haml
       rails (~> 7.0)
       rest-client
