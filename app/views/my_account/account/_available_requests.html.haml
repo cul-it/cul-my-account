@@ -22,5 +22,7 @@
               class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
             }
               = c['ou_aulast'] || c['au']
+            -# NOTE: The location cell will be populated by an AJAX call to get the service point name.
+            -# See app/assets/javascripts/my_account/account.js.coffee
             %td.location
               = c['lo']
