@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [IN PROGRESS]
+### Changed
+- Remove reference to obsolete env value in documentation 
+
 ### Fixed
 - Add a hack to the available requests display logic to prevent it from showing 'Staff Use Only' (DACCESS-564)
 
