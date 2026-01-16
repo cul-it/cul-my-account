@@ -22,9 +22,6 @@ BORROW_DIRECT_TIMEOUT=<BorrowDirect timeout in seconds>
 
 Note that the BorrowDirect and Okapi ENV keys are also used by the Requests engine.
 
-### Deprecated keys (to be removed in future)
-MY_ACCOUNT_PATRONINFO_URL=<netid/patron info lookup URL>
-
 After restarting the Blacklight server, MyAccount should be accessible at `/myaccount`.
 
 ### Disabling MA

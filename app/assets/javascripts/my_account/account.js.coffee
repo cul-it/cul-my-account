@@ -343,7 +343,15 @@ account =
       error: (jqXHR, textStatus, error) ->
         account.logError("couldn't find service point #{sp_id} (#{error})")
       success: (data) ->
-        $("##{requestId} td.location").html(data.service_point.discoveryDisplayName)
+        displayName = data.service_point.discoveryDisplayName
+        # HACK: This is a terrible hack to account for the fact that the display name for Olin SP
+        # is currently "Staff Use Only". We can hope that, one day, this will be fixed in the SP
+        # entry in FOLIO so that we won't need to do this.
+        if displayName == "Staff Use Only"
+          displayName = data.service_point.name
+          # Remove ' Service Point' from the end if present, leaving just "Olin", "Mann", etc.
+          displayName = displayName.replace(/ Service Point$/, '')
+        $("##{requestId} td.location").html(displayName)
         return data.service_point
     })
 
