@@ -13,7 +13,7 @@ gemspec
 # To use a debugger
 # gem 'byebug', group: [:development, :test]
 
-gem 'rails', '~> 7.0'
+gem 'rails', '~> 8.0'
 gem 'unf_ext'
 gem 'haml'
 gem 'jquery-rails'
