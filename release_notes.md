@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - Update Rails dependency to v8.x (DACCESS-740)
 - Allow versions of `cul-folio-edge` higher than 3.x
+- Better handling of ReShare shipped status codes (DACCESS-15)
 
 ## [2.4.2] - 2026-01-16
 ### Changed
