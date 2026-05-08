@@ -17,15 +17,15 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["test/**/*"]
 
-  s.add_dependency 'rails', '~> 7.0'
+  s.add_dependency 'rails', '~> 8.0'
   s.add_dependency 'blacklight', '~> 7.0'
   s.add_dependency 'xml-simple'
   s.add_dependency 'rest-client'
-  s.add_dependency 'cul-folio-edge', '~> 3.3'
+  s.add_dependency 'cul-folio-edge', '> 3.3'
   s.add_dependency 'haml'
   s.add_dependency 'sprockets-rails'
 
   s.add_development_dependency "rspec-rails"
   s.add_development_dependency "simplecov"
-  s.add_development_dependency "sqlite3", '~> 1.4'
+  s.add_development_dependency "sqlite3", '>= 2.1'
 end

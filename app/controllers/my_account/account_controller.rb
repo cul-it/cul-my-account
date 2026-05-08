@@ -390,14 +390,16 @@ module MyAccount
     # Use the 'audit' section of a ReShare item's metadata to determine whether the item has
     # been shipped or not. If it has, return a string to that effect that can be displayed in the UI.
     def reshare_shipped_status(item)
-      if item && item['audit']
-        steps = item['audit'].sort_by! { |i| i['auditNo'] }
-        steps.each do |step|
-          step_date = formatted_date(step['dateCreated'])
-          return "Shipped #{step_date}" if step['toStatus']['code'] == 'REQ_SHIPPED'
-        end
-      end
-      return ''
+      return '' unless item && item['audit'].is_a?(Array)
+
+      shipped_step = item['audit']
+        .select { |step| step.dig('toStatus', 'code') == 'REQ_SHIPPED' }
+        .max_by { |step| step['auditNo'].to_i }
+
+      return '' unless shipped_step
+
+      step_date = formatted_date(shipped_step['dateCreated'])
+      "Shipped #{step_date}"
     end
 
     # Given a date of the form 2023-01-29T23:14:24Z, return a string formatted to 1/29/23

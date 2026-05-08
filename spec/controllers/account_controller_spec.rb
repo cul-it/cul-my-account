@@ -223,6 +223,66 @@ RSpec.describe MyAccount::AccountController, type: :controller do
     end
   end
 
+  describe '#reshare_shipped_status' do
+    subject { controller.send(:reshare_shipped_status, item) }
+
+    context 'when item is nil' do
+      let(:item) { nil }
+      it { is_expected.to eq('') }
+    end
+
+    context 'when audit block is not an array' do
+      let(:item) { { 'audit' => nil } }
+      it { is_expected.to eq('') }
+    end
+
+    context 'when audit is an empty array' do
+      let(:item) { { 'audit' => [] } }
+      it { is_expected.to eq('') }
+    end
+
+    context 'when no audit step has REQ_SHIPPED status' do
+      let(:item) do
+        { 'audit' => [
+          { 'auditNo' => '1', 'toStatus' => { 'code' => 'REQ_CREATED' }, 'dateCreated' => '2024-03-01T12:00:00Z' }
+        ] }
+      end
+      it { is_expected.to eq('') }
+    end
+
+    context 'when one audit step has REQ_SHIPPED status' do
+      let(:item) do
+        { 'audit' => [
+          { 'auditNo' => '1', 'toStatus' => { 'code' => 'REQ_CREATED' }, 'dateCreated' => '2024-03-01T12:00:00Z' },
+          { 'auditNo' => '2', 'toStatus' => { 'code' => 'REQ_SHIPPED' }, 'dateCreated' => '2024-03-05T12:00:00Z' }
+        ] }
+      end
+      it { is_expected.to eq('Shipped 3/5/24') }
+    end
+
+    context 'when multiple audit steps have REQ_SHIPPED status' do
+      let(:item) do
+        { 'audit' => [
+          { 'auditNo' => '2', 'toStatus' => { 'code' => 'REQ_SHIPPED' }, 'dateCreated' => '2024-03-05T12:00:00Z' },
+          { 'auditNo' => '10', 'toStatus' => { 'code' => 'REQ_SHIPPED' }, 'dateCreated' => '2024-04-01T00:00:00Z' },
+          { 'auditNo' => '9', 'toStatus' => { 'code' => 'REQ_SHIPPED' }, 'dateCreated' => '2024-03-20T00:00:00Z' }
+        ] }
+      end
+      it 'returns the date from the highest auditNo (numeric, not lexicographic)' do
+        is_expected.to eq('Shipped 4/1/24')
+      end
+    end
+
+    context 'when the shipped step has an unparseable date' do
+      let(:item) do
+        { 'audit' => [
+          { 'auditNo' => '1', 'toStatus' => { 'code' => 'REQ_SHIPPED' }, 'dateCreated' => 'not-a-date' }
+        ] }
+      end
+      it { is_expected.to eq('Shipped ') }
+    end
+  end
+
   describe 'POST #get_bd_requests' do
     it 'returns JSON BD requests' do
       allow(CUL::FOLIO::Edge).to receive(:authenticate).and_return({ code: 200, token: 'token' })
