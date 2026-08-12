@@ -8,7 +8,7 @@ GIT
 PATH
   remote: .
   specs:
-    my_account (2.4.2)
+    my_account (2.5)
       blacklight (~> 7.0)
       cul-folio-edge (> 3.3)
       haml
