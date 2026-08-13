@@ -1,5 +1,4 @@
 require_dependency "my_account/application_controller"
-require_relative '../../../lib/ill'
 
 require 'rest-client'
 require 'json'
@@ -9,7 +8,7 @@ require 'cul/folio/edge'
 module MyAccount
   class AccountController < ApplicationController
     #include Reshare
-    include ILL
+    include Ill
 
     before_action :heading
     before_action :authenticate_user, except: [:intro]
