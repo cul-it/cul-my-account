@@ -1,9 +1,9 @@
 require 'json'
 require_relative '../../lib/ill'
 
-RSpec.describe ILL do
+RSpec.describe Ill do
   # Need a dummy class to test module methods
-  let(:dummy) { Class.new { extend ILL } }
+  let(:dummy) { Class.new { extend Ill } }
 
   describe '#filter_by_status' do
     it 'removes completed and cancelled transactions' do
