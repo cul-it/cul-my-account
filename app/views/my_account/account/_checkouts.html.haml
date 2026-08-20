@@ -4,7 +4,7 @@
 - else
   - Rails.logger.debug "mjc12test: starting checkouts display"
   //= form_tag({controller: :account, action: :handle_actions}, :remote => true, :id => 'checkouts-form') do
-  %div#sort-announcement{ aria: { live: 'assertive' }, class: 'sr-only' }
+
   %div.table-responsive
     %table#checkouts-table.table.table-striped.tablesort
       %thead
@@ -19,7 +19,7 @@
         - @checkouts.sort_by { |c| [c['dueDate'], c['item']['title']] }.each do |c|
           %tr.item{:id => "#{c['item']['itemId']}", :data => {:system => system_tag(c)}}
             %td{:class => 'no-wrap text-center'}
-              = label_tag "#{c['item']['itemId']}", 'Select', { :class => 'sr-only' }
+              = label_tag "#{c['item']['itemId']}", 'Select', { :class => 'visually-hidden' }
               = check_box_tag "#{c['item']['itemId']}", 1, false, { 'aria-label' => 'Select', :title => 'Select' }
             %td.date{ 'data-timestamp' => c['dueDate'] }
               - dueDate = ''
@@ -35,7 +35,7 @@
               }
                 = cased_title_link c
               -# - if @renewable_lookup_hash && @renewable_lookup_hash[c['item']['itemId']] == 'N'
-              -#   %div.badge.badge-secondary
+              -#   %div.badge.bg-secondary
               -#     This item cannot be renewed.
               -# - if c['is_bd']
               %div.source-badge

@@ -19,20 +19,22 @@
       class: (Rails.env.development? && ENV['DEBUG_PRIVACY'] == 'true' ? 'blurred' : nil)
     }
   - if Rails.env.development?
-    %div.dev-tools{:class => "alert alert-info"}
+    %span.dev-tools{:class => "alert alert-info"}
       %label
         %input#privacy-toggle{ type: 'checkbox', checked: ENV['DEBUG_PRIVACY'] == 'true', data: { action: 'toggle-privacy' }, onchange: "toggleBlurredElements()" }
         Privacy mode
-
+  
+  %div#sort-announcement{ aria: { live: 'assertive' }, class: 'visually-hidden' }
+  
   %ul.nav.nav-tabs{:role => "tablist"}
     %li.nav-item{:role => "presentation"}
-      = link_to "Checked out", "#checkouts", :class => "nav-link active", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }, :id => "checkoutsTab"
+      = link_to "Checked out", "#checkouts", :class => "nav-link active", :data => { :bs_toggle => "tab" }, :role => "tab", :aria => { :controls => "checkouts" }, :id => "checkoutsTab"
     %li.nav-item{:role => "presentation"}
-      = link_to "Ready for pickup", "#available-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "available requests" }, :id => "availableTab"
+      = link_to "Ready for pickup", "#available-requests", :class => "nav-link", :data => { :bs_toggle => "tab" }, :role => "tab", :aria => { :controls => "available-requests" }, :id => "availableTab"
     %li.nav-item{:role => "presentation"}
-      = link_to "Pending requests", "#pending-requests", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "pending requests" }, :id => "pendingTab"
+      = link_to "Pending requests", "#pending-requests", :class => "nav-link", :data => { :bs_toggle => "tab" }, :role => "tab", :aria => { :controls => "pending-requests" }, :id => "pendingTab"
     %li.nav-item{:role => "presentation"}
-      = link_to "Fines and fees", "#fines", :class => "nav-link", :data => { :toggle => "tab" }, :role => "tab", :aria => { :controls => "fines and fees" }, :id => "finesTab"
+      = link_to "Fines and fees", "#fines", :class => "nav-link", :data => { :bs_toggle => "tab" }, :role => "tab", :aria => { :controls => "fines" }, :id => "finesTab"
 
   %div{:class => 'tab-content', :id => 'accountData', :data => { netid: @netid }}
     %div#checkouts.tab-pane.fade.show.active{:role => "tabpanel"}
