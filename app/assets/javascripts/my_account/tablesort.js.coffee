@@ -2,7 +2,7 @@
 $(document).ready ->
   # Attach click event to <th> in any table with the class 'tablesort'
   # ... but skip any <th> that are marked nonsortable
-  $(document).on 'click keydown', 'table.tablesort th', ->
+  $(document).on 'click keydown', 'table.tablesort th', (event) ->
     if event.type == 'keydown' and not (event.key == 'Enter' or event.key == ' ')
       return
     # stop the scrolling if its the 'Space' key

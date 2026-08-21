@@ -75,7 +75,7 @@ account =
     $.when(folioAccountLookup, illiadAccountLookup, bdAccountLookup).done (folioAccount, illiadAccount) ->
       if folioAccount[0].code > 200
         account.logError("couldn't retrieve user account data from FOLIO (#{folioAccount[0].error})")
-        $("#checkouts").html("<span>Couldn't retrieve account information. Please ask a librarian for assistance.</span>")
+        $("#checkouts").html("<p class='no-results'>Couldn't retrieve account information. Please ask a librarian for assistance.</p>")
       if illiadAccount[0] == undefined
         account.logError("couldn't retrieve user account data from ILLiad")
 
@@ -85,11 +85,10 @@ account =
     (error) ->
       account.logError("problem combining account lookup results (#{error})")
 
-    # Enable tab navigation
-    $('.nav-tabs a').click ->
-      $(this).tab('show')
+    # Update the action buttons when a tab is clicked
+    $('.nav-tabs a').on 'shown.bs.tab', ->
       account.setActionButtonState()
-
+  
     account.userRecord = null
     # Look up user's name from FOLIO
     $.ajax({
@@ -224,9 +223,9 @@ account =
   # The source indicator has to be set during the instance lookup in account_controller.rb.
   addSourceBadge: (id, source) ->
     if source == 'bd'
-      $("##{id} .source-badge").html('<div class="badge badge-primary">BorrowDirect</div>')
+      $("##{id} .source-badge").html('<div class="badge bg-primary">BorrowDirect</div>')
     if source == 'ill'
-      $("##{id} .source-badge").html('<div class="badge badge-primary">Interlibrary Loan</div>')
+      $("##{id} .source-badge").html('<div class="badge bg-primary">Interlibrary Loan</div>')
 
   # Populate fines/fees in the UI
   showFines: (accountData) ->
@@ -498,15 +497,15 @@ account =
       msgType = request.getResponseHeader("X-Message-Type")
       alert_type = 'alert-success'
       if msgType
-        alert_type = 'alert-error' unless msgType.indexOf("error") is -1
+        alert_type = 'alert-danger' unless msgType.indexOf("error") is -1
       unless msgType? and msgType.indexOf("keep") is 0
         account.setFlash(alert_type, msg)
   
   setFlash: (type, message) ->
     # Add flash message if there is any text to display
     $("#main-flashes").replaceWith("<div id='main-flashes'>
-      <div class='alert " + type + "'>
-        <button type='button' class='close' data-dismiss='alert'>&times;</button>
+      <div class='alert alert-dismissible " + type + "'>
+        <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
         #{message}
       </div>
     ") if message

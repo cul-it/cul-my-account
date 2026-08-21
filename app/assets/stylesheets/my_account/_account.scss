@@ -7,6 +7,7 @@
 table.tablesort thead th.sortable {
   cursor: pointer;
   position: relative;
+  white-space: nowrap;
   padding-right: 2rem; // space between icons and <th> text
 
   /* Inactive gray icons for all sortable columns */
@@ -59,12 +60,18 @@ table.tablesort thead th.sortable {
   padding: 2rem 0;
 }
 
-// for the privacy toggle container
+// style for the privacy toggle container in developer mode
+h2:has(+ .dev-tools) {
+  display: inline-block;
+  margin-right: 1rem;
+}
+
 .dev-tools {
-  position: absolute;
-  top: 0px;
-  right: 20px;
+  display: inline-block;
+  vertical-align: middle;
   white-space: nowrap;
+  margin-bottom: 0;
+  padding: 0.25rem 0.75rem; // slim down padding
 }
 
 .blurred {
