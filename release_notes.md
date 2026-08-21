@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - Code properly handles eager loading of libraries (DACCESS-953)
+- Fix login redirect bug due to Blacklight 8 flash messages requiring blacklight_config (DACCESS-970)
 
 ## [2.5] - 2026-05-08
 ### Changed
