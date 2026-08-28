@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6] - 2026-08-28
+### Added
+- Added table sorting to Pending Requests and Fines tab, now all tables behave the same
+
+### Changed
+- Support Blacklight 8 in addition to Blacklight 7 (DACCESS-944)
+- Support for Bootstrap 5 (DACCESS-961)
+- Adjusted the position of the Privacy option for developers
+
+### Fixed
+- Code properly handles eager loading of libraries (DACCESS-953)
+- Fix login redirect bug due to Blacklight 8 flash messages requiring blacklight_config (DACCESS-970)
+
 ## [2.5] - 2026-05-08
 ### Changed
 - Update Rails dependency to v8.x (DACCESS-740)

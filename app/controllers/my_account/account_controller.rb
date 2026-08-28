@@ -1,5 +1,4 @@
 require_dependency "my_account/application_controller"
-require_relative '../../../lib/ill'
 
 require 'rest-client'
 require 'json'
@@ -9,10 +8,15 @@ require 'cul/folio/edge'
 module MyAccount
   class AccountController < ApplicationController
     #include Reshare
-    include ILL
+    include Ill
+    include Blacklight::Configurable
 
     before_action :heading
     before_action :authenticate_user, except: [:intro]
+
+    # Blacklight::FlashMessageComponent checks blacklight_config for bootstrap version
+    # Fixes DACCESS-970
+    copy_blacklight_config_from(CatalogController)
 
     def heading
       @heading = 'My Account'
