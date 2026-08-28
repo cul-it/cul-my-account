@@ -9,7 +9,7 @@ PATH
   remote: .
   specs:
     my_account (2.5)
-      blacklight (~> 7.0)
+      blacklight (>= 7.0, < 9.0)
       cul-folio-edge (> 3.3)
       haml
       rails (~> 8.0)
