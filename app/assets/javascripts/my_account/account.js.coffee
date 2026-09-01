@@ -128,7 +128,7 @@ account =
     $('#cancel').click (e) ->
       e.preventDefault()
       e.stopPropagation()
-      $('#request-loading-spinner').spin('cancelling')
+      $('#request-loading-spinner').removeClass('d-none')
       account.cancelItems()
 
   # Populate checkouts in the UI
@@ -151,7 +151,7 @@ account =
         # Set up renew button handler
         $('#renew').click (e) ->
           account.clearItemStatuses()
-          $('#request-loading-spinner').spin('renewing')
+          $('#request-loading-spinner').removeClass('d-none')
           account.renewItems()
         # Add catalog links to the titles in the table and source badge if needed
         data.locals.checkouts.forEach (checkout) ->
@@ -381,11 +381,11 @@ account =
             account.setFlash('alert-warning', "Some items could not be renewed")
         else
           account.setFlash('alert-success', "Renewal succeeded")
-        $('#request-loading-spinner').spin(false)
+        $('#request-loading-spinner').addClass('d-none')
         window.scrollTo(0, 0)
       .catch (error) ->
         account.setFlash('alert-warning', "Some items could not be renewed")
-        $('#request-loading-spinner').spin(false)
+        $('#request-loading-spinner').addClass('d-none')
 
   # Return a promise that renews a single item
   renewItem: (netid, id) ->
@@ -431,13 +431,13 @@ account =
           account.setFlash('alert-success', "Cancellation complete")
         else
           account.setFlash('alert-success', "Cancellation complete")
-        $('#request-loading-spinner').spin(false)
+        $('#request-loading-spinner').addClass('d-none')
         # This next bit is overkill for just trying to update the display -- it reloads the entire
         # MyAccount page!
         account.onLoad()
       .catch (error) ->
         account.setFlash('alert-warning', "Some items could not be cancelled")
-        $('#request-loading-spinner').spin(false)
+        $('#request-loading-spinner').addClass('d-none')
 
   # Return a promise that cancels a single request
   cancelRequest: (netid, id) ->

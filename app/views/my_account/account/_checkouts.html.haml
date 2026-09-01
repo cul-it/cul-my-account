@@ -55,4 +55,6 @@
           My Account is currently in read-only mode. Items cannot be renewed or cancelled. Please <a href="https://library.cornell.edu/get-help/ask">ask a librarian</a> for assistance if needed.
     - else
       = button_tag 'Renew', :type => 'submit', :id => 'renew', :value => 'renew', :class => 'btn btn-danger'
-      %span{:id => 'request-loading-spinner'}
+      %span.spinner-border.text-danger.d-none.ms-2{:id => 'request-loading-spinner', :role => "status"}
+        %span.visually-hidden
+          Working...

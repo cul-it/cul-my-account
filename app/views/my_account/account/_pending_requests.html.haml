@@ -54,7 +54,9 @@
           My Account is currently in read-only mode. Items cannot be renewed or cancelled. Please <a href="https://library.cornell.edu/get-help/ask">ask a librarian</a> for assistance if needed.
     - else
       = button_tag 'Cancel request(s)', :type => 'submit', :id => 'cancel', :value => 'cancel', :class => 'btn btn-danger', 'disabled' => true
-      %span{:id => 'request-loading-spinner'}
+      %span.spinner-border.text-danger.d-none.ms-2{:id => 'request-loading-spinner', :role => "status"}
+        %span.visually-hidden
+          Cancelling...
       - if has_ill_pending || has_bd_pending
         %p
           Need to cancel a BorrowDirect or Interlibrary Loan request? Go to 
