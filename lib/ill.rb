@@ -50,6 +50,10 @@ module Ill
   # to be this obscure? Can we make them more readable? These are questions to ponder in the future.
   def transform_fields(transactions)
     items_array = transactions.map do |transaction|
+      # TODO: 9/1/26 Caitlin pointed out that there's a RequestType field in the record that can be either Loan or Article.
+      # If we have that, it's proabably a much better way to determine the genre than checking for the presence of LoanTitle.
+      # Why are we doing it this way? This goes way back to the perl scripts of bygone days. This whole thing is probably due for
+      # a rethink and overhaul.
       genre = transaction['LoanTitle'] ? 'book' : 'article'
       title = transaction['LoanTitle'] || transaction['PhotoArticleTitle']
       title.gsub!(/"/, ' ')
@@ -120,6 +124,7 @@ module Ill
         # ou_issn: issn,
         url: url,
         requestDate: transaction['CreationDate'],
+        requestType: transaction['RequestType'],
         TransactionDate: transaction['TransactionDate'],
         TransactionNumber: transaction['TransactionNumber'],
         TransactionStatus: transaction['TransactionStatus']

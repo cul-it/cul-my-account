@@ -9,7 +9,6 @@ module MyAccount
   class AccountController < ApplicationController
     #include Reshare
     include Ill
-    include Blacklight::Configurable
 
     before_action :heading
     before_action :authenticate_user, except: [:intro]
@@ -194,7 +193,7 @@ module MyAccount
         # account data. We don't need to show them here.
         next if i['TransactionStatus'] == 'In Folio Processing'
         # Skip ILLiad items of type "article" (DACCESS-596)
-        next if i['system'] == 'illiad' && i['it'] == 'Article'
+        next if i['system'] == 'illiad' && i['LoanType'] == 'Article'
         
         # This is a hold, recall, or ILL request. Rather than tracking the item ID, we need the request
         # id for potential cancellations.

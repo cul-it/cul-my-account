@@ -170,6 +170,52 @@ RSpec.describe MyAccount::AccountController, type: :controller do
     end
   end
 
+  describe 'POST #get_illiad_data' do
+    let(:illiad_item) do
+      {
+        'system' => 'illiad',
+        'status' => 'pahr',
+        'it' => 'Article',
+        'TransactionDate' => '2026-09-01T11:15:25.57',
+        'TransactionNumber' => 1721536,
+        'TransactionStatus' => 'Request Sent',
+        'LoanType' => loan_type
+      }
+    end
+
+    before do
+      allow(controller).to receive(:ill_transactions)
+        .with('testuser')
+        .and_return({ 'items' => [illiad_item] }.to_json)
+    end
+
+    context 'when LoanType is Article' do
+      let(:loan_type) { 'Article' }
+
+      it 'skips the item' do
+        post :get_illiad_data, params: { netid: 'testuser' }
+
+        expect(JSON.parse(response.body)).to eq('pending' => [], 'available' => [])
+      end
+    end
+
+    context 'when LoanType is Loan' do
+      let(:loan_type) { 'Loan' }
+
+      it 'includes the item in pending requests' do
+        post :get_illiad_data, params: { netid: 'testuser' }
+
+        pending_request = JSON.parse(response.body)['pending'].first
+        expect(pending_request).to include(
+          'it' => 'Article',
+          'TransactionNumber' => 1721536,
+          'iid' => 'illiad-1721536'
+        )
+        expect(JSON.parse(response.body)['available']).to be_empty
+      end
+    end
+  end
+
   describe 'POST #ajax_checkouts' do
     it 'renders JSON with checkouts partial' do
       post :ajax_checkouts, params: { checkouts: [{ 'dueDate' => '2025-01-01' }] }
