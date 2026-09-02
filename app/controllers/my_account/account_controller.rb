@@ -9,9 +9,14 @@ module MyAccount
   class AccountController < ApplicationController
     #include Reshare
     include Ill
+    include Blacklight::Configurable
 
     before_action :heading
     before_action :authenticate_user, except: [:intro]
+
+    # Blacklight::FlashMessageComponent checks blacklight_config for bootstrap version
+    # Fixes DACCESS-970
+    copy_blacklight_config_from(CatalogController)
 
     def heading
       @heading = 'My Account'
